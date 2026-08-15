@@ -21,3 +21,28 @@ export function calcularConsistencia(
 
   return { ultimos7Dias, ultimos30Dias }
 }
+
+function chaveDia(data: Date): string {
+  return data.toISOString().slice(0, 10)
+}
+
+/**
+ * Quantos dias seguidos (até hoje) o usuário treinou pelo menos uma vez.
+ * Se ainda não treinou hoje, a sequência conta a partir de ontem — treinar
+ * mais tarde no dia não deveria "quebrar" a sequência que já existe.
+ */
+export function calcularStreak(datasConcluidasISO: string[], referenciaISO: string): number {
+  const diasComTreino = new Set(datasConcluidasISO.map((d) => chaveDia(new Date(d))))
+
+  const cursor = new Date(referenciaISO)
+  if (!diasComTreino.has(chaveDia(cursor))) {
+    cursor.setDate(cursor.getDate() - 1)
+  }
+
+  let streak = 0
+  while (diasComTreino.has(chaveDia(cursor))) {
+    streak++
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return streak
+}

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { calcularConsistencia } from './consistencia.ts'
+import { calcularConsistencia, calcularStreak } from './consistencia.ts'
 
 const HOJE = '2026-08-15T12:00:00.000Z'
 
@@ -34,4 +34,28 @@ test('ignora sessões no futuro', () => {
 test('sem sessões, tudo zero', () => {
   const r = calcularConsistencia([], HOJE)
   assert.deepEqual(r, { ultimos7Dias: 0, ultimos30Dias: 0 })
+})
+
+test('streak conta dias seguidos até hoje', () => {
+  const datas = ['2026-08-15T09:00:00.000Z', '2026-08-14T09:00:00.000Z', '2026-08-13T09:00:00.000Z']
+  assert.equal(calcularStreak(datas, HOJE), 3)
+})
+
+test('streak não quebra se ainda não treinou hoje, mas treinou ontem', () => {
+  const datas = ['2026-08-14T09:00:00.000Z', '2026-08-13T09:00:00.000Z']
+  assert.equal(calcularStreak(datas, HOJE), 2)
+})
+
+test('streak zera com um dia de furo', () => {
+  const datas = ['2026-08-15T09:00:00.000Z', '2026-08-13T09:00:00.000Z']
+  assert.equal(calcularStreak(datas, HOJE), 1)
+})
+
+test('streak zero sem nenhum treino', () => {
+  assert.equal(calcularStreak([], HOJE), 0)
+})
+
+test('streak zero se o último treino foi há 2 dias ou mais', () => {
+  const datas = ['2026-08-12T09:00:00.000Z']
+  assert.equal(calcularStreak(datas, HOJE), 0)
 })

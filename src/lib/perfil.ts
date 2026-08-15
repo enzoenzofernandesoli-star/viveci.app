@@ -45,6 +45,7 @@ export type PerfilDB = {
   id: string
   nome: string | null
   foto_url: string | null
+  bio: string | null
   sexo: Sexo | null
   idade: number | null
   altura_cm: number | null
@@ -69,6 +70,7 @@ export function usePerfil(userId: string | undefined) {
   const [perfil, setPerfil] = useState<PerfilDB | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
+  const [versao, setVersao] = useState(0)
 
   useEffect(() => {
     if (!userId) {
@@ -93,12 +95,29 @@ export function usePerfil(userId: string | undefined) {
     return () => {
       cancelado = true
     }
-  }, [userId])
+  }, [userId, versao])
 
-  return { perfil, carregando, erro }
+  return { perfil, carregando, erro, recarregar: () => setVersao((v) => v + 1) }
 }
 
 export async function atualizarPerfil(userId: string, dados: Partial<PerfilDB>) {
   const { error } = await supabase.from('perfis').update(dados).eq('id', userId)
   if (error) throw error
+}
+
+/** Sobe a foto de perfil pro bucket `Fotos` e já salva a URL em `perfis.foto_url`. */
+export async function enviarFotoPerfil(userId: string, arquivo: File): Promise<string> {
+  const extensao = arquivo.name.split('.').pop() ?? 'jpg'
+  const caminho = `${userId}/avatar.${extensao}`
+
+  const { error: erroUpload } = await supabase.storage.from('Fotos').upload(caminho, arquivo, {
+    upsert: true,
+    cacheControl: '3600',
+  })
+  if (erroUpload) throw erroUpload
+
+  const { data } = supabase.storage.from('Fotos').getPublicUrl(caminho)
+  const url = `${data.publicUrl}?v=${Date.now()}`
+  await atualizarPerfil(userId, { foto_url: url })
+  return url
 }
