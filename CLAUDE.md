@@ -1,23 +1,32 @@
 # Viveci — guia do projeto
 
-App de treino personalizado, em português do Brasil. Web app + PWA instalável.
+App de treino e nutrição personalizados, em português do Brasil. Web app + PWA
+instalável.
 Este arquivo é a fonte da verdade. Leia antes de escrever qualquer código.
+
+**Antes de codar qualquer coisa nova**, rode `git log --oneline` pra ver o
+histórico real do projeto — o app já passou por uma reformulação grande (saiu
+o gerador automático de treino, entrou o construtor manual de rotinas) e o
+`git log` conta essa história melhor que qualquer resumo.
 
 ---
 
 ## O conceito
 
-Não é uma pasta de planilhas com login. O usuário responde um onboarding e o
-sistema **monta o plano dele**, entrega o treino do dia, registra carga série a
-série, ilumina no mapa corporal os músculos treinados e mostra a evolução ao
-longo de 12 semanas.
+O usuário faz um onboarding curto (dados físicos + objetivo), monta as
+próprias rotinas de treino escolhendo os exercícios um a um, registra carga
+série a série ao treinar, ilumina no mapa corporal os músculos treinados,
+registra o que come com cálculo automático de calorias, e acompanha a
+evolução (peso, cargas, consistência).
 
 ```
-PERFIL → OBJETIVO → TREINO → EXERCÍCIOS → REGISTRO DE CARGA
-→ MAPA CORPORAL → PROGRESSO → NUTRIÇÃO → DESAFIO → EVOLUÇÃO
+PERFIL → ROTINA (montada pelo usuário) → SESSÃO DE TREINO → REGISTRO DE CARGA
+→ MAPA CORPORAL → NUTRIÇÃO (diário + meta) → EVOLUÇÃO
 ```
 
-Plano de **12 semanas**. Nunca "12 meses".
+Não existe plano automático de 12 semanas nem gerador de treino por
+algoritmo — isso foi removido a pedido do usuário. Cada rotina é criada e
+editada manualmente, sem limite de tempo ou de semanas.
 
 ---
 
@@ -31,11 +40,13 @@ Plano de **12 semanas**. Nunca "12 meses".
 4. **Todo texto visível em português do Brasil.** Números com vírgula decimal
    (`75,2 kg`).
 5. **Regra de negócio é função pura e testada**, nunca lógica solta dentro de
-   componente. Gerador de treino, cálculo de metas e cálculo do mapa corporal
-   vivem em `src/lib/` com teste ao lado.
+   componente. Cálculo de metas, mapa corporal, progressão de carga e ritmo de
+   cardio vivem em `src/lib/` com teste ao lado (`*.test.ts`).
 6. **Nunca prometer resultado**, nunca usar linguagem de culpa, nunca tratar
    biotipo como diagnóstico.
 7. Mobile-first. Testar a 375px. Alvos de toque de no mínimo 44px.
+8. **Sem git não tem como desfazer.** O projeto tem `git init` feito — sempre
+   commitar antes de uma mudança grande/destrutiva, pra ter ponto de volta.
 
 ---
 
@@ -82,54 +93,66 @@ iguais seriam ilegíveis.
 
 ```
 src/
-  lib/        regra de negócio pura + testes (*.test.ts ao lado)
-  data/       catálogos estáticos que espelham tabelas do Supabase
+  lib/        regra de negócio pura + testes (*.test.ts ao lado) + camadas de I/O com o Supabase
+  data/       catálogos estáticos que espelham tabelas do Supabase (exercícios, alimentos)
   components/ componentes reutilizáveis
   pages/      uma por rota
 ```
 
 `npm test` roda os testes com o runner nativo do Node (sem vitest, sem jest).
+Arquivos de teste (`*.test.ts`) só importam módulos **puros** (sem `import.meta.env`,
+sem o client do Supabase) — por isso a lógica de negócio fica separada da
+camada de I/O em arquivos próprios (ex: `progressaoCarga.ts` puro vs `registros.ts` com I/O).
+
+**Navegação:** 4 abas fixas — Início, Treino, Nutrição, Perfil — mais um botão
+redondo flutuante no meio da barra inferior que abre o Treino Rápido
+(`/treino/rapido`). Evolução e Planos não têm aba própria; acessíveis a partir
+do Perfil.
 
 ---
 
 ## Estado atual
 
-**Pronto e testado:**
-- Design system, sidebar (desktop), bottom nav (celular), rotas, `Page`, `Empty`
-- `src/lib/metas.ts` — cálculo de meta calórica e macros. 7 testes passando.
-- `src/lib/perfil.ts`, `src/lib/refeicoes.ts`, `src/lib/data.ts`, `src/lib/diario.ts`
-- `src/data/alimentos.ts` — 50 alimentos brasileiros
+Praticamente tudo abaixo está implementado, testado e passou por teste manual
+no navegador. Rode `npm test` (deve passar 100%) e `npm run build` antes de
+qualquer entrega.
 
-**Em construção:** tela `/nutricao` (anel de calorias + barras de macro).
+- **Auth** — email/senha via Supabase (`src/lib/auth.ts`).
+- **Onboarding** — 6 passos: nome, sexo, idade, altura/peso, objetivo, dias/semana.
+- **Rotinas de treino (manual)** — usuário cria, nomeia, adiciona/remove
+  exercícios pelo catálogo, edita e exclui. Sem geração automática.
+- **Sessão de treino** — cronômetro total no topo, carrossel de bolinhas pra
+  trocar de exercício livremente, tabela de séries (peso/reps/check), descanso
+  editável por exercício (persiste), sugestão de carga baseada no histórico.
+- **Treino rápido** — sessão avulsa sem rotina salva, exercícios adicionados
+  na hora; fica só no histórico.
+- **Cardio** — aba dentro de Treino: equipamento, duração, distância, ritmo
+  calculado (min/km).
+- **Biblioteca de exercícios** — não é mais tela própria; vive como o
+  componente `SeletorExercicio`, usado dentro do editor de rotina e do treino rápido.
+- **Nutrição** — diário alimentar real (busca no catálogo com cálculo
+  automático de kcal/macros por quantidade, ou entrada rápida manual), meta de
+  calorias calculada automaticamente e **editável manualmente** (mantém
+  proteína/gordura, recalcula carboidrato como resto).
+- **Mapa corporal** — SVG frente/costas, cores por intensidade real dos
+  últimos 7 dias, alerta de desequilíbrio.
+- **Dashboard** — dados reais: rotinas, nutrição do dia, mapa corporal.
+- **Evolução** — peso (gráfico), consistência (treinos em 7/30 dias), cargas
+  por exercício (gráfico). Acessível pelo Perfil.
+- **Planos** — só `free` e `pro`. Único bloqueio ativo hoje: free trava em 4
+  rotinas de treino. Pro ainda não tem nenhum recurso exclusivo de verdade —
+  isso é intencional, só entra quando o dono do produto decidir o quê.
+- **PWA** — manifest, ícones, service worker (offline básico).
 
-**Ainda não existe:** Supabase, auth, onboarding, gerador de treino, sessão de
-treino, mapa corporal, dashboard com dados reais, desafio, evolução, paywall, PWA.
-
----
-
-## Ordem de construção
-
-```
-1  ✅ Fundação: design system, navegação, rotas
-2  ⬜ Diário alimentar: motor de metas ✅ + tela ⬜
-3  ⬜ Supabase + auth + perfil
-4  ⬜ Onboarding de 10 passos
-5  ⬜ Gerador de treino (12 semanas)
-6  ⬜ Sessão de treino + registro de carga + timer
-7  ⬜ Biblioteca de exercícios
-8  ⬜ Mapa corporal + equilíbrio muscular
-9  ⬜ Dashboard com dados reais
-10 ⬜ Evolução: peso, medidas, cargas, consistência
-11 ⬜ Desafio 24 Dias + streak
-12 ⬜ Paywall, planos, perfil
-13 ⬜ PWA, offline, acabamento
-```
+**Não existe (e não tem ordem definida pra construir):** Desafio 24 Dias,
+receitas, IA de dieta personalizada. Não construir nenhum desses sem pedido
+explícito.
 
 ---
 
 ## Regras de negócio
 
-### Meta calórica — `src/lib/metas.ts` (implementado)
+### Meta calórica — `src/lib/metas.ts`
 
 Mifflin-St Jeor → fator de atividade → ajuste por objetivo → pisos de segurança
 → proteína → gordura → carboidrato como resto.
@@ -151,39 +174,63 @@ Gramas em múltiplos de 5, calorias em múltiplos de 10.
 **Caso de referência (é teste):** homem, 28a, 178cm, 75,2kg, 5 dias, ganhar massa
 → **3.430 kcal · P 145g · C 500g · G 95g**.
 
-### Gerador de treino — a fazer
+**Meta manual** (`aplicarMetaManual`): usuário pode sobrescrever a meta de
+calorias direto na tela de Nutrição. Mantém proteína e gordura fixas,
+recalcula só o carboidrato como resto — mesma regra do cálculo automático.
+Fica salva em `metas_nutricionais` (mantém histórico, a mais recente com
+`ativa = true` vale).
 
-Divisão por frequência: 2 dias Full Body A/B · 3 Push/Pull/Legs ·
-4 Peito+Tríceps / Costas+Bíceps / Pernas / Ombros+Abdômen ·
-5 Peito / Costas / Pernas / Ombros+Abdômen / Braços · 6 PPL ×2.
+### Rotinas de treino (manual) — `src/lib/rotinas.ts`
 
-Volume por nível: iniciante 5–6 ex, 3 séries, 10–12 reps, 60s ·
-intermediário 6–7 ex, 3–4 séries, 8–12 reps, 60–90s ·
-avançado 7–8 ex, 4 séries, 6–12 reps, 90–120s.
+Sem gerador automático. O usuário cria a rotina (nome), adiciona exercícios
+pelo `SeletorExercicio` (busca + filtro por grupo muscular), reordena não é
+suportado ainda. Cada rotina vira 1 linha em `planos` + 1 linha em
+`plano_sessoes` (estrutura antiga reaproveitada, sem semana/progressão) +
+N linhas em `plano_itens`.
 
-Objetivo: emagrecer 12–15 reps e 45s · ganhar massa 8–12 reps, 90s, compostos
-primeiro · definir 10–15 reps · força 4–6 reps nos compostos, 120s ·
-condicionamento 30–45s.
+Todo item novo entra com padrão `series: 3, reps_min: 8, reps_max: 12,
+descanso_seg: 90` — editável durante a própria sessão de treino (o descanso
+persiste de volta em `plano_itens`; peso/reps são por série, registrados em
+`registros`).
 
-Biotipo: ectomorfo −1 exercício e +15s de descanso · mesomorfo padrão ·
-endomorfo −15s de descanso e +1 bloco de cardio.
+**Limite do plano Free:** até 4 rotinas (`limiteRotinasAtingido` em
+`src/lib/planos.ts`). Pro não tem limite. Bloqueio sempre **visível**, nunca
+some silenciosamente — mostra cadeado + CTA único `Ver planos`.
 
-Local "Casa" → só peso corporal, halter e elástico.
-Tempo → `séries_totais ≈ minutos / 3`.
+### Sessão de treino — `src/pages/SessaoTreino.tsx`
 
-Progressão: sem 1–4 adaptação · 5–8 +1 série nos compostos · 9–11 técnica
-avançada em 1 exercício por sessão (só intermediário/avançado) · 12 deload 60%.
+Cronômetro total desde o início, sempre visível. Circulo de exercícios no
+topo permite pular pra qualquer um a qualquer momento (sem ordem forçada).
+Cada série tem peso/reps editáveis até marcar como feita (check verde, trava
+depois). Ao marcar, entra num descanso mostrado inline (não tela cheia) com
+botão "Pular".
 
-Nunca dois treinos do mesmo grupo em dias consecutivos.
-Função determinística: mesmo perfil, mesmo plano. Sem IA, sem chamada externa.
+Funciona em dois modos, mesmo componente:
+- **A partir de uma rotina** (`/treino/:id/sessao`) — exercícios pré-carregados,
+  grava em `registros`/`sessoes_concluidas` com `sessao_id` da rotina.
+- **Treino rápido** (`/treino/rapido`) — começa vazio, `sessao_id = null`,
+  usuário monta na hora.
 
-### Progressão de carga
+**Cuidado com StrictMode:** o `useEffect` que chama `iniciarSessao` roda duas
+vezes em desenvolvimento por causa do StrictMode do React. Use uma ref-trava
+(`sessaoIniciada`) pra não criar duas linhas em `sessoes_concluidas` — já
+apareceu esse bug uma vez, não reintroduzir.
+
+### Progressão de carga — `src/lib/progressaoCarga.ts`
 
 Pré-preencher peso e reps com o último registro. Se o usuário completou todas as
 reps, sugerir +2,5% em membro superior e +5% em inferior. Mostrar sempre
-`Última vez: 80 kg × 10`.
+`Última vez: 80 kg × 10`. Arredonda pro meio quilo mais próximo.
 
-### Mapa corporal
+### Cardio — `src/lib/cardio.ts`, `src/lib/ritmo.ts`
+
+Aba própria dentro de Treino (não misturar com rotinas de força). Registro:
+equipamento (Esteira, Bicicleta, Elíptico, Escada, Remo, Bike spinning — lista
+fixa, pode crescer), duração em minutos (obrigatório), distância em km
+(opcional). Ritmo (`calcularRitmo`) só aparece quando tem distância:
+`duracao_min / distancia_km`, formatado como `min:seg`.
+
+### Mapa corporal — `src/lib/mapaCorporal.ts`
 
 ```
 volume_grupo = Σ (séries × reps × peso) dos últimos 7 dias
@@ -192,39 +239,52 @@ percentual   = round(volume_grupo / maior_volume × 100)
 Exercício composto: 70% ao grupo primário, 30% dividido entre os secundários.
 Grupo em `muscle-off` quando não treinado; em `brand` com opacidade de 0,35 a 1
 conforme a intensidade. Alerta de desequilíbrio quando um grupo passa 25 pontos
-do antagonista. **Os percentuais vêm do histórico real — nunca valores fixos.**
+do antagonista (Peito↔Costas, Bíceps↔Tríceps, Quadríceps↔Posterior).
+**Os percentuais vêm do histórico real — nunca valores fixos.**
 
-### Diário alimentar
+### Diário alimentar — `src/lib/diario.ts`, `src/lib/alimentos.ts`
 
 Anel: azul até 99% · verde `up` de 100 a 110% · âmbar `gold` acima, com arco de
 excedente. **Nunca vermelho** — passar da meta não é falha.
-Registro por receita, alimento livre, refeição salva ou entrada rápida
-(só kcal + proteína, para reduzir atrito). Botão "Copiar dia".
-Dia futuro não é editável.
+Registro por busca no catálogo (`ALIMENTOS`, calcula kcal/macros pela
+quantidade em gramas) ou entrada rápida (nome + kcal + proteína, pra reduzir
+atrito). Refeições principais sempre visíveis (Café da manhã, Almoço, Lanche
+da tarde, Jantar); as demais só aparecem se tiverem item.
 
-### Planos
+**Ainda não construído:** registro por receita, refeição salva, botão "Copiar
+dia", trava de dia futuro.
 
-`free` — onboarding, semana 1 do plano, 20 exercícios, 10 receitas, dias 1–3 do
-desafio. `basico` — pagamento único vitalício, tudo menos recálculo automático de
-metas e histórico do diário acima de 7 dias. `premium` — R$ 49,90/mês, tudo,
-com plano que se adapta ao desempenho real.
+### Planos — `src/lib/planos.ts`
 
-Bloqueio sempre **visível e desfocado**, com cadeado e um único CTA `Ver planos`.
+Só `free` e `pro`. Hoje o único recurso realmente bloqueado é o limite de 4
+rotinas no Free — todo o resto do app está aberto pros dois planos. **Não
+adicionar novos bloqueios sem pedido explícito**; quando pedido, seguir o
+padrão visual já usado (cadeado + desfoque + CTA único `Ver planos`, sem
+modal, sem popup).
+
+A ideia de o Pro gerar dieta personalizada via IA (pesquisa de internet,
+questionário de objetivo, etc.) foi levantada mas **não tem escopo definido
+ainda** — não implementar até o dono do produto detalhar como deve funcionar.
 
 ---
 
 ## Supabase
 
-Projeto `Viveci APP`. As tabelas já existem no banco — os scripts estão em
-`sql/`. Rodar na ordem 01 → 02 → 03 → 04.
+Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
+`01_estrutura` → `02_exercicios` → `03_alimentos_desafio` → `04_storage_policies`
+→ `05_cardio`. Todos já foram rodados no banco de produção.
+
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia.
 
-Seeds já aplicados: 59 exercícios, 50 alimentos, 24 dias de desafio.
-RLS ativo: cada usuário só lê e escreve as próprias linhas.
+Seeds aplicados: 59 exercícios, 50 alimentos, 24 dias de desafio (tabela existe,
+recurso de desafio não é usado pelo app ainda). RLS ativo: cada usuário só lê
+e escreve as próprias linhas.
 
-Ao integrar, o ponto de troca do diário é `src/lib/diario.ts` — as quatro funções
-do topo do arquivo. Nenhum componente precisa mudar.
+Tabelas `planos` / `plano_sessoes` / `plano_itens` foram **reaproveitadas** pro
+sistema de rotinas manuais (ver seção "Rotinas de treino" acima) — os campos
+de semana/progressão da estrutura original ficam sempre com valor fixo
+(`semana: 1`, sem uso real).
 
 ---
 
