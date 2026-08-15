@@ -226,3 +226,9 @@ export async function salvarItensRotina(sessaoId: string, exercicioIds: number[]
   )
   if (erroInsert) throw erroInsert
 }
+
+/** Ajusta o tempo de descanso de um exercício específico da rotina. */
+export async function atualizarDescansoItem(itemId: string, descansoSeg: number) {
+  const { error } = await supabase.from('plano_itens').update({ descanso_seg: descansoSeg }).eq('id', itemId)
+  if (error) throw error
+}

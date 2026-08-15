@@ -26,6 +26,7 @@ export default function App() {
               <Route path="treino" element={<Treinos />} />
               <Route path="treino/nova" element={<RotinaEditor />} />
               <Route path="treino/:id/editar" element={<RotinaEditor />} />
+              <Route path="treino/rapido" element={<SessaoTreino />} />
               <Route path="treino/:id/sessao" element={<SessaoTreino />} />
               <Route path="nutricao" element={<Nutricao />} />
               <Route path="evolucao" element={<Evolucao />} />

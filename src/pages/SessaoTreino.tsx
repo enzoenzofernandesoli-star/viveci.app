@@ -1,30 +1,59 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { ChevronDown, Dumbbell, Pencil, Plus } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
+import { SeletorExercicio } from '../components/SeletorExercicio'
 import { useSessao } from '../lib/auth'
-import { useRotina, type Rotina } from '../lib/rotinas'
-import { buscarUltimoRegistro, registrarSerie, iniciarSessao, concluirSessao, type RegistroDB } from '../lib/registros'
+import { useRotina, atualizarDescansoItem, type Rotina } from '../lib/rotinas'
+import { buscarUltimoRegistro, registrarSerie, iniciarSessao, concluirSessao } from '../lib/registros'
 import { sugerirProximoPeso } from '../lib/progressaoCarga'
+import { EXERCICIOS, type Exercicio } from '../data/exercicios'
+
+const DESCANSO_PADRAO = 90
+
+type LinhaSet = { peso: string; reps: string; completo: boolean }
+
+type ExercicioSessao = {
+  itemId: string | null
+  exercicioId: number
+  exercicio: Exercicio
+  descansoSeg: number
+  sets: LinhaSet[]
+}
+
+function formatoTempo(totalSeg: number): string {
+  const m = Math.floor(totalSeg / 60)
+  const s = totalSeg % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 }
 
-function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina }) {
+function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | null }) {
   const navigate = useNavigate()
-  const { itens } = rotina
 
-  const [indiceExercicio, setIndiceExercicio] = useState(0)
-  const [serieAtual, setSerieAtual] = useState(1)
-  const [pesoInput, setPesoInput] = useState('')
-  const [repsInput, setRepsInput] = useState('')
-  const [ultimoRegistro, setUltimoRegistro] = useState<RegistroDB | null>(null)
-  const [carregandoUltimo, setCarregandoUltimo] = useState(true)
+  const [exercicios, setExercicios] = useState<ExercicioSessao[]>(() =>
+    rotina
+      ? rotina.itens.map((item) => ({
+          itemId: item.id,
+          exercicioId: item.exercicio_id,
+          exercicio: item.exercicio,
+          descansoSeg: item.descanso_seg,
+          sets: Array.from({ length: Math.max(item.series, 1) }, () => ({ peso: '', reps: '', completo: false })),
+        }))
+      : [],
+  )
+  const [ativoIndex, setAtivoIndex] = useState(0)
+  const [mostrarSeletor, setMostrarSeletor] = useState(false)
+  const [editandoDescanso, setEditandoDescanso] = useState(false)
 
   const [descansando, setDescansando] = useState(false)
   const [segundosRestantes, setSegundosRestantes] = useState(0)
 
+  const [elapsedSeg, setElapsedSeg] = useState(0)
   const [treinoConcluido, setTreinoConcluido] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -32,12 +61,12 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina }) 
   const sessaoConcluidaId = useRef<string | null>(null)
   const inicioMs = useRef<number>(Date.now())
   const volumeAcumulado = useRef(0)
-  const proximaAcao = useRef<(() => void) | null>(null)
-
-  const itemAtual = itens[indiceExercicio]
+  const sessaoIniciada = useRef(false)
 
   useEffect(() => {
-    iniciarSessao(userId, rotina.sessaoId)
+    if (sessaoIniciada.current) return
+    sessaoIniciada.current = true
+    iniciarSessao(userId, rotina?.sessaoId ?? null)
       .then((id) => {
         sessaoConcluidaId.current = id
       })
@@ -46,45 +75,133 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina }) 
   }, [])
 
   useEffect(() => {
-    let cancelado = false
-    setCarregandoUltimo(true)
-    buscarUltimoRegistro(userId, itemAtual.exercicio_id)
-      .then((registro) => {
-        if (cancelado) return
-        setUltimoRegistro(registro)
-        if (registro) {
-          const pesoSugerido = sugerirProximoPeso(
-            registro.peso_kg,
-            registro.reps,
-            itemAtual.reps_max,
-            itemAtual.exercicio.grupo_muscular,
-          )
-          setPesoInput(String(pesoSugerido).replace('.', ','))
-          setRepsInput(String(itemAtual.reps_max))
-        } else {
-          setPesoInput('')
-          setRepsInput(String(itemAtual.reps_min))
-        }
-      })
-      .finally(() => {
-        if (!cancelado) setCarregandoUltimo(false)
-      })
-    return () => {
-      cancelado = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indiceExercicio])
+    const id = setInterval(() => setElapsedSeg(Math.floor((Date.now() - inicioMs.current) / 1000)), 1000)
+    return () => clearInterval(id)
+  }, [])
 
   useEffect(() => {
     if (!descansando) return
     if (segundosRestantes <= 0) {
       setDescansando(false)
-      proximaAcao.current?.()
       return
     }
     const id = setTimeout(() => setSegundosRestantes((s) => s - 1), 1000)
     return () => clearTimeout(id)
   }, [descansando, segundosRestantes])
+
+  // pré-preenche a primeira série de cada exercício inicial com o último registro
+  useEffect(() => {
+    let cancelado = false
+    async function prefil() {
+      const copiasIniciais = await Promise.all(
+        exercicios.map(async (ex) => {
+          const ultimo = await buscarUltimoRegistro(userId, ex.exercicioId)
+          return { ex, ultimo }
+        }),
+      )
+      if (cancelado) return
+      setExercicios((atual) =>
+        atual.map((ex, i) => {
+          const { ultimo } = copiasIniciais[i]
+          if (!ultimo || ex.sets[0]?.peso !== '') return ex
+          const item = rotina?.itens.find((it) => it.id === ex.itemId)
+          const repsAlvo = item?.reps_max ?? ultimo.reps
+          const pesoSugerido = sugerirProximoPeso(ultimo.peso_kg, ultimo.reps, repsAlvo, ex.exercicio.grupo_muscular)
+          const sets = [...ex.sets]
+          sets[0] = { ...sets[0], peso: String(pesoSugerido).replace('.', ','), reps: String(ultimo.reps) }
+          return { ...ex, sets }
+        }),
+      )
+    }
+    prefil()
+    return () => {
+      cancelado = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const ativo = exercicios[ativoIndex] as ExercicioSessao | undefined
+
+  async function adicionarExercicio(exercicioId: number) {
+    const exercicio = EXERCICIOS.find((e) => e.id === exercicioId)!
+    const ultimo = await buscarUltimoRegistro(userId, exercicioId)
+    const primeiraLinha: LinhaSet = ultimo
+      ? { peso: String(ultimo.peso_kg).replace('.', ','), reps: String(ultimo.reps), completo: false }
+      : { peso: '', reps: '', completo: false }
+    setExercicios((atual) => [
+      ...atual,
+      { itemId: null, exercicioId, exercicio, descansoSeg: DESCANSO_PADRAO, sets: [primeiraLinha] },
+    ])
+    setAtivoIndex(exercicios.length)
+    setMostrarSeletor(false)
+  }
+
+  function atualizarSet(indiceSet: number, campo: 'peso' | 'reps', valor: string) {
+    setExercicios((atual) =>
+      atual.map((ex, i) => {
+        if (i !== ativoIndex) return ex
+        const sets = ex.sets.map((s, j) => (j === indiceSet ? { ...s, [campo]: valor } : s))
+        return { ...ex, sets }
+      }),
+    )
+  }
+
+  function adicionarSet() {
+    setExercicios((atual) =>
+      atual.map((ex, i) => {
+        if (i !== ativoIndex) return ex
+        const ultima = ex.sets.at(-1)
+        return { ...ex, sets: [...ex.sets, { peso: ultima?.peso ?? '', reps: ultima?.reps ?? '', completo: false }] }
+      }),
+    )
+  }
+
+  async function marcarCompleto(indiceSet: number) {
+    if (!ativo) return
+    const linha = ativo.sets[indiceSet]
+    const peso = Number(linha.peso.replace(',', '.'))
+    const reps = Number(linha.reps)
+    if (Number.isNaN(peso) || Number.isNaN(reps) || reps <= 0) {
+      setErro('Preenche peso e reps antes de marcar a série.')
+      return
+    }
+    setErro(null)
+    try {
+      await registrarSerie({
+        userId,
+        exercicioId: ativo.exercicioId,
+        sessaoId: rotina?.sessaoId ?? null,
+        serieNum: indiceSet + 1,
+        pesoKg: peso,
+        reps,
+      })
+      volumeAcumulado.current += peso * reps
+      setExercicios((atual) =>
+        atual.map((ex, i) => {
+          if (i !== ativoIndex) return ex
+          const sets = ex.sets.map((s, j) => (j === indiceSet ? { ...s, completo: true } : s))
+          return { ...ex, sets }
+        }),
+      )
+      setSegundosRestantes(ativo.descansoSeg)
+      setDescansando(true)
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Não deu pra registrar a série.')
+    }
+  }
+
+  async function salvarDescanso(novoSeg: number) {
+    if (!ativo) return
+    setExercicios((atual) => atual.map((ex, i) => (i === ativoIndex ? { ...ex, descansoSeg: novoSeg } : ex)))
+    setEditandoDescanso(false)
+    if (ativo.itemId) {
+      try {
+        await atualizarDescansoItem(ativo.itemId, novoSeg)
+      } catch {
+        /* não bloqueia o treino se o ajuste não salvar */
+      }
+    }
+  }
 
   async function finalizarTreino() {
     setFinalizando(true)
@@ -102,57 +219,14 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina }) 
     }
   }
 
-  function iniciarDescanso(acao: () => void) {
-    proximaAcao.current = acao
-    setSegundosRestantes(itemAtual.descanso_seg)
-    setDescansando(true)
-  }
-
-  async function registrarEAvancar() {
-    const peso = Number(pesoInput.replace(',', '.'))
-    const reps = Number(repsInput)
-    if (Number.isNaN(peso) || Number.isNaN(reps) || reps <= 0) return
-
-    setErro(null)
-    try {
-      await registrarSerie({
-        userId,
-        exercicioId: itemAtual.exercicio_id,
-        sessaoId: rotina.sessaoId,
-        serieNum: serieAtual,
-        pesoKg: peso,
-        reps,
-      })
-      volumeAcumulado.current += peso * reps
-
-      const ultimaSerieDoExercicio = serieAtual >= itemAtual.series
-      const ultimoExercicio = indiceExercicio >= itens.length - 1
-
-      if (ultimaSerieDoExercicio && ultimoExercicio) {
-        await finalizarTreino()
-        return
-      }
-
-      if (ultimaSerieDoExercicio) {
-        iniciarDescanso(() => {
-          setIndiceExercicio((i) => i + 1)
-          setSerieAtual(1)
-        })
-      } else {
-        iniciarDescanso(() => setSerieAtual((s) => s + 1))
-      }
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não deu pra registrar a série.')
-    }
-  }
-
   if (treinoConcluido) {
     return (
       <Page title="Treino concluído">
         <div className="mt-6 rounded-2xl border border-line bg-card p-6 text-center">
           <p className="text-[17px] font-semibold text-ink">Treino concluído.</p>
           <p className="mt-2 text-sm text-ink-2">
-            Volume total: <span className="num text-ink">{formatoBR(volumeAcumulado.current)} kg</span>
+            Duração: <span className="num text-ink">{formatoTempo(elapsedSeg)}</span> · Volume:{' '}
+            <span className="num text-ink">{formatoBR(volumeAcumulado.current)} kg</span>
           </p>
           <button
             onClick={() => navigate('/treino', { replace: true })}
@@ -165,20 +239,16 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina }) 
     )
   }
 
-  if (descansando) {
+  if (mostrarSeletor) {
     return (
-      <Page title="Descanso">
-        <div className="mt-6 rounded-2xl border border-line bg-card p-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Descanso</p>
-          <p className="num mt-3 text-[56px] font-bold leading-none text-brand">{segundosRestantes}s</p>
+      <Page title="Adicionar exercício">
+        <div className="mt-6">
+          <SeletorExercicio onSelecionar={adicionarExercicio} />
           <button
-            onClick={() => {
-              setDescansando(false)
-              proximaAcao.current?.()
-            }}
-            className="mt-6 h-12 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+            onClick={() => setMostrarSeletor(false)}
+            className="mt-4 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
           >
-            Pular descanso
+            Cancelar
           </button>
         </div>
       </Page>
@@ -186,62 +256,140 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina }) 
   }
 
   return (
-    <Page title={itemAtual.exercicio.nome}>
-      <div className="mt-6 rounded-2xl border border-line bg-card p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
-          Exercício {indiceExercicio + 1} de {itens.length} · Série {serieAtual} de {itemAtual.series}
-        </p>
-        <h2 className="mt-1 text-[17px] font-semibold">{itemAtual.exercicio.nome}</h2>
-        <p className="mt-1 text-sm text-ink-2">
-          Alvo: {itemAtual.reps_min}-{itemAtual.reps_max} reps · Descanso {itemAtual.descanso_seg}s
-        </p>
-
-        <p className="mt-4 text-sm text-ink-2">
-          {carregandoUltimo
-            ? 'Carregando último registro...'
-            : ultimoRegistro
-              ? `Última vez: ${formatoBR(ultimoRegistro.peso_kg)} kg × ${ultimoRegistro.reps}`
-              : 'Primeira vez nesse exercício.'}
-        </p>
-
-        <div className="mt-5 flex gap-4">
-          <div className="flex-1">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
-              Peso (kg)
-            </label>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={pesoInput}
-              onChange={(e) => setPesoInput(e.target.value)}
-              className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
-              Reps
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={repsInput}
-              onChange={(e) => setRepsInput(e.target.value)}
-              className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {erro && <p className="mt-4 text-sm text-down">{erro}</p>}
-
+    <div className="pb-4">
+      <div className="flex items-center justify-between">
+        <button onClick={() => navigate('/treino')} aria-label="Voltar" className="text-ink-2">
+          <ChevronDown size={22} strokeWidth={1.75} />
+        </button>
+        <span className="num text-lg font-bold text-ink">{formatoTempo(elapsedSeg)}</span>
         <button
-          onClick={registrarEAvancar}
+          onClick={finalizarTreino}
           disabled={finalizando}
-          className="mt-6 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-60"
+          className="h-9 rounded-xl border border-line px-4 text-sm font-semibold text-ink transition-colors hover:bg-card-hover disabled:opacity-60"
         >
-          {finalizando ? 'Salvando...' : 'Registrar série'}
+          {finalizando ? '...' : 'Concluir'}
         </button>
       </div>
-    </Page>
+
+      <div className="-mx-4 mt-5 flex gap-3 overflow-x-auto px-4 pb-1">
+        {exercicios.map((ex, i) => (
+          <button
+            key={`${ex.exercicioId}-${i}`}
+            onClick={() => setAtivoIndex(i)}
+            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 text-center text-[10px] font-semibold leading-tight ${
+              i === ativoIndex ? 'border-brand text-brand' : 'border-line text-ink-2'
+            }`}
+          >
+            <Dumbbell size={20} strokeWidth={1.75} />
+          </button>
+        ))}
+        <button
+          onClick={() => setMostrarSeletor(true)}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-line text-ink-3"
+          aria-label="Adicionar exercício"
+        >
+          <Plus size={20} strokeWidth={1.75} />
+        </button>
+      </div>
+
+      {!ativo ? (
+        <div className="mt-6">
+          <Empty text="Adiciona um exercício pra começar." />
+        </div>
+      ) : (
+        <div className="mt-6">
+          <h2 className="text-[19px] font-bold">{ativo.exercicio.nome}</h2>
+          <p className="text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
+
+          {editandoDescanso ? (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                defaultValue={ativo.descansoSeg}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') salvarDescanso(Number((e.target as HTMLInputElement).value) || DESCANSO_PADRAO)
+                }}
+                onBlur={(e) => salvarDescanso(Number(e.target.value) || DESCANSO_PADRAO)}
+                className="h-9 w-24 rounded-lg border border-line bg-card-hover px-2 text-sm text-ink focus:border-brand focus:outline-none"
+              />
+              <span className="text-sm text-ink-2">segundos de descanso</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditandoDescanso(true)}
+              className="mt-3 flex items-center gap-1.5 text-sm text-ink-2 hover:text-ink"
+            >
+              <Pencil size={13} strokeWidth={1.75} />
+              Descanso: {Math.floor(ativo.descansoSeg / 60)}min {ativo.descansoSeg % 60}s
+            </button>
+          )}
+
+          {descansando && (
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-brand/30 bg-brand/10 px-4 py-3">
+              <p className="text-sm text-ink">
+                Descansando... <span className="num font-semibold text-brand">{segundosRestantes}s</span>
+              </p>
+              <button
+                onClick={() => setDescansando(false)}
+                className="h-8 rounded-lg border border-line px-3 text-xs font-semibold text-ink-2"
+              >
+                Pular
+              </button>
+            </div>
+          )}
+
+          <div className="mt-5 grid grid-cols-[auto_1fr_1fr_auto] items-center gap-x-3 gap-y-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Set</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Kg</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Reps</span>
+            <span />
+
+            {ativo.sets.map((linha, i) => (
+              <Fragment key={i}>
+                <span className="num text-sm text-ink-2">{i + 1}</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={linha.peso}
+                  disabled={linha.completo}
+                  onChange={(e) => atualizarSet(i, 'peso', e.target.value)}
+                  className="h-11 w-full rounded-xl border border-line bg-card-hover px-2 text-center text-sm text-ink focus:border-brand focus:outline-none disabled:opacity-50"
+                />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={linha.reps}
+                  disabled={linha.completo}
+                  onChange={(e) => atualizarSet(i, 'reps', e.target.value)}
+                  className="h-11 w-full rounded-xl border border-line bg-card-hover px-2 text-center text-sm text-ink focus:border-brand focus:outline-none disabled:opacity-50"
+                />
+                <button
+                  onClick={() => marcarCompleto(i)}
+                  disabled={linha.completo}
+                  aria-label="Marcar série completa"
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-bold ${
+                    linha.completo ? 'border-up bg-up/15 text-up' : 'border-line text-ink-3'
+                  }`}
+                >
+                  ✓
+                </button>
+              </Fragment>
+            ))}
+          </div>
+
+          <button
+            onClick={adicionarSet}
+            className="mt-4 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+          >
+            + Adicionar série
+          </button>
+        </div>
+      )}
+
+      {erro && <p className="mt-4 text-sm text-down">{erro}</p>}
+    </div>
   )
 }
 
@@ -250,7 +398,7 @@ export default function SessaoTreino() {
   const { sessao } = useSessao()
   const { rotina, carregando, erro } = useRotina(id)
 
-  if (carregando) {
+  if (!sessao || (id && carregando)) {
     return (
       <Page title="Treino">
         <Empty text="Carregando..." />
@@ -258,7 +406,7 @@ export default function SessaoTreino() {
     )
   }
 
-  if (erro || !rotina || !sessao) {
+  if (id && (erro || !rotina)) {
     return (
       <Page title="Treino">
         <Empty text="Não deu pra carregar essa rotina. Tenta de novo em instantes." />
@@ -266,13 +414,5 @@ export default function SessaoTreino() {
     )
   }
 
-  if (rotina.itens.length === 0) {
-    return (
-      <Page title={rotina.nome}>
-        <Empty text="Essa rotina ainda não tem exercícios. Edite a rotina antes de iniciar." />
-      </Page>
-    )
-  }
-
-  return <ExecutorTreino userId={sessao.user.id} rotina={rotina} />
+  return <ExecutorTreino userId={sessao.user.id} rotina={id ? rotina! : null} />
 }

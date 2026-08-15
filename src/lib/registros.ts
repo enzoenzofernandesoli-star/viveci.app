@@ -32,7 +32,7 @@ export async function buscarUltimoRegistro(userId: string, exercicioId: number):
 export async function registrarSerie(dados: {
   userId: string
   exercicioId: number
-  sessaoId: string
+  sessaoId: string | null
   serieNum: number
   pesoKg: number
   reps: number
@@ -48,7 +48,8 @@ export async function registrarSerie(dados: {
   if (error) throw error
 }
 
-export async function iniciarSessao(userId: string, sessaoId: string): Promise<string> {
+/** sessaoId nulo = treino rápido, sem rotina salva por trás. */
+export async function iniciarSessao(userId: string, sessaoId: string | null): Promise<string> {
   const { data, error } = await supabase
     .from('sessoes_concluidas')
     .insert({ user_id: userId, sessao_id: sessaoId, iniciada_em: new Date().toISOString() })
