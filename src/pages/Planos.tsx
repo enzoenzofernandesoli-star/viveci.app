@@ -17,28 +17,13 @@ const PLANOS: CardPlano[] = [
     id: 'free',
     nome: 'Free',
     preco: 'Grátis',
-    recursos: ['Onboarding completo', 'Semana 1 do plano de treino', '20 exercícios da biblioteca'],
+    recursos: ['Rotinas de treino ilimitadas', 'Diário alimentar', 'Mapa corporal e evolução'],
   },
   {
-    id: 'basico',
-    nome: 'Básico',
-    preco: 'Pagamento único',
-    recursos: [
-      'Plano de treino completo, 12 semanas',
-      'Biblioteca de exercícios inteira',
-      'Diário alimentar dos últimos 7 dias',
-    ],
-  },
-  {
-    id: 'premium',
-    nome: 'Premium',
-    preco: 'R$ 49,90/mês',
-    recursos: [
-      'Tudo do Básico',
-      'Recálculo automático da meta nutricional',
-      'Histórico completo do diário',
-      'Plano que se adapta ao seu desempenho real',
-    ],
+    id: 'pro',
+    nome: 'Pro',
+    preco: 'Em breve',
+    recursos: ['Tudo do Free, por enquanto', 'Novos recursos chegando'],
   },
 ]
 
@@ -63,10 +48,7 @@ export default function Planos() {
         {PLANOS.map((p) => {
           const ativo = p.id === planoAtual
           return (
-            <div
-              key={p.id}
-              className={`rounded-2xl border p-6 ${ativo ? 'border-brand' : 'border-line'} bg-card`}
-            >
+            <div key={p.id} className={`rounded-2xl border p-6 ${ativo ? 'border-brand' : 'border-line'} bg-card`}>
               <div className="flex items-center justify-between">
                 <h2 className="text-[17px] font-semibold">{p.nome}</h2>
                 {ativo && (
@@ -97,11 +79,7 @@ export default function Planos() {
           )
         })}
 
-        {aviso && (
-          <p className="text-center text-sm text-ink-2">
-            Pagamento ainda não está disponível. Volte em breve.
-          </p>
-        )}
+        {aviso && <p className="text-center text-sm text-ink-2">Pagamento ainda não está disponível. Volte em breve.</p>}
       </div>
     </Page>
   )

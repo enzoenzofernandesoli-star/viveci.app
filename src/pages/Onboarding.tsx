@@ -2,21 +2,9 @@ import { useState, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { useSessao } from '../lib/auth'
-import {
-  usePerfil,
-  atualizarPerfil,
-  ROTULO_OBJETIVO,
-  ROTULO_NIVEL,
-  ROTULO_LOCAL_TREINO,
-  ROTULO_BIOTIPO,
-  type Sexo,
-  type Objetivo,
-  type Nivel,
-  type LocalTreino,
-  type Biotipo,
-} from '../lib/perfil'
+import { usePerfil, atualizarPerfil, ROTULO_OBJETIVO, type Sexo, type Objetivo } from '../lib/perfil'
 
-const TOTAL_PASSOS = 10
+const TOTAL_PASSOS = 6
 
 type Respostas = {
   nome: string
@@ -25,11 +13,7 @@ type Respostas = {
   altura_cm: string
   peso_kg: string
   objetivo: Objetivo | null
-  nivel: Nivel | null
-  local_treino: LocalTreino | null
   dias_semana: number | null
-  tempo_sessao_min: number | null
-  biotipo: Biotipo | null
 }
 
 const RESPOSTAS_INICIAIS: Respostas = {
@@ -39,11 +23,7 @@ const RESPOSTAS_INICIAIS: Respostas = {
   altura_cm: '',
   peso_kg: '',
   objetivo: null,
-  nivel: null,
-  local_treino: null,
   dias_semana: null,
-  tempo_sessao_min: null,
-  biotipo: null,
 }
 
 function passoValido(passo: number, r: Respostas): boolean {
@@ -64,15 +44,7 @@ function passoValido(passo: number, r: Respostas): boolean {
     case 4:
       return r.objetivo !== null
     case 5:
-      return r.nivel !== null
-    case 6:
-      return r.local_treino !== null
-    case 7:
       return r.dias_semana !== null
-    case 8:
-      return r.tempo_sessao_min !== null
-    case 9:
-      return r.biotipo !== null
     default:
       return false
   }
@@ -82,15 +54,7 @@ function Titulo({ children }: { children: ReactNode }) {
   return <h2 className="text-[22px] font-bold leading-snug">{children}</h2>
 }
 
-function Chip({
-  ativo,
-  onClick,
-  children,
-}: {
-  ativo: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
+function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
@@ -121,9 +85,7 @@ function Campo({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
-        {label}
-      </label>
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">{label}</label>
       <input
         type={tipo}
         inputMode={inputMode}
@@ -177,11 +139,7 @@ export default function Onboarding() {
         altura_cm: Number(r.altura_cm),
         peso_kg: Number(r.peso_kg.replace(',', '.')),
         objetivo: r.objetivo,
-        nivel: r.nivel,
-        local_treino: r.local_treino,
         dias_semana: r.dias_semana,
-        tempo_sessao_min: r.tempo_sessao_min,
-        biotipo: r.biotipo,
         onboarding_completo: true,
       })
       navigate('/', { replace: true })
@@ -205,10 +163,7 @@ export default function Onboarding() {
 
         <div className="mb-6 flex gap-1.5">
           {Array.from({ length: TOTAL_PASSOS }, (_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full ${i <= passo ? 'bg-brand' : 'bg-card-hover'}`}
-            />
+            <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= passo ? 'bg-brand' : 'bg-card-hover'}`} />
           ))}
         </div>
 
@@ -270,66 +225,11 @@ export default function Onboarding() {
 
             {passo === 5 && (
               <>
-                <Titulo>Qual seu nível de treino?</Titulo>
-                <div className="flex flex-wrap gap-3">
-                  {(Object.entries(ROTULO_NIVEL) as [Nivel, string][]).map(([valor, rotulo]) => (
-                    <Chip key={valor} ativo={r.nivel === valor} onClick={() => setR({ ...r, nivel: valor })}>
-                      {rotulo}
-                    </Chip>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {passo === 6 && (
-              <>
-                <Titulo>Onde você vai treinar?</Titulo>
-                <div className="flex flex-wrap gap-3">
-                  {(Object.entries(ROTULO_LOCAL_TREINO) as [LocalTreino, string][]).map(([valor, rotulo]) => (
-                    <Chip key={valor} ativo={r.local_treino === valor} onClick={() => setR({ ...r, local_treino: valor })}>
-                      {rotulo}
-                    </Chip>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {passo === 7 && (
-              <>
                 <Titulo>Quantos dias por semana?</Titulo>
                 <div className="flex flex-wrap gap-3">
                   {[1, 2, 3, 4, 5, 6].map((dias) => (
                     <Chip key={dias} ativo={r.dias_semana === dias} onClick={() => setR({ ...r, dias_semana: dias })}>
                       {dias}x
-                    </Chip>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {passo === 8 && (
-              <>
-                <Titulo>Quanto tempo por sessão?</Titulo>
-                <div className="flex flex-wrap gap-3">
-                  {[30, 45, 60, 90].map((min) => (
-                    <Chip key={min} ativo={r.tempo_sessao_min === min} onClick={() => setR({ ...r, tempo_sessao_min: min })}>
-                      {min} min
-                    </Chip>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {passo === 9 && (
-              <>
-                <Titulo>Qual biotipo mais parece com o seu?</Titulo>
-                <p className="text-sm text-ink-2">
-                  Isso só ajusta o ritmo do treino — não é um diagnóstico nem uma classificação exata.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  {(Object.entries(ROTULO_BIOTIPO) as [Biotipo, string][]).map(([valor, rotulo]) => (
-                    <Chip key={valor} ativo={r.biotipo === valor} onClick={() => setR({ ...r, biotipo: valor })}>
-                      {rotulo}
                     </Chip>
                   ))}
                 </div>

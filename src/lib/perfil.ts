@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import type { Plano } from './planos'
 
 export type Sexo = 'masculino' | 'feminino'
 
@@ -36,22 +37,10 @@ export const ROTULO_NIVEL: Record<Nivel, string> = {
   avancado: 'Avançado',
 }
 
-export type LocalTreino = 'casa' | 'academia'
-
-export const ROTULO_LOCAL_TREINO: Record<LocalTreino, string> = {
-  casa: 'Casa',
-  academia: 'Academia',
-}
-
-export type Biotipo = 'ectomorfo' | 'mesomorfo' | 'endomorfo'
-
-export const ROTULO_BIOTIPO: Record<Biotipo, string> = {
-  ectomorfo: 'Ectomorfo',
-  mesomorfo: 'Mesomorfo',
-  endomorfo: 'Endomorfo',
-}
-
-/** Linha da tabela `perfis`. Campos ficam nulos até o onboarding preenchê-los. */
+/** Linha da tabela `perfis`. Campos ficam nulos até o onboarding preenchê-los.
+ * nivel/local_treino/tempo_sessao_min/biotipo não são mais coletados no onboarding
+ * (eram só pro gerador automático de treino, que saiu) — a coluna continua existindo
+ * no banco, mas fica sempre nula por enquanto. */
 export type PerfilDB = {
   id: string
   nome: string | null
@@ -62,12 +51,12 @@ export type PerfilDB = {
   peso_kg: number | null
   objetivo: Objetivo | null
   nivel: Nivel | null
-  local_treino: LocalTreino | null
+  local_treino: string | null
   dias_semana: number | null
   tempo_sessao_min: number | null
-  biotipo: Biotipo | null
+  biotipo: string | null
   onboarding_completo: boolean
-  plano: 'free' | 'basico' | 'premium'
+  plano: Plano
   criado_em: string
 }
 

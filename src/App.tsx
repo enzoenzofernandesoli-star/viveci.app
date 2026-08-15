@@ -6,10 +6,9 @@ import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Treinos from './pages/Treinos'
+import RotinaEditor from './pages/RotinaEditor'
 import SessaoTreino from './pages/SessaoTreino'
-import Exercicios from './pages/Exercicios'
 import Nutricao from './pages/Nutricao'
-import Desafio from './pages/Desafio'
 import Evolucao from './pages/Evolucao'
 import Perfil from './pages/Perfil'
 import Planos from './pages/Planos'
@@ -24,11 +23,11 @@ export default function App() {
           <Route element={<RotaOnboardingCompleto />}>
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
-              <Route path="treinos" element={<Treinos />} />
-              <Route path="treinos/sessao" element={<SessaoTreino />} />
-              <Route path="exercicios" element={<Exercicios />} />
+              <Route path="treino" element={<Treinos />} />
+              <Route path="treino/nova" element={<RotinaEditor />} />
+              <Route path="treino/:id/editar" element={<RotinaEditor />} />
+              <Route path="treino/:id/sessao" element={<SessaoTreino />} />
               <Route path="nutricao" element={<Nutricao />} />
-              <Route path="desafio" element={<Desafio />} />
               <Route path="evolucao" element={<Evolucao />} />
               <Route path="perfil" element={<Perfil />} />
               <Route path="planos" element={<Planos />} />

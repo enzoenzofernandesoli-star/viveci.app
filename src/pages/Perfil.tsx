@@ -26,6 +26,13 @@ export default function Perfil() {
         </button>
 
         <button
+          onClick={() => navigate('/evolucao')}
+          className="mt-3 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+        >
+          Ver evolução
+        </button>
+
+        <button
           onClick={() => sair()}
           className="mt-3 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
         >

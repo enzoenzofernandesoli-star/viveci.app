@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { useSessao } from '../lib/auth'
-import { usePerfil } from '../lib/perfil'
-import { useProximoTreino, type ProximoTreino } from '../lib/plano'
+import { useRotina, type Rotina } from '../lib/rotinas'
 import { buscarUltimoRegistro, registrarSerie, iniciarSessao, concluirSessao, type RegistroDB } from '../lib/registros'
 import { sugerirProximoPeso } from '../lib/progressaoCarga'
 
@@ -12,9 +11,9 @@ function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 }
 
-function ExecutorTreino({ userId, dados }: { userId: string; dados: ProximoTreino }) {
+function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina }) {
   const navigate = useNavigate()
-  const { sessao: sessaoTreino, itens } = dados
+  const { itens } = rotina
 
   const [indiceExercicio, setIndiceExercicio] = useState(0)
   const [serieAtual, setSerieAtual] = useState(1)
@@ -38,7 +37,7 @@ function ExecutorTreino({ userId, dados }: { userId: string; dados: ProximoTrein
   const itemAtual = itens[indiceExercicio]
 
   useEffect(() => {
-    iniciarSessao(userId, sessaoTreino.id)
+    iniciarSessao(userId, rotina.sessaoId)
       .then((id) => {
         sessaoConcluidaId.current = id
       })
@@ -119,7 +118,7 @@ function ExecutorTreino({ userId, dados }: { userId: string; dados: ProximoTrein
       await registrarSerie({
         userId,
         exercicioId: itemAtual.exercicio_id,
-        sessaoId: sessaoTreino.id,
+        sessaoId: rotina.sessaoId,
         serieNum: serieAtual,
         pesoKg: peso,
         reps,
@@ -156,7 +155,7 @@ function ExecutorTreino({ userId, dados }: { userId: string; dados: ProximoTrein
             Volume total: <span className="num text-ink">{formatoBR(volumeAcumulado.current)} kg</span>
           </p>
           <button
-            onClick={() => navigate('/treinos', { replace: true })}
+            onClick={() => navigate('/treino', { replace: true })}
             className="mt-6 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
           >
             Voltar
@@ -247,11 +246,11 @@ function ExecutorTreino({ userId, dados }: { userId: string; dados: ProximoTrein
 }
 
 export default function SessaoTreino() {
+  const { id } = useParams<{ id: string }>()
   const { sessao } = useSessao()
-  const { perfil, carregando: carregandoPerfil } = usePerfil(sessao?.user.id)
-  const { dados, carregando, erro } = useProximoTreino(sessao?.user.id, perfil)
+  const { rotina, carregando, erro } = useRotina(id)
 
-  if (carregandoPerfil || carregando) {
+  if (carregando) {
     return (
       <Page title="Treino">
         <Empty text="Carregando..." />
@@ -259,13 +258,21 @@ export default function SessaoTreino() {
     )
   }
 
-  if (erro || !dados || !sessao) {
+  if (erro || !rotina || !sessao) {
     return (
       <Page title="Treino">
-        <Empty text="Não deu pra carregar seu treino. Tenta de novo em instantes." />
+        <Empty text="Não deu pra carregar essa rotina. Tenta de novo em instantes." />
       </Page>
     )
   }
 
-  return <ExecutorTreino userId={sessao.user.id} dados={dados} />
+  if (rotina.itens.length === 0) {
+    return (
+      <Page title={rotina.nome}>
+        <Empty text="Essa rotina ainda não tem exercícios. Edite a rotina antes de iniciar." />
+      </Page>
+    )
+  }
+
+  return <ExecutorTreino userId={sessao.user.id} rotina={rotina} />
 }

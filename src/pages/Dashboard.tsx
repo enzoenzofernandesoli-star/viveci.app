@@ -5,7 +5,7 @@ import { MapaCorporal } from '../components/MapaCorporal'
 import { useSessao } from '../lib/auth'
 import { usePerfil } from '../lib/perfil'
 import { useMapaMuscular } from '../lib/mapa'
-import { useProximoTreino } from '../lib/plano'
+import { useRotinas } from '../lib/rotinas'
 import { useDia, somar } from '../lib/diario'
 import { hojeISO } from '../lib/data'
 import { calcularMetas } from '../lib/metas'
@@ -15,33 +15,30 @@ function formatoBR(n: number): string {
   return Math.round(n).toLocaleString('pt-BR')
 }
 
-function CardProximoTreino({ userId, perfil }: { userId: string; perfil: NonNullable<ReturnType<typeof usePerfil>['perfil']> }) {
+function CardTreino({ userId }: { userId: string }) {
   const navigate = useNavigate()
-  const { dados, carregando, erro } = useProximoTreino(userId, perfil)
+  const { rotinas, carregando, erro } = useRotinas(userId)
 
   return (
     <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="text-[17px] font-semibold">Próximo treino</h2>
+      <h2 className="text-[17px] font-semibold">Treino</h2>
       {carregando ? (
-        <p className="mt-3 text-sm text-ink-2">Montando seu treino...</p>
-      ) : erro || !dados ? (
-        <p className="mt-3 text-sm text-ink-2">Não deu pra carregar o treino agora.</p>
+        <p className="mt-3 text-sm text-ink-2">Carregando suas rotinas...</p>
+      ) : erro ? (
+        <p className="mt-3 text-sm text-ink-2">Não deu pra carregar suas rotinas agora.</p>
+      ) : rotinas.length === 0 ? (
+        <p className="mt-1 text-sm text-ink-2">Você ainda não criou nenhuma rotina.</p>
       ) : (
-        <>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
-            Semana {dados.sessao.semana} de 12
-          </p>
-          <p className="mt-1 text-sm text-ink">
-            {dados.sessao.nome_sessao} · {dados.itens.length} exercícios
-          </p>
-          <button
-            onClick={() => navigate('/treinos')}
-            className="mt-4 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
-          >
-            Ver treino
-          </button>
-        </>
+        <p className="mt-1 text-sm text-ink-2">
+          {rotinas.length} {rotinas.length === 1 ? 'rotina criada' : 'rotinas criadas'}
+        </p>
       )}
+      <button
+        onClick={() => navigate('/treino')}
+        className="mt-4 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+      >
+        {rotinas.length === 0 && !carregando ? 'Criar rotina' : 'Ver treinos'}
+      </button>
     </div>
   )
 }
@@ -108,7 +105,7 @@ export default function Dashboard() {
   return (
     <Page title={`Olá, ${perfil.nome}`}>
       <div className="mt-6 space-y-5">
-        <CardProximoTreino userId={sessao.user.id} perfil={perfil} />
+        <CardTreino userId={sessao.user.id} />
         <CardNutricao perfil={perfil} />
 
         {carregandoMapa ? (

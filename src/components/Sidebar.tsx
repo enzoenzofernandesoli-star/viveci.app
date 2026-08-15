@@ -32,7 +32,7 @@ export function Sidebar() {
       <div className="p-3 space-y-3">
         <div className="rounded-2xl border border-line bg-card p-4">
           <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-ink-2">
-            Plano Premium
+            Plano Pro
           </p>
           <p className="mt-2 text-[13px] leading-snug text-ink-2">
             Aproveite todos os recursos e acelere seus resultados

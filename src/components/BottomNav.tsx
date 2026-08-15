@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { MOBILE_NAV } from '../lib/nav'
+import { NAV } from '../lib/nav'
 
 export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-line bg-sidebar pb-[env(safe-area-inset-bottom)] lg:hidden">
-      {MOBILE_NAV.map(({ to, icon: Icon, mobile }) => (
+      {NAV.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
           to={to}
@@ -16,7 +16,7 @@ export function BottomNav() {
           }
         >
           <Icon size={20} strokeWidth={1.75} />
-          {mobile!.label}
+          {label}
         </NavLink>
       ))}
     </nav>
