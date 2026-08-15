@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, Lock } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { useSessao } from '../lib/auth'
+import { usePerfil } from '../lib/perfil'
 import { useRotinas, excluirRotina } from '../lib/rotinas'
+import { limiteRotinasAtingido } from '../lib/planos'
 
 export default function Treinos() {
   const { sessao } = useSessao()
+  const { perfil } = usePerfil(sessao?.user.id)
   const { rotinas, carregando, erro, recarregar } = useRotinas(sessao?.user.id)
   const navigate = useNavigate()
   const [excluindo, setExcluindo] = useState<string | null>(null)
+
+  const plano = perfil?.plano ?? 'free'
+  const limiteAtingido = limiteRotinasAtingido(plano, rotinas.length)
 
   async function apagar(id: string) {
     setExcluindo(id)
@@ -25,13 +31,28 @@ export default function Treinos() {
   return (
     <Page title="Treino">
       <div className="mt-6 space-y-5">
-        <button
-          onClick={() => navigate('/treino/nova')}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
-        >
-          <Plus size={18} strokeWidth={1.75} />
-          Nova rotina
-        </button>
+        {limiteAtingido ? (
+          <div className="rounded-2xl border border-line bg-card p-4">
+            <p className="flex items-center justify-center gap-2 text-sm text-ink-2">
+              <Lock size={16} strokeWidth={1.75} />
+              Você atingiu o limite de 4 rotinas do plano Free.
+            </p>
+            <button
+              onClick={() => navigate('/planos')}
+              className="mt-3 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+            >
+              Ver planos
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => navigate('/treino/nova')}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+          >
+            <Plus size={18} strokeWidth={1.75} />
+            Nova rotina
+          </button>
+        )}
 
         {carregando ? (
           <Empty text="Carregando suas rotinas..." />

@@ -5,7 +5,9 @@ import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { SeletorExercicio } from '../components/SeletorExercicio'
 import { useSessao } from '../lib/auth'
-import { useRotina, criarRotina, renomearRotina, salvarItensRotina } from '../lib/rotinas'
+import { usePerfil } from '../lib/perfil'
+import { useRotina, useRotinas, criarRotina, renomearRotina, salvarItensRotina } from '../lib/rotinas'
+import { limiteRotinasAtingido } from '../lib/planos'
 import { EXERCICIOS, type Exercicio } from '../data/exercicios'
 
 type ItemDraft = { exercicioId: number; exercicio: Exercicio }
@@ -14,7 +16,9 @@ export default function RotinaEditor() {
   const { id } = useParams<{ id: string }>()
   const editando = Boolean(id)
   const { sessao } = useSessao()
+  const { perfil } = usePerfil(sessao?.user.id)
   const { rotina, carregando } = useRotina(id)
+  const { rotinas } = useRotinas(editando ? undefined : sessao?.user.id)
   const navigate = useNavigate()
 
   const [nome, setNome] = useState('')
@@ -65,6 +69,12 @@ export default function RotinaEditor() {
           itens.map((i) => i.exercicioId),
         )
       } else {
+        const plano = perfil?.plano ?? 'free'
+        if (limiteRotinasAtingido(plano, rotinas.length)) {
+          setErro('Você atingiu o limite de 4 rotinas do plano Free.')
+          setSalvando(false)
+          return
+        }
         const { sessaoId } = await criarRotina(sessao.user.id, nome.trim())
         await salvarItensRotina(
           sessaoId,
