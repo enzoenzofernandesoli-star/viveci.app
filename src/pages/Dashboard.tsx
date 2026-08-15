@@ -43,10 +43,10 @@ function CardTreino({ userId }: { userId: string }) {
   )
 }
 
-function CardNutricao({ perfil }: { perfil: NonNullable<ReturnType<typeof usePerfil>['perfil']> }) {
+function CardNutricao({ userId, perfil }: { userId: string; perfil: NonNullable<ReturnType<typeof usePerfil>['perfil']> }) {
   const navigate = useNavigate()
-  const itensHoje = useDia(hojeISO())
-  const consumido = somar(itensHoje)
+  const { itens } = useDia(userId, hojeISO())
+  const consumido = somar(itens)
 
   const perfilCalculo: Perfil = {
     nome: perfil.nome!,
@@ -106,7 +106,7 @@ export default function Dashboard() {
     <Page title={`Olá, ${perfil.nome}`}>
       <div className="mt-6 space-y-5">
         <CardTreino userId={sessao.user.id} />
-        <CardNutricao perfil={perfil} />
+        <CardNutricao userId={sessao.user.id} perfil={perfil} />
 
         {carregandoMapa ? (
           <Empty text="Carregando mapa corporal..." />

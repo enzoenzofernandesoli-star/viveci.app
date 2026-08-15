@@ -1,14 +1,23 @@
+import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { calcularMetas } from '../lib/metas'
 import type { Perfil } from '../lib/perfil'
 import { useSessao } from '../lib/auth'
 import { usePerfil } from '../lib/perfil'
-import { useDia, somar } from '../lib/diario'
+import { useDia, somar, adicionarItem, removerItem, type ItemDiario } from '../lib/diario'
 import { hojeISO } from '../lib/data'
+import { REFEICOES, REFEICOES_PRINCIPAIS, type Refeicao } from '../lib/refeicoes'
+import { ALIMENTOS, type Alimento } from '../data/alimentos'
+import { calcularMacrosPorQuantidade } from '../lib/alimentos'
 
 function formatoBR(n: number): string {
   return Math.round(n).toLocaleString('pt-BR')
+}
+
+function formatoBR1(n: number): string {
+  return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 }
 
 const RAIO = 80
@@ -59,17 +68,7 @@ function AnelCalorias({ consumido, meta }: { consumido: number; meta: number }) 
   )
 }
 
-function BarraMacro({
-  label,
-  consumido,
-  meta,
-  cor,
-}: {
-  label: string
-  consumido: number
-  meta: number
-  cor: string
-}) {
+function BarraMacro({ label, consumido, meta, cor }: { label: string; consumido: number; meta: number; cor: string }) {
   const pct = meta > 0 ? Math.min((consumido / meta) * 100, 100) : 0
   return (
     <div>
@@ -80,20 +79,232 @@ function BarraMacro({
         </span>
       </div>
       <div className="mt-2 h-2 rounded-full bg-card-hover">
-        <div
-          className="h-2 rounded-full transition-all"
-          style={{ width: `${pct}%`, backgroundColor: cor }}
-        />
+        <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: cor }} />
       </div>
     </div>
+  )
+}
+
+function AdicionarAlimento({
+  refeicao,
+  onFechar,
+  onAdicionar,
+}: {
+  refeicao: Refeicao
+  onFechar: () => void
+  onAdicionar: (dados: Omit<ItemDiario, 'id' | 'data' | 'refeicao'>) => Promise<void>
+}) {
+  const [aba, setAba] = useState<'buscar' | 'rapida'>('buscar')
+  const [busca, setBusca] = useState('')
+  const [selecionado, setSelecionado] = useState<Alimento | null>(null)
+  const [quantidade, setQuantidade] = useState('100')
+  const [nomeRapido, setNomeRapido] = useState('')
+  const [kcalRapido, setKcalRapido] = useState('')
+  const [protRapido, setProtRapido] = useState('')
+  const [enviando, setEnviando] = useState(false)
+
+  const filtrados = useMemo(() => {
+    const termo = busca.trim().toLowerCase()
+    if (termo === '') return []
+    return ALIMENTOS.filter((a) => a.nome.toLowerCase().includes(termo)).slice(0, 20)
+  }, [busca])
+
+  const qtdNum = Number(quantidade.replace(',', '.'))
+  const macrosPreview = selecionado && qtdNum > 0 ? calcularMacrosPorQuantidade(selecionado, qtdNum) : null
+
+  async function confirmarAlimento() {
+    if (!selecionado || !macrosPreview) return
+    setEnviando(true)
+    try {
+      await onAdicionar({
+        origem: 'alimento',
+        nome: selecionado.nome,
+        alimento_id: selecionado.id,
+        quantidade: qtdNum,
+        ...macrosPreview,
+      })
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  async function confirmarRapida() {
+    const kcal = Number(kcalRapido.replace(',', '.'))
+    const prot = Number(protRapido.replace(',', '.') || '0')
+    if (nomeRapido.trim().length === 0 || Number.isNaN(kcal) || kcal <= 0) return
+    setEnviando(true)
+    try {
+      await onAdicionar({
+        origem: 'rapida',
+        nome: nomeRapido.trim(),
+        alimento_id: null,
+        quantidade: null,
+        kcal: Math.round(kcal),
+        prot_g: Number.isNaN(prot) ? 0 : prot,
+        carb_g: 0,
+        gord_g: 0,
+      })
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <Page title={`Adicionar em ${refeicao}`}>
+      <div className="mt-6">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setAba('buscar')}
+            className={`h-11 flex-1 rounded-xl text-sm font-semibold transition-colors ${
+              aba === 'buscar' ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
+            }`}
+          >
+            Buscar alimento
+          </button>
+          <button
+            type="button"
+            onClick={() => setAba('rapida')}
+            className={`h-11 flex-1 rounded-xl text-sm font-semibold transition-colors ${
+              aba === 'rapida' ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
+            }`}
+          >
+            Entrada rápida
+          </button>
+        </div>
+
+        {aba === 'buscar' ? (
+          <div className="mt-5">
+            {selecionado ? (
+              <div className="rounded-2xl border border-line bg-card p-6">
+                <p className="text-[17px] font-semibold text-ink">{selecionado.nome}</p>
+                <label className="mb-1.5 mt-4 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
+                  Quantidade (g)
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(e.target.value)}
+                  className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
+                />
+                {macrosPreview && (
+                  <p className="mt-3 text-sm text-ink-2">
+                    <span className="num text-ink">{macrosPreview.kcal} kcal</span> · P {formatoBR1(macrosPreview.prot_g)}g · C{' '}
+                    {formatoBR1(macrosPreview.carb_g)}g · G {formatoBR1(macrosPreview.gord_g)}g
+                  </p>
+                )}
+                <div className="mt-5 flex gap-3">
+                  <button
+                    onClick={() => setSelecionado(null)}
+                    className="h-11 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+                  >
+                    Trocar
+                  </button>
+                  <button
+                    onClick={confirmarAlimento}
+                    disabled={enviando || !macrosPreview}
+                    className="h-11 flex-1 rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-60"
+                  >
+                    {enviando ? 'Adicionando...' : 'Adicionar'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar alimento"
+                  className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+                  autoFocus
+                />
+                <div className="mt-4 space-y-2">
+                  {filtrados.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => setSelecionado(a)}
+                      className="w-full rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
+                    >
+                      <p className="text-sm font-medium text-ink">{a.nome}</p>
+                      <p className="mt-0.5 text-xs text-ink-2">
+                        {a.kcal_100} kcal / 100g · {a.categoria}
+                      </p>
+                    </button>
+                  ))}
+                  {busca.trim() !== '' && filtrados.length === 0 && (
+                    <p className="mt-4 text-center text-sm text-ink-2">Nenhum alimento encontrado.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5 space-y-4 rounded-2xl border border-line bg-card p-6">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Nome</label>
+              <input
+                type="text"
+                value={nomeRapido}
+                onChange={(e) => setNomeRapido(e.target.value)}
+                placeholder="O que você comeu"
+                className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+              />
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Calorias</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={kcalRapido}
+                  onChange={(e) => setKcalRapido(e.target.value)}
+                  placeholder="kcal"
+                  className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Proteína (g)</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={protRapido}
+                  onChange={(e) => setProtRapido(e.target.value)}
+                  placeholder="Opcional"
+                  className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+                />
+              </div>
+            </div>
+            <button
+              onClick={confirmarRapida}
+              disabled={enviando}
+              className="h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-60"
+            >
+              {enviando ? 'Adicionando...' : 'Adicionar'}
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={onFechar}
+          className="mt-4 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+        >
+          Cancelar
+        </button>
+      </div>
+    </Page>
   )
 }
 
 export default function Nutricao() {
   const { sessao } = useSessao()
   const { perfil, carregando, erro } = usePerfil(sessao?.user.id)
-  const itensHoje = useDia(hojeISO())
-  const consumido = somar(itensHoje)
+  const hoje = hojeISO()
+  const { itens, carregando: carregandoDia, recarregar } = useDia(sessao?.user.id, hoje)
+  const consumido = somar(itens)
+
+  const [refeicaoAdicionando, setRefeicaoAdicionando] = useState<Refeicao | null>(null)
 
   if (carregando) {
     return (
@@ -103,11 +314,25 @@ export default function Nutricao() {
     )
   }
 
-  if (erro || !perfil) {
+  if (erro || !perfil || !sessao) {
     return (
       <Page title="Nutrição">
         <Empty text="Não deu pra carregar seu perfil. Tenta de novo em instantes." />
       </Page>
+    )
+  }
+
+  if (refeicaoAdicionando) {
+    return (
+      <AdicionarAlimento
+        refeicao={refeicaoAdicionando}
+        onFechar={() => setRefeicaoAdicionando(null)}
+        onAdicionar={async (dados) => {
+          await adicionarItem(sessao.user.id, { ...dados, data: hoje, refeicao: refeicaoAdicionando })
+          recarregar()
+          setRefeicaoAdicionando(null)
+        }}
+      />
     )
   }
 
@@ -122,6 +347,11 @@ export default function Nutricao() {
   }
   const metas = calcularMetas(perfilCalculo)
 
+  const outrasComItens = REFEICOES.filter(
+    (r) => !REFEICOES_PRINCIPAIS.includes(r) && itens.some((i) => i.refeicao === r),
+  )
+  const refeicoesExibidas = [...REFEICOES_PRINCIPAIS, ...outrasComItens]
+
   return (
     <Page title="Nutrição">
       <div className="mt-6 rounded-2xl border border-line bg-card p-6">
@@ -132,6 +362,57 @@ export default function Nutricao() {
           <BarraMacro label="Carboidrato" consumido={consumido.carb_g} meta={metas.meta_carb_g} cor="#8B5CF6" />
           <BarraMacro label="Gordura" consumido={consumido.gord_g} meta={metas.meta_gord_g} cor="#F5A524" />
         </div>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        {carregandoDia ? (
+          <Empty text="Carregando refeições..." />
+        ) : (
+          refeicoesExibidas.map((refeicao) => {
+            const itensRefeicao = itens.filter((i) => i.refeicao === refeicao)
+            return (
+              <div key={refeicao} className="rounded-2xl border border-line bg-card p-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[15px] font-semibold">{refeicao}</h2>
+                  <button
+                    onClick={() => setRefeicaoAdicionando(refeicao)}
+                    className="text-sm font-semibold text-brand"
+                  >
+                    + Adicionar
+                  </button>
+                </div>
+
+                {itensRefeicao.length === 0 ? (
+                  <p className="mt-2 text-sm text-ink-2">Nada registrado ainda.</p>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {itensRefeicao.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between rounded-xl bg-card-hover px-3 py-2">
+                        <div>
+                          <p className="text-sm text-ink">{item.nome}</p>
+                          <p className="text-xs text-ink-2">
+                            {item.quantidade ? `${formatoBR(item.quantidade)}g · ` : ''}
+                            {formatoBR(item.kcal)} kcal
+                          </p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            await removerItem(item.id)
+                            recarregar()
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-ink-2 hover:bg-card"
+                          aria-label="Remover"
+                        >
+                          <X size={16} strokeWidth={1.75} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })
+        )}
       </div>
     </Page>
   )
