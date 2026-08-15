@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronDown, Dumbbell, Pencil, Plus } from 'lucide-react'
+import { ChevronDown, Pencil, Plus } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { SeletorExercicio } from '../components/SeletorExercicio'
@@ -276,11 +276,11 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
           <button
             key={`${ex.exercicioId}-${i}`}
             onClick={() => setAtivoIndex(i)}
-            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 text-center text-[10px] font-semibold leading-tight ${
-              i === ativoIndex ? 'border-brand text-brand' : 'border-line text-ink-2'
+            className={`h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 ${
+              i === ativoIndex ? 'border-brand' : 'border-line'
             }`}
           >
-            <Dumbbell size={20} strokeWidth={1.75} />
+            <img src={ex.exercicio.gif} alt="" className="h-full w-full object-cover" />
           </button>
         ))}
         <button
@@ -298,6 +298,8 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
         </div>
       ) : (
         <div className="mt-6">
+          <img src={ativo.exercicio.gif} alt={ativo.exercicio.nome} className="mx-auto h-56 w-56 object-contain" />
+
           <h2 className="text-[19px] font-bold">{ativo.exercicio.nome}</h2>
           <p className="text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
 

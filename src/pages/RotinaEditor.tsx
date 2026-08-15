@@ -126,11 +126,14 @@ export default function RotinaEditor() {
             {itens.map((item, i) => (
               <div
                 key={`${item.exercicioId}-${i}`}
-                className="flex items-center justify-between rounded-xl border border-line bg-card px-4 py-3"
+                className="flex items-center justify-between rounded-xl border border-line bg-card px-3 py-3"
               >
-                <div>
-                  <p className="text-sm font-medium text-ink">{item.exercicio.nome}</p>
-                  <p className="text-xs text-ink-2">{item.exercicio.grupo_muscular}</p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <img src={item.exercicio.gif} alt="" className="h-12 w-12 shrink-0 rounded-lg bg-card-hover object-cover" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{item.exercicio.nome}</p>
+                    <p className="text-xs text-ink-2">{item.exercicio.grupo_muscular}</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => removerExercicio(i)}

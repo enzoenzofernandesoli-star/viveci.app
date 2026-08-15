@@ -72,16 +72,19 @@ export function SeletorExercicio({ onSelecionar }: { onSelecionar: (exercicioId:
             <button
               key={ex.id}
               onClick={() => onSelecionar(ex.id)}
-              className="w-full rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
+              className="flex w-full items-center gap-3 rounded-xl border border-line bg-card px-3 py-3 text-left transition-colors hover:bg-card-hover"
             >
-              <p className="text-sm font-medium text-ink">{ex.nome}</p>
-              <p className="mt-1 text-xs text-ink-2">
-                {ex.grupo_muscular}
-                {ex.grupos_secundarios.length > 0 && ` · ${ex.grupos_secundarios.join(', ')}`}
-              </p>
-              <p className="mt-1 text-xs text-ink-2">
-                {ex.equipamento} · {ROTULO_NIVEL[ex.nivel]}
-              </p>
+              <img src={ex.gif} alt="" className="h-14 w-14 shrink-0 rounded-lg bg-card-hover object-cover" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink">{ex.nome}</p>
+                <p className="mt-1 text-xs text-ink-2">
+                  {ex.grupo_muscular}
+                  {ex.grupos_secundarios.length > 0 && ` · ${ex.grupos_secundarios.join(', ')}`}
+                </p>
+                <p className="mt-1 text-xs text-ink-2">
+                  {ex.equipamento} · {ROTULO_NIVEL[ex.nivel]}
+                </p>
+              </div>
             </button>
           ))}
         </div>
