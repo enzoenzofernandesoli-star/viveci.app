@@ -40,8 +40,8 @@ editada manualmente, sem limite de tempo ou de semanas.
 4. **Todo texto visível em português do Brasil.** Números com vírgula decimal
    (`75,2 kg`).
 5. **Regra de negócio é função pura e testada**, nunca lógica solta dentro de
-   componente. Cálculo de metas, mapa corporal, progressão de carga e ritmo de
-   cardio vivem em `src/lib/` com teste ao lado (`*.test.ts`).
+   componente. Cálculo de metas, mapa corporal, progressão de carga, ritmo de
+   cardio e consistência/streak vivem em `src/lib/` com teste ao lado (`*.test.ts`).
 6. **Nunca prometer resultado**, nunca usar linguagem de culpa, nunca tratar
    biotipo como diagnóstico.
 7. Mobile-first. Testar a 375px. Alvos de toque de no mínimo 44px.
@@ -106,8 +106,13 @@ camada de I/O em arquivos próprios (ex: `progressaoCarga.ts` puro vs `registros
 
 **Navegação:** 4 abas fixas — Início, Treino, Nutrição, Perfil — mais um botão
 redondo flutuante no meio da barra inferior que abre o Treino Rápido
-(`/treino/rapido`). Evolução e Planos não têm aba própria; acessíveis a partir
-do Perfil.
+(`/treino/rapido`). Planos não tem aba própria (acessível a partir do Perfil
+e de telas de bloqueio). Evolução não é mais rota — é a 2ª aba dentro da
+própria página de Perfil (a 1ª é Treinos).
+
+**Dependência externa de UI:** `body-muscles` (npm) — biblioteca do mapa
+corporal (SVG anatômico com 89 regiões). Ver seção "Mapa corporal" abaixo
+pra entender por que as cores dela são sobrescritas na mão.
 
 ---
 
@@ -129,24 +134,31 @@ qualquer entrega.
 - **Cardio** — aba dentro de Treino: equipamento, duração, distância, ritmo
   calculado (min/km).
 - **Biblioteca de exercícios** — não é mais tela própria; vive como o
-  componente `SeletorExercicio`, usado dentro do editor de rotina e do treino rápido.
+  componente `SeletorExercicio`, usado dentro do editor de rotina e do treino
+  rápido. Cada um dos 59 exercícios tem um GIF de demonstração real
+  (`public/exercicios/<id>.gif`) — mostrado no seletor, na lista da rotina e
+  em destaque na sessão de treino.
 - **Nutrição** — diário alimentar real (busca no catálogo com cálculo
   automático de kcal/macros por quantidade, ou entrada rápida manual), meta de
   calorias calculada automaticamente e **editável manualmente** (mantém
   proteína/gordura, recalcula carboidrato como resto).
-- **Mapa corporal** — SVG frente/costas, cores por intensidade real dos
-  últimos 7 dias, alerta de desequilíbrio.
+- **Mapa corporal** — corpo anatômico real via `body-muscles`, frente/costas,
+  cores por intensidade real dos últimos 7 dias, alerta de desequilíbrio.
 - **Dashboard** — dados reais: rotinas, nutrição do dia, mapa corporal.
-- **Evolução** — peso (gráfico), consistência (treinos em 7/30 dias), cargas
-  por exercício (gráfico). Acessível pelo Perfil.
+- **Perfil** — avatar (upload pro bucket `Fotos`), nome e biografia editáveis,
+  3 números reais (treinos concluídos / rotinas criadas / sequência de dias),
+  e 2 abas: **Treinos** (histórico de sessões concluídas) e **Evolução**
+  (peso com gráfico, consistência 7/30 dias, cargas por exercício com gráfico).
 - **Planos** — só `free` e `pro`. Único bloqueio ativo hoje: free trava em 4
   rotinas de treino. Pro ainda não tem nenhum recurso exclusivo de verdade —
   isso é intencional, só entra quando o dono do produto decidir o quê.
 - **PWA** — manifest, ícones, service worker (offline básico).
 
 **Não existe (e não tem ordem definida pra construir):** Desafio 24 Dias,
-receitas, IA de dieta personalizada. Não construir nenhum desses sem pedido
-explícito.
+receitas, IA de dieta personalizada, sistema social (seguidores/amigos —
+o Perfil foi inspirado visualmente num app com esse recurso, mas os 3 números
+mostrados são só estatísticas próprias, não social), fotos de progresso.
+Não construir nenhum desses sem pedido explícito.
 
 ---
 
@@ -230,7 +242,7 @@ fixa, pode crescer), duração em minutos (obrigatório), distância em km
 (opcional). Ritmo (`calcularRitmo`) só aparece quando tem distância:
 `duracao_min / distancia_km`, formatado como `min:seg`.
 
-### Mapa corporal — `src/lib/mapaCorporal.ts`
+### Mapa corporal — `src/lib/mapaCorporal.ts`, `src/components/MapaCorporal.tsx`
 
 ```
 volume_grupo = Σ (séries × reps × peso) dos últimos 7 dias
@@ -241,6 +253,17 @@ Grupo em `muscle-off` quando não treinado; em `brand` com opacidade de 0,35 a 1
 conforme a intensidade. Alerta de desequilíbrio quando um grupo passa 25 pontos
 do antagonista (Peito↔Costas, Bíceps↔Tríceps, Quadríceps↔Posterior).
 **Os percentuais vêm do histórico real — nunca valores fixos.**
+
+O corpo em si é renderizado pela lib `body-muscles` (89 regiões anatômicas
+reais, frente/costas). Ela colore por gradiente amarelo→vermelho por padrão,
+o que **fere a regra de "proibido gradiente colorido"** — por isso
+`MapaCorporal.tsx` repinta cada `path` na mão (`muscle-off`/`brand` + opacidade)
+logo depois de todo `chart.update()`. Os 89 IDs da lib são mapeados pros nossos
+10 grupos musculares em `ID_PARA_GRUPO`; IDs sem grupo correspondente (mão, pé,
+joelho...) ficam neutros. **Cuidado com hover:** a lib pinta a própria cor de
+hover *depois* de disparar `onMuscleHover`, então o repaint customizado
+precisa rodar num `setTimeout(0)` senão a cor da lib vaza de volta — já foi
+bug, não reintroduzir.
 
 ### Diário alimentar — `src/lib/diario.ts`, `src/lib/alimentos.ts`
 
@@ -253,6 +276,33 @@ da tarde, Jantar); as demais só aparecem se tiverem item.
 
 **Ainda não construído:** registro por receita, refeição salva, botão "Copiar
 dia", trava de dia futuro.
+
+### Perfil — `src/pages/Perfil.tsx`, `src/lib/historicoTreinos.ts`
+
+Avatar sobe pro bucket `Fotos` em `<user_id>/avatar.<ext>` (sobrescreve, `upsert:
+true`) e salva a URL em `perfis.foto_url`. Nome e `bio` (coluna `perfis.bio`)
+editáveis num formulário inline (sem navegar pra outra tela).
+
+**Sequência (streak)** — `calcularStreak` em `src/lib/consistencia.ts`: conta
+dias seguidos com pelo menos 1 treino concluído, terminando hoje. Se o usuário
+ainda não treinou hoje mas treinou ontem, a sequência **não zera** — só quebra
+de verdade quando passa um dia inteiro sem nenhum treino.
+
+A aba "Treinos" busca o histórico via `useHistoricoTreinos`, que junta
+`sessoes_concluidas` → `plano_sessoes` → `planos` pra achar o nome da rotina;
+sessão sem `sessao_id` (treino rápido) ou com rotina já excluída mostra
+"Treino rápido" / "Rotina" como *fallback*, não quebra.
+
+### Exercícios: GIFs de demonstração — `public/exercicios/`
+
+Os 59 exercícios têm GIF real (fonte: dataset público
+`hasaneyldrm/exercises-dataset`, 1.324 exercícios — casado manualmente nome a
+nome com o catálogo em português). Os arquivos ficam em `public/exercicios/
+<id>.gif`, referenciados pelo campo `gif` em `Exercicio`
+(`src/data/exercicios.ts`). A pasta `videos/` na raiz (matéria-prima com os
+1.324 GIFs originais) está no `.gitignore` — não é usada pelo app, só serviu
+de fonte pra escolher os 59. Se precisar trocar ou adicionar um GIF, o
+material bruto está lá.
 
 ### Planos — `src/lib/planos.ts`
 
@@ -272,7 +322,7 @@ ainda** — não implementar até o dono do produto detalhar como deve funcionar
 
 Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 `01_estrutura` → `02_exercicios` → `03_alimentos_desafio` → `04_storage_policies`
-→ `05_cardio`. Todos já foram rodados no banco de produção.
+→ `05_cardio` → `06_perfil_bio`. Todos já foram rodados no banco de produção.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia.
