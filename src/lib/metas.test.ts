@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { calcularMetas } from './metas.ts'
+import { calcularMetas, aplicarMetaManual } from './metas.ts'
 import type { Perfil } from './perfil.ts'
 
 const base: Perfil = {
@@ -73,4 +73,29 @@ test('soma dos macros bate com a meta calórica dentro de 5%', () => {
     const erro = Math.abs(somaKcal - m.meta_kcal) / m.meta_kcal
     assert.ok(erro < 0.05, `${dias} dias: erro de ${(erro * 100).toFixed(1)}%`)
   }
+})
+
+test('meta manual mantém a proteína e recalcula o carboidrato como resto', () => {
+  const auto = calcularMetas(base)
+  const manual = aplicarMetaManual(auto, 3000, base.peso_kg)
+  assert.equal(manual.meta_kcal, 3000)
+  assert.equal(manual.meta_prot_g, auto.meta_prot_g)
+  assert.equal(manual.meta_gord_g, auto.meta_gord_g)
+  const somaKcal = manual.meta_prot_g * 4 + manual.meta_carb_g * 4 + manual.meta_gord_g * 9
+  assert.ok(Math.abs(somaKcal - manual.meta_kcal) / manual.meta_kcal < 0.05)
+})
+
+test('meta manual nunca fica negativa e desliga o aviso de meta limitada', () => {
+  const auto = calcularMetas(base)
+  const manual = aplicarMetaManual(auto, -500, base.peso_kg)
+  assert.equal(manual.meta_kcal, 0)
+  assert.equal(manual.meta_limitada, false)
+})
+
+test('meta manual muito baixa reduz a gordura até o piso e liga low_carb', () => {
+  const auto = calcularMetas(base)
+  const manual = aplicarMetaManual(auto, 1600, base.peso_kg)
+  const pisoGordura = Math.round((base.peso_kg * 0.8) / 5) * 5
+  assert.equal(manual.meta_gord_g, pisoGordura)
+  assert.equal(manual.low_carb, true)
 })

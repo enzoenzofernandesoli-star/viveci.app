@@ -94,3 +94,31 @@ export function calcularMetas(perfil: Perfil): Metas {
     low_carb,
   }
 }
+
+/**
+ * Aplica uma meta de calorias definida manualmente pelo usuário, mantendo a
+ * proteína e recalculando o carboidrato como resto — mesma regra do cálculo
+ * automático, só que a partir do valor escolhido em vez do TMB.
+ */
+export function aplicarMetaManual(base: Metas, novoKcal: number, peso_kg: number): Metas {
+  const meta_kcal = Math.max(0, arredonda10(novoKcal))
+  const prot_g = base.meta_prot_g
+  let gord_g = base.meta_gord_g
+  let carb_g = arredonda5((meta_kcal - prot_g * 4 - gord_g * 9) / 4)
+
+  const pisoGordura = arredonda5(peso_kg * 0.8)
+  if (carb_g < peso_kg * 2 && gord_g > pisoGordura) {
+    gord_g = pisoGordura
+    carb_g = arredonda5((meta_kcal - prot_g * 4 - gord_g * 9) / 4)
+  }
+  const low_carb = carb_g < peso_kg * 2
+
+  return {
+    ...base,
+    meta_kcal,
+    meta_carb_g: Math.max(carb_g, 0),
+    meta_gord_g: gord_g,
+    meta_limitada: false,
+    low_carb,
+  }
+}

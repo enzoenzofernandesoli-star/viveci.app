@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
-import { X } from 'lucide-react'
+import { Pencil, X } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
-import { calcularMetas } from '../lib/metas'
 import type { Perfil } from '../lib/perfil'
 import { useSessao } from '../lib/auth'
 import { usePerfil } from '../lib/perfil'
+import { useMetaAtiva, definirMetaManual } from '../lib/metaManual'
 import { useDia, somar, adicionarItem, removerItem, type ItemDiario } from '../lib/diario'
 import { hojeISO } from '../lib/data'
 import { REFEICOES, REFEICOES_PRINCIPAIS, type Refeicao } from '../lib/refeicoes'
@@ -80,6 +80,61 @@ function BarraMacro({ label, consumido, meta, cor }: { label: string; consumido:
       </div>
       <div className="mt-2 h-2 rounded-full bg-card-hover">
         <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: cor }} />
+      </div>
+    </div>
+  )
+}
+
+function EditarMeta({
+  metaAtual,
+  onFechar,
+  onSalvar,
+}: {
+  metaAtual: number
+  onFechar: () => void
+  onSalvar: (novoKcal: number) => Promise<void>
+}) {
+  const [valor, setValor] = useState(String(metaAtual))
+  const [enviando, setEnviando] = useState(false)
+
+  async function salvar() {
+    const novoKcal = Number(valor.replace(',', '.'))
+    if (Number.isNaN(novoKcal) || novoKcal <= 0) return
+    setEnviando(true)
+    try {
+      await onSalvar(novoKcal)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-line bg-card-hover p-4">
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
+        Meta de calorias (kcal)
+      </label>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={valor}
+        onChange={(e) => setValor(e.target.value)}
+        autoFocus
+        className="h-12 w-full rounded-xl border border-line bg-app px-3 text-sm text-ink focus:border-brand focus:outline-none"
+      />
+      <div className="mt-3 flex gap-3">
+        <button
+          onClick={onFechar}
+          className="h-10 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={salvar}
+          disabled={enviando}
+          className="h-10 flex-1 rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-60"
+        >
+          {enviando ? 'Salvando...' : 'Salvar'}
+        </button>
       </div>
     </div>
   )
@@ -305,8 +360,24 @@ export default function Nutricao() {
   const consumido = somar(itens)
 
   const [refeicaoAdicionando, setRefeicaoAdicionando] = useState<Refeicao | null>(null)
+  const [editandoMeta, setEditandoMeta] = useState(false)
 
-  if (carregando) {
+  const perfilCalculo: Perfil | null =
+    perfil?.nome && perfil.sexo && perfil.idade && perfil.altura_cm && perfil.peso_kg && perfil.dias_semana && perfil.objetivo
+      ? {
+          nome: perfil.nome,
+          sexo: perfil.sexo,
+          idade: perfil.idade,
+          altura_cm: perfil.altura_cm,
+          peso_kg: perfil.peso_kg,
+          dias_semana: perfil.dias_semana,
+          objetivo: perfil.objetivo,
+        }
+      : null
+
+  const { metas, carregando: carregandoMeta, recarregar: recarregarMeta } = useMetaAtiva(sessao?.user.id, perfilCalculo)
+
+  if (carregando || carregandoMeta) {
     return (
       <Page title="Nutrição">
         <Empty text="Carregando..." />
@@ -314,7 +385,7 @@ export default function Nutricao() {
     )
   }
 
-  if (erro || !perfil || !sessao) {
+  if (erro || !perfil || !sessao || !metas) {
     return (
       <Page title="Nutrição">
         <Empty text="Não deu pra carregar seu perfil. Tenta de novo em instantes." />
@@ -336,17 +407,6 @@ export default function Nutricao() {
     )
   }
 
-  const perfilCalculo: Perfil = {
-    nome: perfil.nome!,
-    sexo: perfil.sexo!,
-    idade: perfil.idade!,
-    altura_cm: perfil.altura_cm!,
-    peso_kg: perfil.peso_kg!,
-    dias_semana: perfil.dias_semana!,
-    objetivo: perfil.objetivo!,
-  }
-  const metas = calcularMetas(perfilCalculo)
-
   const outrasComItens = REFEICOES.filter(
     (r) => !REFEICOES_PRINCIPAIS.includes(r) && itens.some((i) => i.refeicao === r),
   )
@@ -356,6 +416,28 @@ export default function Nutricao() {
     <Page title="Nutrição">
       <div className="mt-6 rounded-2xl border border-line bg-card p-6">
         <AnelCalorias consumido={consumido.kcal} meta={metas.meta_kcal} />
+
+        <div className="mt-3 flex justify-center">
+          <button
+            onClick={() => setEditandoMeta((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-ink-2 hover:text-ink"
+          >
+            <Pencil size={13} strokeWidth={1.75} />
+            Editar meta de calorias
+          </button>
+        </div>
+
+        {editandoMeta && (
+          <EditarMeta
+            metaAtual={metas.meta_kcal}
+            onFechar={() => setEditandoMeta(false)}
+            onSalvar={async (novoKcal) => {
+              await definirMetaManual(sessao.user.id, metas, novoKcal, perfilCalculo!.peso_kg)
+              recarregarMeta()
+              setEditandoMeta(false)
+            }}
+          />
+        )}
 
         <div className="mt-8 space-y-5">
           <BarraMacro label="Proteína" consumido={consumido.prot_g} meta={metas.meta_prot_g} cor="#2F6BFF" />

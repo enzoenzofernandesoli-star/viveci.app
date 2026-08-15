@@ -8,7 +8,7 @@ import { useMapaMuscular } from '../lib/mapa'
 import { useRotinas } from '../lib/rotinas'
 import { useDia, somar } from '../lib/diario'
 import { hojeISO } from '../lib/data'
-import { calcularMetas } from '../lib/metas'
+import { useMetaAtiva } from '../lib/metaManual'
 import type { Perfil } from '../lib/perfil'
 
 function formatoBR(n: number): string {
@@ -57,8 +57,9 @@ function CardNutricao({ userId, perfil }: { userId: string; perfil: NonNullable<
     dias_semana: perfil.dias_semana!,
     objetivo: perfil.objetivo!,
   }
-  const metas = calcularMetas(perfilCalculo)
-  const pct = metas.meta_kcal > 0 ? Math.min((consumido.kcal / metas.meta_kcal) * 100, 100) : 0
+  const { metas } = useMetaAtiva(userId, perfilCalculo)
+  const metaKcal = metas?.meta_kcal ?? 0
+  const pct = metaKcal > 0 ? Math.min((consumido.kcal / metaKcal) * 100, 100) : 0
   const cor = pct < 100 ? 'var(--color-brand)' : pct <= 110 ? 'var(--color-up)' : 'var(--color-gold)'
 
   return (
@@ -66,7 +67,7 @@ function CardNutricao({ userId, perfil }: { userId: string; perfil: NonNullable<
       <h2 className="text-[17px] font-semibold">Nutrição hoje</h2>
       <p className="mt-1 text-sm text-ink">
         <span className="num">{formatoBR(consumido.kcal)}</span>{' '}
-        <span className="text-ink-2">de {formatoBR(metas.meta_kcal)} kcal</span>
+        <span className="text-ink-2">de {formatoBR(metaKcal)} kcal</span>
       </p>
       <div className="mt-3 h-2 rounded-full bg-card-hover">
         <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: cor }} />
