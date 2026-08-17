@@ -1,9 +1,20 @@
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { Logo } from './Logo'
+import { useSessao } from '../lib/auth'
+import { usePreferencias } from '../lib/preferencias'
 
 export function Layout() {
+  const { sessao } = useSessao()
+  const { preferencias } = usePreferencias(sessao?.user.id)
+
+  useEffect(() => {
+    const reduzir = preferencias.reduzir_movimento || !preferencias.animacoes
+    document.documentElement.dataset.reduzirMovimento = reduzir ? 'true' : 'false'
+  }, [preferencias.reduzir_movimento, preferencias.animacoes])
+
   return (
     <div className="flex min-h-full">
       <Sidebar />

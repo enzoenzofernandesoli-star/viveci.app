@@ -206,8 +206,12 @@ function AbaForca({
         <Empty text="Você ainda não tem nenhuma rotina de treino. Crie a primeira acima." />
       ) : (
         <div className="space-y-4">
-          {rotinas.map((r) => (
-            <div key={r.id} className="rounded-2xl border border-line bg-card p-6">
+          {rotinas.map((r, i) => (
+            <div
+              key={r.id}
+              className="animar-entrada rounded-2xl border border-line bg-card p-6"
+              style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
+            >
               <h2 className="text-[17px] font-semibold">{r.nome}</h2>
               <p className="mt-1 text-sm text-ink-2">
                 {r.itens.length === 0 ? 'Nenhum exercício ainda' : r.itens.map((i) => i.exercicio.nome).join(', ')}

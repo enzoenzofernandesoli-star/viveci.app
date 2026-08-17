@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
@@ -26,7 +27,7 @@ function CardRecomendacao({
 
   if (carregando) {
     return (
-      <div className="rounded-2xl border border-line bg-card p-6">
+      <div className="animar-entrada rounded-2xl border border-line bg-card p-6">
         <p className="text-sm text-ink-2">Analisando seu histórico...</p>
       </div>
     )
@@ -37,7 +38,7 @@ function CardRecomendacao({
   const { nome, motivos, rotinaId } = recomendacao.recomendacao
 
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
+    <div className="animar-entrada rounded-2xl border border-line bg-card p-6">
       <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-2">O que eu treino hoje?</span>
       <h2 className="mt-1 text-[17px] font-semibold">{nome}</h2>
       <ul className="mt-2 space-y-1">
@@ -60,9 +61,11 @@ function CardRecomendacao({
 function CardDailyScore({ resultado }: { resultado: NonNullable<ReturnType<typeof useVivici>['resultado']> }) {
   const { dailyScore } = resultado
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
+    <div className="animar-entrada rounded-2xl border border-line bg-card p-6" style={{ animationDelay: '60ms' }}>
       <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-2">Seu dia</span>
-      <p className="num mt-1 text-[44px] font-bold text-brand">{dailyScore.score}</p>
+      <p className="num animar-escala mt-1 text-[44px] font-bold text-brand" style={{ animationDelay: '160ms' }}>
+        {dailyScore.score}
+      </p>
       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
         <div>
           <span className="text-ink-2">Treino</span>
@@ -92,7 +95,7 @@ function CardAlertas({ resultado }: { resultado: NonNullable<ReturnType<typeof u
   return (
     <div className="space-y-3">
       {eventosPR.length > 0 && (
-        <div className="rounded-2xl border border-line bg-card p-6">
+        <div className="animar-escala rounded-2xl border border-gold/30 bg-card p-6">
           <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-gold">Novo PR!</span>
           {eventosPR.map((e) => {
             const exercicio = e.atual
@@ -106,7 +109,7 @@ function CardAlertas({ resultado }: { resultado: NonNullable<ReturnType<typeof u
         </div>
       )}
       {musculoNegligenciado && (
-        <div className="rounded-2xl border border-line bg-card p-6">
+        <div className="animar-entrada rounded-2xl border border-line bg-card p-6">
           <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-2">
             Músculo negligenciado
           </span>
@@ -140,15 +143,24 @@ function CardNutricao({ userId, perfil }: { userId: string; perfil: NonNullable<
   const pct = metaKcal > 0 ? Math.min((consumido.kcal / metaKcal) * 100, 100) : 0
   const cor = pct < 100 ? 'var(--color-brand)' : pct <= 110 ? 'var(--color-up)' : 'var(--color-gold)'
 
+  const [barPct, setBarPct] = useState(0)
+  useEffect(() => {
+    const id = setTimeout(() => setBarPct(pct), 50)
+    return () => clearTimeout(id)
+  }, [pct])
+
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
+    <div className="animar-entrada rounded-2xl border border-line bg-card p-6" style={{ animationDelay: '120ms' }}>
       <h2 className="text-[17px] font-semibold">Nutrição hoje</h2>
       <p className="mt-1 text-sm text-ink">
         <span className="num">{formatoBR(consumido.kcal)}</span>{' '}
         <span className="text-ink-2">de {formatoBR(metaKcal)} kcal</span>
       </p>
       <div className="mt-3 h-2 rounded-full bg-card-hover">
-        <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: cor }} />
+        <div
+          className="h-2 rounded-full transition-[width] duration-700 ease-out"
+          style={{ width: `${barPct}%`, backgroundColor: cor }}
+        />
       </div>
       <button
         onClick={() => navigate('/nutricao')}

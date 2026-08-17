@@ -16,7 +16,7 @@
   --color-gold: #F5A524;
   --color-muscle-off: #3A4252;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
 }
 
 html, body, #root { height: 100%; }
@@ -29,3 +29,70 @@ body {
 }
 
 .num { font-variant-numeric: tabular-nums; }
+
+/* ───────────────────────── Microinterações ─────────────────────────
+   Regra 39 do CLAUDE.md: elegante, nunca exagerado. Tudo aqui respeita
+   prefers-reduced-motion e o toggle "Reduzir movimento" das Configurações
+   (que marca data-reduzir-movimento="true" na <html> via Layout.tsx). */
+
+@keyframes entrada {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes escala-entrada {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulso-suave {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animar-entrada {
+  animation: entrada 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animar-escala {
+  animation: escala-entrada 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animar-pulso {
+  animation: pulso-suave 1.6s ease-in-out infinite;
+}
+
+button, a {
+  transition: transform 120ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease, color 150ms ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+a:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  button:active {
+    transform: none;
+  }
+}
+
+:root[data-reduzir-movimento="true"] *,
+:root[data-reduzir-movimento="true"] *::before,
+:root[data-reduzir-movimento="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+:root[data-reduzir-movimento="true"] button:active {
+  transform: none;
+}

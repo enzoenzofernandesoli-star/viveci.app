@@ -45,8 +45,12 @@ function AbaTreinos({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-3">
-      {treinos.map((t) => (
-        <div key={t.id} className="rounded-xl border border-line bg-card px-4 py-3">
+      {treinos.map((t, i) => (
+        <div
+          key={t.id}
+          className="animar-entrada rounded-xl border border-line bg-card px-4 py-3"
+          style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}
+        >
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-ink">{t.nome}</p>
             <p className="text-xs text-ink-2">{formatoData(t.finalizadaEm)}</p>
@@ -244,20 +248,29 @@ const RES_DNA: [keyof DNATreino, string][] = [
 ]
 
 function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
+  const [cheio, setCheio] = useState(false)
+  useEffect(() => {
+    const id = setTimeout(() => setCheio(true), 80)
+    return () => clearTimeout(id)
+  }, [])
+
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
+    <div className="animar-entrada rounded-2xl border border-line bg-card p-6">
       <h2 className="text-[17px] font-semibold">Meu DNA de treino</h2>
       <p className="mt-1 text-sm text-brand">{perfilDNA.rotulo}</p>
       <p className="mt-1 text-xs text-ink-2">{perfilDNA.descricao}</p>
       <div className="mt-4 space-y-3">
-        {RES_DNA.map(([chave, rotulo]) => (
+        {RES_DNA.map(([chave, rotulo], i) => (
           <div key={chave}>
             <div className="flex items-center justify-between text-xs">
               <span className="text-ink-2">{rotulo}</span>
               <span className="num text-ink">{dna[chave]}</span>
             </div>
             <div className="mt-1 h-1.5 rounded-full bg-card-hover">
-              <div className="h-1.5 rounded-full bg-brand transition-all" style={{ width: `${dna[chave]}%` }} />
+              <div
+                className="h-1.5 rounded-full bg-brand transition-[width] duration-700 ease-out"
+                style={{ width: `${cheio ? dna[chave] : 0}%`, transitionDelay: `${i * 60}ms` }}
+              />
             </div>
           </div>
         ))}

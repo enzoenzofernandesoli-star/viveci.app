@@ -84,7 +84,7 @@ hex solto no componente.
 | `gold` | `#F5A524` | só conquista, troféu e streak |
 | `muscle-off` | `#3A4252` | músculo não treinado no mapa |
 
-**Tipografia:** Inter. H1 28px/700. Título de card 17px/600. Número de destaque
+**Tipografia:** Sora. H1 28px/700. Título de card 17px/600. Número de destaque
 44px/700 com a classe `.num` (tabular-nums). Texto 14px. Label 12px maiúscula
 com tracking 0.06em em `ink-2`.
 
