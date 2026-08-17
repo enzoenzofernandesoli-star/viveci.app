@@ -11,6 +11,8 @@ import SessaoTreino from './pages/SessaoTreino'
 import Nutricao from './pages/Nutricao'
 import Perfil from './pages/Perfil'
 import Configuracoes from './pages/Configuracoes'
+import BodyScan from './pages/BodyScan'
+import AnalisarMovimento from './pages/AnalisarMovimento'
 import Planos from './pages/Planos'
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
               <Route path="nutricao" element={<Nutricao />} />
               <Route path="perfil" element={<Perfil />} />
               <Route path="perfil/configuracoes" element={<Configuracoes />} />
+              <Route path="perfil/body-scan" element={<BodyScan />} />
+              <Route path="treino/analisar/:exercicioId" element={<AnalisarMovimento />} />
               <Route path="planos" element={<Planos />} />
             </Route>
           </Route>

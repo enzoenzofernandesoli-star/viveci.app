@@ -105,10 +105,11 @@ iguais seriam ilegíveis.
 
 ```
 src/
-  lib/        regra de negócio pura + testes (*.test.ts ao lado) + camadas de I/O com o Supabase
-  data/       catálogos estáticos que espelham tabelas do Supabase (exercícios, alimentos)
-  components/ componentes reutilizáveis
-  pages/      uma por rota
+  lib/          regra de negócio pura + testes (*.test.ts ao lado) + camadas de I/O com o Supabase
+  lib/services/ serviços de IA de visão — hoje só mock declarado (ver seção "IA de visão")
+  data/         catálogos estáticos que espelham tabelas do Supabase (exercícios, alimentos)
+  components/   componentes reutilizáveis
+  pages/        uma por rota
 ```
 
 `npm test` roda os testes com o runner nativo do Node (sem vitest, sem jest).
@@ -120,7 +121,12 @@ camada de I/O em arquivos próprios (ex: `progressaoCarga.ts` puro vs `registros
 redondo flutuante no meio da barra inferior que abre o Treino Rápido
 (`/treino/rapido`). Planos não tem aba própria (acessível a partir do Perfil
 e de telas de bloqueio). Evolução não é mais rota — é a 2ª aba dentro da
-própria página de Perfil (a 1ª é Treinos).
+própria página de Perfil (a 1ª é Treinos). Food Scanner e Label Scanner não
+são rotas — abrem como view cheia de dentro de Nutrição (ícone de câmera em
+cada refeição). Body Scan (`/perfil/body-scan`), Configurações
+(`/perfil/configuracoes`) e Analisar movimento (`/treino/analisar/:id`) são
+rotas próprias, mas só alcançáveis a partir do Perfil/sessão de treino —
+nenhuma delas tem aba própria na navegação inferior.
 
 **Dependência externa de UI:** `body-muscles` (npm) — biblioteca do mapa
 corporal (SVG anatômico com 89 regiões). Ver seção "Mapa corporal" abaixo
@@ -190,12 +196,29 @@ qualquer entrega.
   rotinas de treino. Pro ainda não tem nenhum recurso exclusivo de verdade —
   isso é intencional, só entra quando o dono do produto decidir o quê.
 - **PWA** — manifest, ícones, service worker (offline básico).
+- **Food Scanner** (câmera na Nutrição) — identifica alimentos numa foto do
+  prato, estima kcal/macros/fibra por item, permite ajustar quantidade
+  (Pouco/Médio/Muito) e adiciona ao diário de verdade. **Análise é
+  simulada** (mock declarado) — não há IA de visão conectada.
+- **Label Scanner** (câmera na Nutrição) — lê a tabela nutricional de um
+  rótulo, explica os números em linguagem simples, calcula quantas porções
+  a pessoa realmente comeu (matemática real) e adiciona ao diário.
+  **Leitura do rótulo é simulada** — sem OCR conectado.
+- **Body Scan** (`/perfil/body-scan`) — fotos de progresso reais (frente/
+  lateral/costas) sobem pro bucket `Fotos` e ficam em `fotos_progresso`;
+  timeline filtrável por 7/30/90 dias; comparação lado a lado entre duas
+  datas do mesmo ângulo, com contagem real de treinos no período.
+  **Nunca estima proporções corporais** — mostra sempre "não foi possível
+  estimar com confiança", porque isso exigiria IA que não existe aqui.
+- **Analisar movimento** (botão na sessão de treino) — grava/envia vídeo do
+  exercício. **100% simulado**: sempre devolve a mesma mensagem avisando
+  que a análise real ainda não está conectada, nunca finge diagnóstico.
 
 **Não existe (e não tem ordem definida pra construir):** Desafio 24 Dias,
 receitas, IA de dieta personalizada, sistema social (seguidores/amigos —
 o Perfil foi inspirado visualmente num app com esse recurso, mas os 3 números
-mostrados são só estatísticas próprias, não social), fotos de progresso.
-Não construir nenhum desses sem pedido explícito.
+mostrados são só estatísticas próprias, não social). Não construir nenhum
+desses sem pedido explícito.
 
 ---
 
@@ -389,6 +412,55 @@ mais treinado, só quando a diferença passa 30 pontos (evita ruído). Não
 confundir com `detectarDesequilibrios`, que é especificamente sobre pares
 antagonistas (Peito↔Costas etc).
 
+### IA de visão (mock declarado) — `src/lib/services/`
+
+Food Scanner, Label Scanner e Análise de movimento dependem de IA de visão
+computacional / OCR real, que este projeto **não tem configurada**. Em vez
+de fingir, cada um segue o padrão UI → Service → dado mock, igual à seção
+33 do prompt original:
+
+- `src/lib/services/foodScannerService.ts` — `FoodScannerService.analisarFoto`
+  sempre devolve o mesmo prato de exemplo (frango, arroz, feijão, salada)
+  com confiança de 78%. Usado por `src/components/EscanearRefeicao.tsx`.
+- `src/lib/services/labelScannerService.ts` — `LabelScannerService.escanearRotulo`
+  sempre devolve o mesmo rótulo de exemplo. Usado por
+  `src/components/EscanearRotulo.tsx`.
+- `src/lib/services/movementAnalysisService.ts` — sempre devolve a mesma
+  mensagem avisando que é simulação, nunca finge diagnóstico. Usado por
+  `src/pages/AnalisarMovimento.tsx`.
+
+**Regra pra quando plugar uma API de verdade:** trocar só a implementação
+dentro do arquivo do serviço (a interface já está pronta) — nunca a UI que
+consome. Toda tela que usa esses serviços mostra um aviso visível
+("Simulação — ..." em `gold`) enquanto o resultado for mockado; isso não é
+opcional, é o que impede o usuário de confiar num número inventado.
+
+O que **é** real nesses fluxos, mesmo com o mock: os cálculos em cima do
+resultado. `src/lib/analiseRefeicao.ts` (ajuste de quantidade Pouco/Médio/
+Muito, heurística "como posso melhorar" por proteína/fibra) e
+`src/lib/analiseRotulo.ts` (explicador de rótulo em linguagem simples,
+`calcularConsumoPorPorcao` — matemática real de porções) são funções puras
+testadas, e o botão "Adicionar ao diário" grava de verdade em
+`diario_alimentar` via `src/lib/diario.ts`. Só a etapa de "olhar a foto e
+identificar o que tem nela" é simulada.
+
+### Body Scan — `src/pages/BodyScan.tsx`, `src/lib/bodyScan.ts`
+
+Diferente do Food/Label Scanner, aqui **não há mock nenhum** — é 100% real
+e determinístico, só sem análise de IA. Reaproveita a tabela
+`fotos_progresso` que já existia desde `sql/01_estrutura.sql` (nunca usada
+até agora) e o bucket `Fotos` (mesmo bucket do avatar), caminho
+`<user_id>/body/<angulo>-<timestamp>.<ext>`. Três ângulos fixos: Frente,
+Lateral, Costas (`ANGULOS` em `bodyScan.ts`).
+
+A comparação entre duas datas mostra as fotos lado a lado e a contagem real
+de treinos concluídos no período (via `useHistoricoTreinos`) — **nunca**
+tenta calcular diferença de proporção corporal a partir das fotos; o card
+"Estimativa de proporções" sempre mostra "Não foi possível estimar com
+confiança", porque medir isso de verdade exigiria uma IA que este projeto
+não tem. Não inventar um número aqui nem quando parecer "só uma estimativa
+grosseira" — regra 22 do prompt original.
+
 ### Configurações — `src/pages/Configuracoes.tsx`, `src/lib/preferencias.ts`
 
 Dentro do Perfil (`/perfil/configuracoes`), não é rota própria da navegação
@@ -424,14 +496,22 @@ ainda** — não implementar até o dono do produto detalhar como deve funcionar
 
 Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 `01_estrutura` → `02_exercicios` → `03_alimentos_desafio` → `04_storage_policies`
-→ `05_cardio` → `06_perfil_bio` → `07_preferencias`. Os 6 primeiros já foram
-rodados no banco de produção; **`07_preferencias` (tabela
-`preferencias_usuario`, usada pela tela de Configurações) ainda não foi
-rodado** — até lá, a tela de Configurações funciona normalmente com os
-valores padrão (`PREFERENCIAS_PADRAO`), mas nada fica salvo de fato.
+→ `05_cardio` → `06_perfil_bio` → `07_preferencias`. Todos já foram rodados
+no banco de produção (`07_preferencias` foi confirmado pelo usuário) —
+mas se o app voltar a mostrar `PGRST205 / Could not find the table
+'preferencias_usuario'`, é cache de schema do PostgREST desatualizado, não
+falta de tabela: usar "Reload schema" no painel do Supabase resolve. Até
+resolver, a tela de Configurações continua funcionando com os valores
+padrão (`PREFERENCIAS_PADRAO`), só não persiste.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
-`<user_id>/nome.jpg`, senão a policy bloqueia.
+`<user_id>/nome.jpg`, senão a policy bloqueia. Avatar usa
+`<user_id>/avatar.<ext>`; Body Scan usa `<user_id>/body/<angulo>-<timestamp>.<ext>`
+— ambos passam na policy porque ela só olha o primeiro segmento do caminho.
+
+Tabela `fotos_progresso` existia desde `01_estrutura.sql` mas não era usada
+por nenhuma tela até o Body Scan (ver seção "Body Scan" acima) — não é
+tabela nova, só ficou "adormecida" até agora.
 
 Seeds aplicados: 59 exercícios, 50 alimentos, 24 dias de desafio (tabela existe,
 recurso de desafio não é usado pelo app ainda). RLS ativo: cada usuário só lê

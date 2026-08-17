@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Dumbbell, LineChart, Pencil, Settings, ChevronRight } from 'lucide-react'
+import { Dumbbell, LineChart, Pencil, Settings, ChevronRight, ScanFace } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { GraficoLinha } from '../components/GraficoLinha'
@@ -503,6 +503,18 @@ export default function Perfil() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink">Configurações</p>
           <p className="text-xs text-ink-2">Personalize sua experiência no VIVECI</p>
+        </div>
+        <ChevronRight size={18} strokeWidth={1.75} className="shrink-0 text-ink-3" />
+      </button>
+
+      <button
+        onClick={() => navigate('/perfil/body-scan')}
+        className="mt-2 flex w-full items-center gap-3 rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
+      >
+        <ScanFace size={18} strokeWidth={1.75} className="shrink-0 text-ink-2" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-ink">Body Scan</p>
+          <p className="text-xs text-ink-2">Fotos de progresso e comparação de evolução</p>
         </div>
         <ChevronRight size={18} strokeWidth={1.75} className="shrink-0 text-ink-3" />
       </button>

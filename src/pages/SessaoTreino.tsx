@@ -365,8 +365,18 @@ function ExecutorTreino({
         <div className="mt-6">
           <img src={ativo.exercicio.gif} alt={ativo.exercicio.nome} className="mx-auto h-56 w-56 object-contain" />
 
-          <h2 className="text-[19px] font-bold">{ativo.exercicio.nome}</h2>
-          <p className="text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-[19px] font-bold">{ativo.exercicio.nome}</h2>
+              <p className="text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
+            </div>
+            <button
+              onClick={() => navigate(`/treino/analisar/${ativo.exercicioId}`)}
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 transition-colors hover:border-brand hover:text-brand"
+            >
+              Analisar movimento
+            </button>
+          </div>
 
           {novoPR && (
             <div className="mt-3 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3">

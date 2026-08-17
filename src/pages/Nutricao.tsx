@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Pencil, X } from 'lucide-react'
+import { Camera, Pencil, ScanBarcode, X } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
+import { EscanearRefeicao } from '../components/EscanearRefeicao'
+import { EscanearRotulo } from '../components/EscanearRotulo'
 import type { Perfil } from '../lib/perfil'
 import { useSessao } from '../lib/auth'
 import { usePerfil } from '../lib/perfil'
@@ -360,6 +362,8 @@ export default function Nutricao() {
   const consumido = somar(itens)
 
   const [refeicaoAdicionando, setRefeicaoAdicionando] = useState<Refeicao | null>(null)
+  const [refeicaoEscaneando, setRefeicaoEscaneando] = useState<Refeicao | null>(null)
+  const [refeicaoRotulo, setRefeicaoRotulo] = useState<Refeicao | null>(null)
   const [editandoMeta, setEditandoMeta] = useState(false)
 
   const perfilCalculo: Perfil | null =
@@ -402,6 +406,36 @@ export default function Nutricao() {
           await adicionarItem(sessao.user.id, { ...dados, data: hoje, refeicao: refeicaoAdicionando })
           recarregar()
           setRefeicaoAdicionando(null)
+        }}
+      />
+    )
+  }
+
+  if (refeicaoEscaneando) {
+    return (
+      <EscanearRefeicao
+        refeicao={refeicaoEscaneando}
+        onFechar={() => setRefeicaoEscaneando(null)}
+        onAdicionarTodos={async (itensList) => {
+          for (const dados of itensList) {
+            await adicionarItem(sessao.user.id, { ...dados, data: hoje, refeicao: refeicaoEscaneando })
+          }
+          recarregar()
+          setRefeicaoEscaneando(null)
+        }}
+      />
+    )
+  }
+
+  if (refeicaoRotulo) {
+    return (
+      <EscanearRotulo
+        refeicao={refeicaoRotulo}
+        onFechar={() => setRefeicaoRotulo(null)}
+        onAdicionar={async (dados) => {
+          await adicionarItem(sessao.user.id, { ...dados, data: hoje, refeicao: refeicaoRotulo })
+          recarregar()
+          setRefeicaoRotulo(null)
         }}
       />
     )
@@ -456,12 +490,28 @@ export default function Nutricao() {
               <div key={refeicao} className="rounded-2xl border border-line bg-card p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-[15px] font-semibold">{refeicao}</h2>
-                  <button
-                    onClick={() => setRefeicaoAdicionando(refeicao)}
-                    className="text-sm font-semibold text-brand"
-                  >
-                    + Adicionar
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setRefeicaoEscaneando(refeicao)}
+                      aria-label="Escanear refeição"
+                      className="text-ink-2 hover:text-brand"
+                    >
+                      <Camera size={17} strokeWidth={1.75} />
+                    </button>
+                    <button
+                      onClick={() => setRefeicaoRotulo(refeicao)}
+                      aria-label="Escanear rótulo"
+                      className="text-ink-2 hover:text-brand"
+                    >
+                      <ScanBarcode size={17} strokeWidth={1.75} />
+                    </button>
+                    <button
+                      onClick={() => setRefeicaoAdicionando(refeicao)}
+                      className="text-sm font-semibold text-brand"
+                    >
+                      + Adicionar
+                    </button>
+                  </div>
                 </div>
 
                 {itensRefeicao.length === 0 ? (
