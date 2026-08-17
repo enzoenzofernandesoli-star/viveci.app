@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Dumbbell, LineChart, Pencil } from 'lucide-react'
+import { Dumbbell, LineChart, Pencil, Settings, ChevronRight } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { GraficoLinha } from '../components/GraficoLinha'
@@ -18,6 +18,8 @@ import {
 import { calcularConsistencia, calcularStreak } from '../lib/consistencia'
 import { EXERCICIOS } from '../data/exercicios'
 import { ROTULO_PLANO } from '../lib/planos'
+import { useVivici } from '../lib/vivici'
+import type { DNATreino, PerfilDNA } from '../lib/dnaTreino'
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -232,9 +234,56 @@ function CardCargas({ userId }: { userId: string }) {
   )
 }
 
-function AbaEvolucao({ userId, ultimos7Dias, ultimos30Dias }: { userId: string; ultimos7Dias: number; ultimos30Dias: number }) {
+const RES_DNA: [keyof DNATreino, string][] = [
+  ['forca', 'Força'],
+  ['hipertrofia', 'Hipertrofia'],
+  ['consistencia', 'Consistência'],
+  ['volume', 'Volume'],
+  ['progressao', 'Progressão'],
+  ['equilibrio', 'Equilíbrio'],
+]
+
+function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
+  return (
+    <div className="rounded-2xl border border-line bg-card p-6">
+      <h2 className="text-[17px] font-semibold">Meu DNA de treino</h2>
+      <p className="mt-1 text-sm text-brand">{perfilDNA.rotulo}</p>
+      <p className="mt-1 text-xs text-ink-2">{perfilDNA.descricao}</p>
+      <div className="mt-4 space-y-3">
+        {RES_DNA.map(([chave, rotulo]) => (
+          <div key={chave}>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-ink-2">{rotulo}</span>
+              <span className="num text-ink">{dna[chave]}</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-card-hover">
+              <div className="h-1.5 rounded-full bg-brand transition-all" style={{ width: `${dna[chave]}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AbaEvolucao({
+  userId,
+  ultimos7Dias,
+  ultimos30Dias,
+  diasSemana,
+  rotinas,
+}: {
+  userId: string
+  ultimos7Dias: number
+  ultimos30Dias: number
+  diasSemana: number | null
+  rotinas: ReturnType<typeof useRotinas>['rotinas']
+}) {
+  const { resultado } = useVivici(userId, rotinas, diasSemana, 0, 0)
+
   return (
     <div className="space-y-5">
+      {resultado && <CardDNA dna={resultado.dna} perfilDNA={resultado.perfilDNA} />}
       <CardPeso userId={userId} />
       <CardConsistencia ultimos7Dias={ultimos7Dias} ultimos30Dias={ultimos30Dias} />
       <CardCargas userId={userId} />
@@ -433,6 +482,18 @@ export default function Perfil() {
         </button>
       </div>
 
+      <button
+        onClick={() => navigate('/perfil/configuracoes')}
+        className="mt-4 flex w-full items-center gap-3 rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
+      >
+        <Settings size={18} strokeWidth={1.75} className="shrink-0 text-ink-2" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-ink">Configurações</p>
+          <p className="text-xs text-ink-2">Personalize sua experiência no VIVECI</p>
+        </div>
+        <ChevronRight size={18} strokeWidth={1.75} className="shrink-0 text-ink-3" />
+      </button>
+
       <div className="mt-6 flex gap-2 border-b border-line">
         <button
           onClick={() => setAba('treinos')}
@@ -458,7 +519,13 @@ export default function Perfil() {
         {aba === 'treinos' ? (
           <AbaTreinos userId={sessao.user.id} />
         ) : (
-          <AbaEvolucao userId={sessao.user.id} ultimos7Dias={ultimos7Dias} ultimos30Dias={ultimos30Dias} />
+          <AbaEvolucao
+            userId={sessao.user.id}
+            ultimos7Dias={ultimos7Dias}
+            ultimos30Dias={ultimos30Dias}
+            diasSemana={perfil.dias_semana}
+            rotinas={rotinas}
+          />
         )}
       </div>
 

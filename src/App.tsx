@@ -10,6 +10,7 @@ import RotinaEditor from './pages/RotinaEditor'
 import SessaoTreino from './pages/SessaoTreino'
 import Nutricao from './pages/Nutricao'
 import Perfil from './pages/Perfil'
+import Configuracoes from './pages/Configuracoes'
 import Planos from './pages/Planos'
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="treino/:id/sessao" element={<SessaoTreino />} />
               <Route path="nutricao" element={<Nutricao />} />
               <Route path="perfil" element={<Perfil />} />
+              <Route path="perfil/configuracoes" element={<Configuracoes />} />
               <Route path="planos" element={<Planos />} />
             </Route>
           </Route>

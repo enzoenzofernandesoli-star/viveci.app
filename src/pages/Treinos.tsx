@@ -153,6 +153,8 @@ function AbaCardio({ userId }: { userId: string }) {
   )
 }
 
+const DURACOES_EXPRESS = [15, 20, 30, 35, 45, 60, 90]
+
 function AbaForca({
   rotinas,
   carregando,
@@ -169,6 +171,7 @@ function AbaForca({
   onApagar: (id: string) => void
 }) {
   const navigate = useNavigate()
+  const [expressAberto, setExpressAberto] = useState<string | null>(null)
 
   return (
     <div className="mt-6 space-y-5">
@@ -217,6 +220,31 @@ function AbaForca({
               >
                 Iniciar rotina
               </button>
+
+              <button
+                onClick={() => setExpressAberto((atual) => (atual === r.id ? null : r.id))}
+                disabled={r.itens.length === 0}
+                className="mt-2 h-10 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover disabled:opacity-60"
+              >
+                Treino express
+              </button>
+
+              {expressAberto === r.id && (
+                <div className="mt-3 rounded-xl border border-line bg-card-hover p-4">
+                  <p className="text-xs text-ink-2">Quanto tempo você tem hoje?</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {DURACOES_EXPRESS.map((min) => (
+                      <button
+                        key={min}
+                        onClick={() => navigate(`/treino/${r.id}/sessao?minutos=${min}`)}
+                        className="h-10 rounded-full border border-line px-4 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand"
+                      >
+                        {min} min
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-3 flex gap-3">
                 <button

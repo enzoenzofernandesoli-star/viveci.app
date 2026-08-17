@@ -4,6 +4,7 @@ import {
   calcularVolumePorGrupo,
   calcularPercentuais,
   detectarDesequilibrios,
+  detectarMusculoNegligenciado,
   type RegistroParaMapa,
 } from './mapaCorporal.ts'
 import { EXERCICIOS } from '../data/exercicios.ts'
@@ -79,13 +80,42 @@ test('não alerta grupos sem par antagonista definido', () => {
   assert.equal(alertas.length, 0)
 })
 
+// Voador na máquina: id 6, Peito, isolado — sem contaminar outros grupos.
+// Panturrilha em pé: id 52, Panturrilha, isolado.
+
+test('detecta músculo negligenciado quando a diferença passa 30 pontos', () => {
+  const registros: RegistroParaMapa[] = [
+    { exercicio_id: 6, peso_kg: 100, reps: 1 },
+    { exercicio_id: 52, peso_kg: 40, reps: 1 },
+  ]
+  const percentuais = calcularPercentuais(calcularVolumePorGrupo(registros, EXERCICIOS))
+  const alerta = detectarMusculoNegligenciado(percentuais)
+  assert.equal(alerta?.grupo, 'Panturrilha')
+  assert.equal(alerta?.grupoReferencia, 'Peito')
+})
+
+test('não alerta músculo negligenciado com diferença de 30 pontos ou menos', () => {
+  const registros: RegistroParaMapa[] = [
+    { exercicio_id: 6, peso_kg: 100, reps: 1 },
+    { exercicio_id: 52, peso_kg: 70, reps: 1 },
+  ]
+  const percentuais = calcularPercentuais(calcularVolumePorGrupo(registros, EXERCICIOS))
+  assert.equal(detectarMusculoNegligenciado(percentuais), null)
+})
+
+test('não alerta músculo negligenciado com menos de 2 grupos treinados', () => {
+  const registros: RegistroParaMapa[] = [{ exercicio_id: 6, peso_kg: 100, reps: 1 }]
+  const percentuais = calcularPercentuais(calcularVolumePorGrupo(registros, EXERCICIOS))
+  assert.equal(detectarMusculoNegligenciado(percentuais), null)
+})
+
 function volumesFixos(parcial: Partial<Record<string, number>>) {
   const registros: RegistroParaMapa[] = []
   const idPorGrupo: Record<string, number> = {
     Peito: 1, // composto, mas usamos só pra comparação relativa
     Costas: 14, // Puxada frontal na polia — composto
     Ombros: 22,
-    Panturrilha: 56,
+    Panturrilha: 52, // Panturrilha em pé — isolado, sem secundário
   }
   for (const [grupo, volume] of Object.entries(parcial)) {
     const id = idPorGrupo[grupo]

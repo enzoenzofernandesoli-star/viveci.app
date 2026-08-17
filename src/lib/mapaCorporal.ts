@@ -78,6 +78,32 @@ export type Desequilibrio = {
   diferenca: number
 }
 
+export type MusculoNegligenciado = {
+  grupo: GrupoMuscular
+  percentual: number
+  grupoReferencia: GrupoMuscular
+  percentualReferencia: number
+}
+
+/**
+ * Aponta o grupo muscular treinado com menor volume relativo ao grupo mais treinado.
+ * Só alerta quando a diferença passa 30 pontos — evita ruído em treinos já equilibrados.
+ * Grupos com percentual 0 (nunca treinados) não entram na comparação: isso é ausência
+ * total, não negligência dentro de um programa em andamento.
+ */
+export function detectarMusculoNegligenciado(percentuais: PercentualPorGrupo): MusculoNegligenciado | null {
+  const treinados = GRUPOS_MUSCULARES.filter((g) => percentuais[g] > 0)
+  if (treinados.length < 2) return null
+
+  const grupoReferencia = treinados.reduce((maior, g) => (percentuais[g] > percentuais[maior] ? g : maior))
+  const grupo = treinados.reduce((menor, g) => (percentuais[g] < percentuais[menor] ? g : menor))
+  const percentualReferencia = percentuais[grupoReferencia]
+  const percentual = percentuais[grupo]
+
+  if (grupo === grupoReferencia || percentualReferencia - percentual <= 30) return null
+  return { grupo, percentual, grupoReferencia, percentualReferencia }
+}
+
 /** Alerta quando um grupo passa 25 pontos percentuais do seu antagonista. */
 export function detectarDesequilibrios(percentuais: PercentualPorGrupo): Desequilibrio[] {
   const alertas: Desequilibrio[] = []

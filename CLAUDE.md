@@ -17,16 +17,25 @@ O usuário faz um onboarding curto (dados físicos + objetivo), monta as
 próprias rotinas de treino escolhendo os exercícios um a um, registra carga
 série a série ao treinar, ilumina no mapa corporal os músculos treinados,
 registra o que come com cálculo automático de calorias, e acompanha a
-evolução (peso, cargas, consistência).
+evolução (peso, cargas, consistência). Por cima disso, o **VIVECI
+Intelligence Engine** (`src/lib/vivici.ts`) cruza esse histórico real e
+recomenda qual rotina treinar hoje, com o motivo — sem inventar treino novo.
 
 ```
 PERFIL → ROTINA (montada pelo usuário) → SESSÃO DE TREINO → REGISTRO DE CARGA
 → MAPA CORPORAL → NUTRIÇÃO (diário + meta) → EVOLUÇÃO
+                  ↑
+     VIVECI INTELLIGENCE ENGINE (recomendação, DNA, PR, Daily Score)
 ```
 
 Não existe plano automático de 12 semanas nem gerador de treino por
-algoritmo — isso foi removido a pedido do usuário. Cada rotina é criada e
-editada manualmente, sem limite de tempo ou de semanas.
+algoritmo — isso foi removido a pedido do usuário e continua removido. O
+motor de recomendação **não gera rotina nenhuma**: ele só escolhe, entre as
+rotinas que o próprio usuário já montou, qual faz mais sentido treinar hoje
+(regra determinística sobre dias sem estímulo e volume recente) — a
+diferença é sutil mas importante pra não reintroduzir o que foi tirado.
+Cada rotina continua sendo criada e editada manualmente, sem limite de
+tempo ou de semanas.
 
 ---
 
@@ -41,7 +50,10 @@ editada manualmente, sem limite de tempo ou de semanas.
    (`75,2 kg`).
 5. **Regra de negócio é função pura e testada**, nunca lógica solta dentro de
    componente. Cálculo de metas, mapa corporal, progressão de carga, ritmo de
-   cardio e consistência/streak vivem em `src/lib/` com teste ao lado (`*.test.ts`).
+   cardio, consistência/streak, PRs, DNA de treino, recomendação de treino,
+   treino express e Daily Score vivem em `src/lib/` com teste ao lado
+   (`*.test.ts`) — `vivici.ts` é a única exceção (é a camada de I/O que
+   junta tudo, não tem lógica de negócio própria pra testar).
 6. **Nunca prometer resultado**, nunca usar linguagem de culpa, nunca tratar
    biotipo como diagnóstico.
 7. Mobile-first. Testar a 375px. Alvos de toque de no mínimo 44px.
@@ -114,6 +126,15 @@ própria página de Perfil (a 1ª é Treinos).
 corporal (SVG anatômico com 89 regiões). Ver seção "Mapa corporal" abaixo
 pra entender por que as cores dela são sobrescritas na mão.
 
+**VIVECI Intelligence Engine:** `src/lib/vivici.ts` é o hook central
+(`useVivici`) que busca registros/sessões do usuário uma vez e alimenta
+todos os módulos de inteligência (`dnaTreino.ts`, `recomendacaoTreino.ts`,
+`recordesPessoais.ts`, `treinoExpress.ts`, `dailyScore.ts`, mais
+`detectarMusculoNegligenciado` em `mapaCorporal.ts`) — usado no Dashboard
+(recomendação + Daily Score + PRs + músculo negligenciado) e na aba
+Evolução do Perfil (DNA de treino). Cada módulo é função pura testada; o
+`vivici.ts` só faz o fetch e a costura entre eles.
+
 ---
 
 ## Estado atual
@@ -144,11 +165,27 @@ qualquer entrega.
   proteína/gordura, recalcula carboidrato como resto).
 - **Mapa corporal** — corpo anatômico real via `body-muscles`, frente/costas,
   cores por intensidade real dos últimos 7 dias, alerta de desequilíbrio.
-- **Dashboard** — dados reais: rotinas, nutrição do dia, mapa corporal.
+- **Dashboard** — dados reais: recomendação "O que eu treino hoje?" (com
+  motivo), Daily Score, nutrição do dia, alerta de PR recente, alerta de
+  músculo negligenciado, mapa corporal.
+- **Treino Express** — dentro de Treino, botão "Treino express" em cada
+  rotina abre um seletor de duração (15 a 90 min) que reconstrói a sessão
+  pra caber no tempo (reduz/remove isolados antes de tocar em compostos),
+  com aviso do quanto foi cortado.
+- **Novo PR** — ao bater recorde numa série (1RM estimado por Epley maior
+  que o anterior), banner dourado aparece na sessão de treino.
 - **Perfil** — avatar (upload pro bucket `Fotos`), nome e biografia editáveis,
   3 números reais (treinos concluídos / rotinas criadas / sequência de dias),
-  e 2 abas: **Treinos** (histórico de sessões concluídas) e **Evolução**
-  (peso com gráfico, consistência 7/30 dias, cargas por exercício com gráfico).
+  link pra **Configurações**, e 2 abas: **Treinos** (histórico de sessões
+  concluídas) e **Evolução** (DNA de treino, peso com gráfico, consistência
+  7/30 dias, cargas por exercício com gráfico).
+- **Configurações** (`/perfil/configuracoes`) — menu de categorias dentro do
+  Perfil: Perfil (objetivo/nível/dias por semana), Notificações,
+  Treinamento (duração/horário/dias/equipamentos preferidos), Nutrição
+  (o que mostrar no diário), Aparência (animações — tema é só escuro por
+  enquanto), Privacidade (excluir fotos; excluir dados/conta é só
+  instrução de contato, não é automatizado), Meus dados (exportação real
+  em JSON), Aplicativo (versão, limpar cache) e Sobre.
 - **Planos** — só `free` e `pro`. Único bloqueio ativo hoje: free trava em 4
   rotinas de treino. Pro ainda não tem nenhum recurso exclusivo de verdade —
   isso é intencional, só entra quando o dono do produto decidir o quê.
@@ -304,6 +341,71 @@ nome com o catálogo em português). Os arquivos ficam em `public/exercicios/
 de fonte pra escolher os 59. Se precisar trocar ou adicionar um GIF, o
 material bruto está lá.
 
+### VIVECI Intelligence Engine — `src/lib/vivici.ts`
+
+Hook `useVivici(userId, rotinas, diasSemanaMeta, caloriasHoje, metaCalorias)`
+busca registros dos últimos 90 dias + sessões concluídas uma única vez e
+calcula tudo abaixo. Nada aqui é IA — são regras determinísticas sobre
+dados reais; sem dado suficiente, o indicador fica zerado/neutro, nunca
+inventado. **Limitação conhecida:** PR e DNA só enxergam os últimos 90 dias
+de `registros` (a janela do fetch) — um recorde batido há mais de 90 dias
+não entra na comparação. Aceitável pro estágio atual do produto.
+
+**Recomendação "O que eu treino hoje?"** (`recomendacaoTreino.ts`) — escolhe
+qual rotina do usuário treinar, nunca gera rotina nova. Prioridade: rotina
+nunca treinada → rotina há mais dias sem estímulo → em empate, grupos com
+menor volume relativo (via `mapaCorporal.ts`). Rotina já treinada hoje só
+volta a ser sugerida se for a única que existe. Sempre vem com `motivos`
+explicáveis, mostrados na Home.
+
+**Recordes pessoais (PR)** — `src/lib/recordesPessoais.ts`. 1RM estimado
+por Epley (`peso × (1 + reps/30)`); PR é quando o 1RM da série bate o
+melhor 1RM anterior do exercício. O primeiro registro de um exercício
+nunca conta como PR (não tem o que superar). Banner na sessão de treino;
+lista de PRs recentes (7 dias) no Dashboard.
+
+**DNA de treino** — `src/lib/dnaTreino.ts`. Seis indicadores 0-100: força
+(variação do 1RM em 90 dias), hipertrofia (% de séries na faixa 8-12 reps),
+consistência (sessões/30d ÷ meta mensal), volume (séries/30d ÷ meta de
+séries), progressão (% de exercícios com PR nos últimos 30 dias),
+equilíbrio (menor % de volume relativo entre os grupos treinados). Mostrado
+na aba Evolução do Perfil.
+
+**Treino Express** — `src/lib/treinoExpress.ts`. Reconstrói a lista de
+exercícios de uma rotina pra caber num tempo disponível: reduz séries de
+isolados primeiro (mínimo 2), depois remove isolados do fim pra começo, só
+depois toca em compostos, e nunca fica com zero exercícios. Acionado pelo
+botão "Treino express" em cada rotina (`/treino/:id/sessao?minutos=N`).
+
+**Daily Score** — `src/lib/dailyScore.ts`. Indicador interno do dia (**não
+é nota de saúde**), média de 4 indicadores 0-100: treino (cai 15 pontos por
+dia sem treinar), alimentação (% da meta calórica já registrada hoje),
+consistência (sessões/7d ÷ meta semanal), evolução (sessões/30d ÷ meta
+mensal).
+
+**Músculo negligenciado** — `detectarMusculoNegligenciado` em
+`mapaCorporal.ts`. Aponta o grupo treinado com menor volume relativo ao
+mais treinado, só quando a diferença passa 30 pontos (evita ruído). Não
+confundir com `detectarDesequilibrios`, que é especificamente sobre pares
+antagonistas (Peito↔Costas etc).
+
+### Configurações — `src/pages/Configuracoes.tsx`, `src/lib/preferencias.ts`
+
+Dentro do Perfil (`/perfil/configuracoes`), não é rota própria da navegação
+inferior. Objetivo/nível/dias por semana editam direto `perfis` (reusa
+`atualizarPerfil`); o resto (duração/horário/dias preferidos, equipamentos,
+notificações, aparência, nutrição) vive na tabela nova
+`preferencias_usuario` (uma linha por usuário, criada só quando o usuário
+salva algo pela primeira vez — até lá a UI usa `PREFERENCIAS_PADRAO`).
+
+Tema é só escuro por enquanto — a opção existe na UI mas não tem tema claro
+construído (fere a regra 41 do prompt original: não fingir funcionalidade
+que não existe). Excluir dados/conta não é automatizado — o app não tem
+acesso de service role pra apagar `auth.users` com segurança, então o botão
+só explica que é preciso contatar o suporte. Exportar dados é real: baixa
+um JSON com perfil, rotinas, registros, sessões, medidas, diário e cardio
+do próprio usuário.
+
 ### Planos — `src/lib/planos.ts`
 
 Só `free` e `pro`. Hoje o único recurso realmente bloqueado é o limite de 4
@@ -322,7 +424,11 @@ ainda** — não implementar até o dono do produto detalhar como deve funcionar
 
 Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 `01_estrutura` → `02_exercicios` → `03_alimentos_desafio` → `04_storage_policies`
-→ `05_cardio` → `06_perfil_bio`. Todos já foram rodados no banco de produção.
+→ `05_cardio` → `06_perfil_bio` → `07_preferencias`. Os 6 primeiros já foram
+rodados no banco de produção; **`07_preferencias` (tabela
+`preferencias_usuario`, usada pela tela de Configurações) ainda não foi
+rodado** — até lá, a tela de Configurações funciona normalmente com os
+valores padrão (`PREFERENCIAS_PADRAO`), mas nada fica salvo de fato.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia.

@@ -1,13 +1,21 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ChevronDown, Pencil, Plus } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { SeletorExercicio } from '../components/SeletorExercicio'
 import { useSessao } from '../lib/auth'
 import { useRotina, atualizarDescansoItem, type Rotina } from '../lib/rotinas'
-import { buscarUltimoRegistro, registrarSerie, iniciarSessao, concluirSessao } from '../lib/registros'
+import {
+  buscarUltimoRegistro,
+  buscarHistoricoExercicio,
+  registrarSerie,
+  iniciarSessao,
+  concluirSessao,
+} from '../lib/registros'
 import { sugerirProximoPeso } from '../lib/progressaoCarga'
+import { detectarPR } from '../lib/recordesPessoais'
+import { reconstruirTreinoExpress, type ItemParaExpress } from '../lib/treinoExpress'
 import { EXERCICIOS, type Exercicio } from '../data/exercicios'
 
 const DESCANSO_PADRAO = 90
@@ -32,20 +40,50 @@ function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 }
 
-function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | null }) {
+function ExecutorTreino({
+  userId,
+  rotina,
+  minutosExpress,
+}: {
+  userId: string
+  rotina: Rotina | null
+  minutosExpress: number | null
+}) {
   const navigate = useNavigate()
 
-  const [exercicios, setExercicios] = useState<ExercicioSessao[]>(() =>
-    rotina
-      ? rotina.itens.map((item) => ({
-          itemId: item.id,
-          exercicioId: item.exercicio_id,
-          exercicio: item.exercicio,
-          descansoSeg: item.descanso_seg,
-          sets: Array.from({ length: Math.max(item.series, 1) }, () => ({ peso: '', reps: '', completo: false })),
-        }))
-      : [],
-  )
+  const resumoExpress =
+    rotina && minutosExpress
+      ? reconstruirTreinoExpress(
+          rotina.itens.map(
+            (item, i): ItemParaExpress => ({
+              id: item.id,
+              exercicioId: item.exercicio_id,
+              nome: item.exercicio.nome,
+              isComposto: item.exercicio.is_composto,
+              series: item.series,
+              descansoSeg: item.descanso_seg,
+              ordem: item.ordem ?? i,
+            }),
+          ),
+          minutosExpress,
+        )
+      : null
+
+  const [exercicios, setExercicios] = useState<ExercicioSessao[]>(() => {
+    if (!rotina) return []
+    const itensFinais = resumoExpress
+      ? resumoExpress.itens.map((e) => ({ item: rotina.itens.find((it) => it.id === e.id)!, seriesFinal: e.seriesFinal }))
+      : rotina.itens.map((item) => ({ item, seriesFinal: item.series }))
+
+    return itensFinais.map(({ item, seriesFinal }) => ({
+      itemId: item.id,
+      exercicioId: item.exercicio_id,
+      exercicio: item.exercicio,
+      descansoSeg: item.descanso_seg,
+      sets: Array.from({ length: Math.max(seriesFinal, 1) }, () => ({ peso: '', reps: '', completo: false })),
+    }))
+  })
+  const [mostrarResumoExpress, setMostrarResumoExpress] = useState(resumoExpress !== null)
   const [ativoIndex, setAtivoIndex] = useState(0)
   const [mostrarSeletor, setMostrarSeletor] = useState(false)
   const [editandoDescanso, setEditandoDescanso] = useState(false)
@@ -57,6 +95,7 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
   const [treinoConcluido, setTreinoConcluido] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [novoPR, setNovoPR] = useState<{ pesoKg: number; reps: number; variacaoPercentual: number } | null>(null)
 
   const sessaoConcluidaId = useRef<string | null>(null)
   const inicioMs = useRef<number>(Date.now())
@@ -78,6 +117,12 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
     const id = setInterval(() => setElapsedSeg(Math.floor((Date.now() - inicioMs.current) / 1000)), 1000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    if (!novoPR) return
+    const id = setTimeout(() => setNovoPR(null), 5000)
+    return () => clearTimeout(id)
+  }, [novoPR])
 
   useEffect(() => {
     if (!descansando) return
@@ -167,6 +212,10 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
     }
     setErro(null)
     try {
+      const historico = await buscarHistoricoExercicio(userId, ativo.exercicioId)
+      const dataAgora = new Date().toISOString()
+      const resultadoPR = detectarPR(historico, { peso_kg: peso, reps, data: dataAgora })
+
       await registrarSerie({
         userId,
         exercicioId: ativo.exercicioId,
@@ -176,6 +225,10 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
         reps,
       })
       volumeAcumulado.current += peso * reps
+
+      if (resultadoPR.isPR && historico.length > 0 && resultadoPR.variacaoPercentual !== null) {
+        setNovoPR({ pesoKg: peso, reps, variacaoPercentual: resultadoPR.variacaoPercentual })
+      }
       setExercicios((atual) =>
         atual.map((ex, i) => {
           if (i !== ativoIndex) return ex
@@ -271,6 +324,18 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
         </button>
       </div>
 
+      {mostrarResumoExpress && resumoExpress && (
+        <div className="mt-4 rounded-xl border border-line bg-card-hover px-4 py-3">
+          <p className="text-sm text-ink">
+            Reduzimos <span className="num font-semibold">{resumoExpress.minutosReduzidos} min</span> priorizando os
+            exercícios mais importantes pra sua sessão.
+          </p>
+          <button onClick={() => setMostrarResumoExpress(false)} className="mt-2 text-xs font-semibold text-ink-2 hover:text-ink">
+            Entendi
+          </button>
+        </div>
+      )}
+
       <div className="-mx-4 mt-5 flex gap-3 overflow-x-auto px-4 pb-1">
         {exercicios.map((ex, i) => (
           <button
@@ -302,6 +367,16 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
 
           <h2 className="text-[19px] font-bold">{ativo.exercicio.nome}</h2>
           <p className="text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
+
+          {novoPR && (
+            <div className="mt-3 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3">
+              <p className="text-sm font-semibold text-gold">Novo PR!</p>
+              <p className="mt-0.5 text-sm text-ink">
+                <span className="num font-semibold">{formatoBR(novoPR.pesoKg)}kg</span> × {novoPR.reps} —{' '}
+                <span className="num">+{formatoBR(novoPR.variacaoPercentual)}%</span>
+              </p>
+            </div>
+          )}
 
           {editandoDescanso ? (
             <div className="mt-3 flex items-center gap-2">
@@ -397,8 +472,12 @@ function ExecutorTreino({ userId, rotina }: { userId: string; rotina: Rotina | n
 
 export default function SessaoTreino() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
   const { sessao } = useSessao()
   const { rotina, carregando, erro } = useRotina(id)
+
+  const minutosParam = Number(searchParams.get('minutos'))
+  const minutosExpress = minutosParam > 0 ? minutosParam : null
 
   if (!sessao || (id && carregando)) {
     return (
@@ -416,5 +495,5 @@ export default function SessaoTreino() {
     )
   }
 
-  return <ExecutorTreino userId={sessao.user.id} rotina={id ? rotina! : null} />
+  return <ExecutorTreino userId={sessao.user.id} rotina={id ? rotina! : null} minutosExpress={minutosExpress} />
 }
