@@ -3,6 +3,7 @@ import { supabase } from '../supabase.ts'
 import { buscarSeguindoIds } from './seguidores.ts'
 import { TAMANHO_MAX_POST, validarImagem } from '../uploadSeguro.ts'
 import { LIMITE_COMENTARIO, LIMITE_LEGENDA, validarTextoSocial } from './limites.ts'
+import { filtrarMetricasCompartilhadas } from './metricasCompartilhadas.ts'
 
 export type Autor = { id: string; nome: string; fotoUrl: string | null }
 
@@ -33,12 +34,11 @@ type PostBruto = {
   user_id: string
   legenda: string | null
   foto_url: string | null
-  sessao_concluida_id: string | null
+  tem_treino: boolean
   mostrar_duracao: boolean
   mostrar_series: boolean
   mostrar_volume: boolean
   criado_em: string
-  foto_path: string | null
   treino_nome: string | null
   treino_duracao_seg: number | null
   treino_series: number | null
@@ -70,12 +70,20 @@ async function montarPosts(postsBrutos: PostBruto[], meuId: string): Promise<Pos
   return postsBrutos.map((p) => {
     const likesDoPost = (likes ?? []).filter((l) => l.post_id === p.id)
     const perfilAutor = perfilPorId.get(p.user_id)
-    const resumoTreino: ResumoTreino | null = p.sessao_concluida_id && p.treino_nome
+    const metricas = filtrarMetricasCompartilhadas({
+      mostrarDuracao: p.mostrar_duracao,
+      mostrarSeries: p.mostrar_series,
+      mostrarVolume: p.mostrar_volume,
+      duracaoSeg: p.treino_duracao_seg,
+      numeroSeries: p.treino_series,
+      volumeTotalKg: p.treino_volume_kg,
+    })
+    const resumoTreino: ResumoTreino | null = p.tem_treino && p.treino_nome
       ? {
           nome: p.treino_nome,
-          duracaoSeg: p.treino_duracao_seg,
-          volumeTotalKg: p.treino_volume_kg,
-          numeroSeries: p.treino_series ?? 0,
+          duracaoSeg: metricas.duracaoSeg,
+          volumeTotalKg: metricas.volumeTotalKg,
+          numeroSeries: metricas.numeroSeries ?? 0,
         }
       : null
 
@@ -151,7 +159,7 @@ export function useFeedAmigos(meuId: string | undefined) {
       const seguindoIds = await buscarSeguindoIds(meuId!)
       const idsFeed = [...seguindoIds, meuId!]
       const { data, error } = await supabase
-        .from('posts')
+        .from('posts_publicos')
         .select('*')
         .in('user_id', idsFeed)
         .order('criado_em', { ascending: false })
@@ -168,7 +176,7 @@ export function useFeedAmigos(meuId: string | undefined) {
 export function useFeedDescobrir(meuId: string | undefined) {
   return useListaDePosts(
     async (inicio, fim) => {
-      const { data, error } = await supabase.from('posts').select('*').order('criado_em', { ascending: false }).range(inicio, fim)
+      const { data, error } = await supabase.from('posts_publicos').select('*').order('criado_em', { ascending: false }).range(inicio, fim)
       if (error) throw error
       return (data ?? []) as PostBruto[]
     },
@@ -182,7 +190,7 @@ export function usePostsDoUsuario(userIdAlvo: string | undefined, meuId: string 
   return useListaDePosts(
     async (inicio, fim) => {
       const { data, error } = await supabase
-        .from('posts')
+        .from('posts_publicos')
         .select('*')
         .eq('user_id', userIdAlvo!)
         .order('criado_em', { ascending: false })
@@ -241,11 +249,9 @@ export async function descurtir(postId: string, userId: string) {
 }
 
 export async function excluirPost(postId: string) {
-  const { data: post, error: erroBusca } = await supabase.from('posts').select('foto_path').eq('id', postId).single()
-  if (erroBusca) throw erroBusca
-  const { error } = await supabase.from('posts').delete().eq('id', postId)
+  const { data: fotoPath, error } = await supabase.rpc('excluir_post', { p_post_id: postId })
   if (error) throw error
-  if (post.foto_path) await supabase.storage.from('midia-publica').remove([post.foto_path])
+  if (fotoPath) await supabase.storage.from('midia-publica').remove([fotoPath])
 }
 
 export type Comentario = {

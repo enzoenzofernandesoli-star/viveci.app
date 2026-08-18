@@ -434,7 +434,7 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
         supabase.from('diario_alimentar').select('*').eq('user_id', userId),
         supabase.from('cardio_sessoes').select('*').eq('user_id', userId),
         supabase.from('fotos_progresso').select('id, data, angulo, storage_bucket, storage_path').eq('user_id', userId),
-        supabase.from('posts').select('*').eq('user_id', userId),
+        supabase.from('posts_proprios').select('*'),
         supabase.from('post_comments').select('*').eq('user_id', userId),
         supabase.from('post_likes').select('*').eq('user_id', userId),
         supabase.from('seguidores').select('*').eq('seguido_id', userId),

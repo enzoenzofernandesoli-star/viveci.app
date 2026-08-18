@@ -92,18 +92,27 @@ Precisam ser validados remotamente:
 3. A não altera `plano` para Pro e a quinta rotina Free falha pela API;
 4. bloqueios e autoria impedem interações indevidas.
 
-## Social e treino associado — risco crítico
+## Social e treino associado — correção local da Etapa 32
 
-O trigger local valida que a sessão pertence ao autor e copia métricas reais para
-o post. Porém `src/lib/social/posts.ts` consulta `posts.select('*')`. A tabela
-armazena duração, séries e volume mesmo quando os respectivos flags estão
-desligados. A interface esconde esses campos, mas um cliente autenticado pode
-potencialmente consultar o snapshot bruto.
+Fluxo anterior: `CriarPost` enviava o id da sessão e flags; o trigger validava a
+autoria, materializava nome/duração/séries/volume em `posts`; o feed fazia
+`posts.select('*')`; `PostCard` escondia métricas conforme os flags. Portanto o
+payload bruto ainda continha dados que o autor havia desmarcado.
 
-Status: **P0 — não atende ao princípio de compartilhar somente métricas
-autorizadas**. A correção deve mascarar os campos no contrato servido pelo banco
-(view/RPC segura e permissões que impeçam leitura direta), seguida de teste A/B.
-Não foi criada migration sem conhecer o estado remoto.
+A migration `12_privacidade_metricas_social.sql` cria:
+
+- `posts_publicos`, contrato do feed que substitui o id da sessão por
+  `tem_treino` e devolve `NULL` para cada métrica não autorizada;
+- `posts_proprios`, visão completa limitada por `auth.uid()` para exportação;
+- revogação do SELECT geral de `posts`, mantendo apenas colunas não sensíveis;
+- RPC `excluir_post`, que valida o JWT e devolve `foto_path` somente ao autor.
+
+O feed passou a consultar `posts_publicos` e ainda filtra as métricas no cliente
+como defesa adicional. Posts antigos permanecem compatíveis porque o contrato é
+calculado sobre as linhas existentes; nenhuma cópia de treino foi criada.
+
+Status local: **corrigido e testado**. Status remoto: **não comprovado até aplicar
+a migration 12 e executar o teste A/B inspecionando o payload**.
 
 ## Storage
 
@@ -154,7 +163,7 @@ Não foi implementado garbage collector nesta etapa.
 
 1. confirmar rotação/revogação da chave antiga;
 2. inspecionar migrations 09–11 no remoto sem reaplicação cega;
-3. corrigir no banco o vazamento potencial de métricas ocultas do post;
+3. confirmar/aplicar a migration 12 e validar métricas ocultas no payload A/B;
 4. criar duas contas descartáveis em homologação e executar a matriz A/B;
 5. confirmar buckets/policies e migrar fotos legadas com cópia antes da remoção;
 6. registrar evidências sem tokens, senhas, URLs assinadas ou dados pessoais.
