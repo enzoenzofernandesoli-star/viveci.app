@@ -108,10 +108,11 @@ function AbaCardio({ userId }: { userId: string }) {
 
         <div className="mt-4 flex gap-4">
           <div className="flex-1">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
+            <label htmlFor="cardio-duracao" className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
               Duração (min)
             </label>
             <input
+              id="cardio-duracao"
               type="number"
               inputMode="numeric"
               value={duracao}
@@ -121,10 +122,11 @@ function AbaCardio({ userId }: { userId: string }) {
             />
           </div>
           <div className="flex-1">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
+            <label htmlFor="cardio-distancia" className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
               Distância (km)
             </label>
             <input
+              id="cardio-distancia"
               type="text"
               inputMode="decimal"
               value={distancia}
