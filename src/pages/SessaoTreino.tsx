@@ -185,6 +185,7 @@ function ExecutorTreino({
 
   const ativo = exercicios[ativoIndex] as ExercicioSessao | undefined
   const referenciaAtiva = ativo ? referencias[ativo.exercicioId] : undefined
+  const proximaSerie = ativo?.sets[serieAtivaIndex]
 
   function selecionarExercicio(indice: number) {
     const exercicio = exercicios[indice]
@@ -414,7 +415,7 @@ function ExecutorTreino({
         <div className="mt-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="num text-[10px] font-semibold text-brand">{String(ativoIndex + 1).padStart(2, '0')} / {String(exercicios.length).padStart(2, '0')}</p>
+              <p className="num text-[10px] font-semibold uppercase tracking-[0.1em] text-brand">Exercício {ativoIndex + 1} de {exercicios.length}</p>
               <h2 className="mt-2 text-[28px] font-semibold leading-[1.05] tracking-[-0.055em]">{ativo.exercicio.nome}</h2>
               <p className="mt-2 text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
             </div>
@@ -442,7 +443,7 @@ function ExecutorTreino({
 
           {novoPR && (
             <div className="mt-5 border-l-2 border-gold py-2 pl-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gold">Novo PR</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gold">Novo recorde</p>
               <p className="mt-1 text-sm font-semibold">{ativo.exercicio.nome}</p>
               <p className="num mt-1 text-lg font-semibold">{formatoBR(novoPR.pesoKg)} kg × {novoPR.reps} <span className="ml-2 text-xs text-gold">+{formatoBR(novoPR.variacaoPercentual)}%</span></p>
             </div>
@@ -474,8 +475,16 @@ function ExecutorTreino({
           )}
 
           {descansando && (
-            <div className="mt-5 flex items-center justify-between border-y border-brand/30 py-5">
-              <div><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-brand">Descanso</p><p className="num mt-1 text-[42px] font-semibold leading-none tracking-[-0.06em]">{formatoTempo(segundosRestantes)}</p></div>
+            <div className="mt-6 flex items-end justify-between border-y border-brand/30 py-6">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-brand">Descanso</p>
+                <p className="num mt-2 text-[56px] font-semibold leading-none tracking-[-0.07em]">{formatoTempo(segundosRestantes)}</p>
+                {proximaSerie && (
+                  <p className="num mt-3 text-xs text-ink-2">
+                    Próxima série: {proximaSerie.peso || '—'} kg × {proximaSerie.reps || '—'}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={() => setDescansando(false)}
                 className="min-h-11 px-4 text-xs font-semibold text-ink-2 hover:text-ink"
@@ -485,7 +494,7 @@ function ExecutorTreino({
             </div>
           )}
 
-          <div className="mt-7">
+          {!descansando && <div className="mt-7">
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-2">Séries</p>
             <div className="mt-3 divide-y divide-line/60 border-y border-line/60">
               {ativo.sets.map((linha, i) => i === serieAtivaIndex && !linha.completo ? (
@@ -509,14 +518,14 @@ function ExecutorTreino({
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
-          <button
+          {!descansando && <button
             onClick={adicionarSet}
             className="mt-3 min-h-11 w-full text-xs font-semibold text-ink-2 transition-colors hover:text-ink"
           >
             + Adicionar série
-          </button>
+          </button>}
 
           <div className="mt-7 flex items-center justify-between border-t border-line/60 pt-4">
             <button onClick={() => selecionarExercicio(Math.max(0, ativoIndex - 1))} disabled={ativoIndex === 0} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-ink-2 disabled:opacity-30"><ArrowLeft size={16} /> Anterior</button>
