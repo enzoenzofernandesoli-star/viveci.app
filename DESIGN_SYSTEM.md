@@ -45,7 +45,7 @@ conquista e sequência.
 - Home: `src/assets/viveci/home-hero.webp`, oficial e prioritária.
 - Login desktop: reutiliza a Home Hero com crop próprio.
 - Treinos: aceita somente capas oficiais em `src/assets/viveci/workouts/`;
-  enquanto ausentes, usa fallback geométrico silencioso.
+  usa mídia 3:2 com `object-cover` e, quando ausente, fallback geométrico.
 - Sessão usa GIF didático do exercício, nunca fotografia decorativa.
 - Social e Body Scan usam mídia enviada pelo usuário.
 - Corpo e Nutrição não recebem fotografia decorativa.

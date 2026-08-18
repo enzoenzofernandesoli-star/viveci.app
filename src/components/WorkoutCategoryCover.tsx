@@ -30,7 +30,7 @@ export function WorkoutCategoryCover({ categoria }: { categoria: CategoriaVisual
   useEffect(() => setFalhou(false), [categoria, foto])
 
   return (
-    <div className="relative aspect-[16/9] overflow-hidden bg-card-hover md:aspect-auto md:min-h-44">
+    <div className="relative aspect-[3/2] overflow-hidden bg-card-hover">
       {(!foto || falhou) && (
         <div className="absolute inset-0" aria-hidden="true">
           <div className="absolute inset-y-0 left-[28%] w-px rotate-12 bg-line" />
@@ -47,7 +47,7 @@ export function WorkoutCategoryCover({ categoria }: { categoria: CategoriaVisual
           loading="lazy"
           decoding="async"
           onError={() => setFalhou(true)}
-          className="relative h-full w-full object-contain"
+          className="relative h-full w-full object-cover object-center"
         />
       )}
     </div>
