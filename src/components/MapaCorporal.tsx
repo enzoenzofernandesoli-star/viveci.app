@@ -115,28 +115,29 @@ function PainelMusculo({
   editorial: boolean
 }) {
   return (
-    <div className={`animar-escala mt-5 ${editorial ? 'border-t border-line/70 pt-5' : 'rounded-xl border border-line bg-card-hover p-4'}`}>
+    <div className={`animar-escala ${editorial ? 'border-y border-line/60 py-6' : 'mt-5 rounded-xl border border-line bg-card-hover p-4'}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-ink">{grupo}</h3>
+        <h3 className={editorial ? 'text-[28px] font-semibold tracking-[-0.05em] text-ink' : 'text-sm font-semibold text-ink'}>{grupo}</h3>
         <button onClick={onFechar} aria-label="Fechar" className="text-xs font-semibold text-ink-2 hover:text-ink">
           Fechar
         </button>
       </div>
-      <p className="mt-1 text-xs text-ink-2">Últimos 7 dias: {percentual}% do volume máximo</p>
-      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+      <p className="mt-2 text-xs text-ink-2">Intensidade relativa · {percentual}% do grupo mais estimulado</p>
+      <div className="mt-4 h-1 overflow-hidden bg-line"><div className="h-full bg-brand" style={{ width: `${percentual}%` }} /></div>
+      <div className={`mt-6 text-sm ${editorial ? 'divide-y divide-line/60' : 'grid grid-cols-2 gap-3'}`}>
         <div>
+          <p className={editorial ? 'num text-[34px] font-semibold leading-none text-ink' : 'num font-semibold text-ink'}>{estatisticas?.series ?? 0}</p>
+          <p className="mt-1 text-xs text-ink-2">séries nos últimos 30 dias</p>
+        </div>
+        <div className={editorial ? 'mt-5 pt-5' : ''}>
+          <p className={editorial ? 'num text-xl font-semibold text-ink' : 'num font-semibold text-ink'}>{(estatisticas?.volumeKg ?? 0).toLocaleString('pt-BR')} kg</p>
+          <p className="text-xs text-ink-2">volume nos últimos 30 dias</p>
+        </div>
+        <div className={editorial ? 'mt-5 pt-5' : ''}>
           <p className="num font-semibold text-ink">{estatisticas?.treinos ?? 0}</p>
-          <p className="text-xs text-ink-2">treinos (30d)</p>
+          <p className="text-xs text-ink-2">treinos nos últimos 30 dias</p>
         </div>
-        <div>
-          <p className="num font-semibold text-ink">{estatisticas?.series ?? 0}</p>
-          <p className="text-xs text-ink-2">séries (30d)</p>
-        </div>
-        <div>
-          <p className="num font-semibold text-ink">{(estatisticas?.volumeKg ?? 0).toLocaleString('pt-BR')} kg</p>
-          <p className="text-xs text-ink-2">volume (30d)</p>
-        </div>
-        <div>
+        <div className={editorial ? 'mt-5 pt-5' : ''}>
           <p className="num font-semibold text-ink">
             {estatisticas?.ultimoEstimuloDias === null || estatisticas?.ultimoEstimuloDias === undefined
               ? '—'
@@ -210,15 +211,15 @@ export function MapaCorporal({
 
   return (
     <div className={modoEditorial ? '' : 'rounded-2xl border border-line bg-card p-6'}>
-      <div className={modoEditorial ? 'grid items-start gap-5 lg:grid-cols-[minmax(260px,0.9fr)_minmax(300px,1.1fr)] lg:gap-12' : ''}>
+      <div className={modoEditorial ? 'grid items-start gap-8 lg:grid-cols-[minmax(360px,1.2fr)_minmax(280px,0.8fr)] lg:gap-16' : ''}>
         <div>
           <div className={`flex items-center ${modoEditorial ? 'justify-center' : 'justify-between'}`}>
             {!modoEditorial && <h2 className="text-[17px] font-semibold">Mapa corporal</h2>}
-            <div className="flex gap-1 border-b border-line/70">
+            <div className="flex border-b border-line/70">
               <button
                 type="button"
                 onClick={() => setVista(ViewSide.FRONT)}
-                className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
+                className={`relative min-h-11 px-6 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors ${
                   vista === ViewSide.FRONT ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
                 }`}
               >
@@ -227,7 +228,7 @@ export function MapaCorporal({
               <button
                 type="button"
                 onClick={() => setVista(ViewSide.BACK)}
-                className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
+                className={`relative min-h-11 px-6 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors ${
                   vista === ViewSide.BACK ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
                 }`}
               >
@@ -238,11 +239,16 @@ export function MapaCorporal({
 
           {!modoEditorial && <p className="mt-1 text-xs text-ink-2">Toque num músculo pra ver os detalhes. Volume dos últimos 7 dias.</p>}
 
-          <div ref={containerRef} className={`mx-auto [&_svg]:mx-auto ${modoEditorial ? 'w-56 sm:w-64 [&_svg]:!max-h-[430px]' : 'w-56 [&_svg]:!max-h-none'}`} />
+          <div ref={containerRef} className={`mx-auto [&_svg]:mx-auto ${modoEditorial ? 'w-[82vw] max-w-[340px] sm:max-w-[380px] [&_svg]:!max-h-[540px]' : 'w-56 [&_svg]:!max-h-none'}`} />
+          {modoEditorial && (
+            <div className="mx-auto mt-1 flex max-w-[340px] items-center gap-3 text-[10px] uppercase tracking-[0.08em] text-ink-3">
+              <span>Baixo</span><div className="flex h-1 flex-1 overflow-hidden bg-line"><span className="w-1/3 bg-brand/35" /><span className="w-1/3 bg-brand/65" /><span className="w-1/3 bg-brand" /></div><span>Alto</span>
+            </div>
+          )}
         </div>
 
-        <div className={modoEditorial ? 'lg:pt-11' : ''}>
-          <div className={`grid grid-cols-2 gap-x-4 ${modoEditorial ? 'mt-0 gap-y-0 border-y border-line/60' : 'mt-4 gap-y-2'}`}>
+        <div className={modoEditorial ? 'lg:pt-16' : ''}>
+          {!modoEditorial && <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2">
             {grupos.map((g) => (
               <button
                 key={g}
@@ -256,7 +262,7 @@ export function MapaCorporal({
                 <span className="num text-ink">{percentuais[g]}%</span>
               </button>
             ))}
-          </div>
+          </div>}
 
           {selecionado && (
             <PainelMusculo
@@ -268,8 +274,13 @@ export function MapaCorporal({
             />
           )}
 
+          {modoEditorial && !selecionado && (
+            <p className="border-y border-line/60 py-6 text-sm text-ink-2">Toque em um músculo para ver detalhes.</p>
+          )}
+
           {desequilibrios.length > 0 && (
-            <div className="mt-5 space-y-2 border-t border-line pt-4">
+            <div className="mt-6 space-y-2 border-t border-line/60 pt-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Equilíbrio</p>
               {desequilibrios.map((d) => (
                 <p key={d.grupoMaisTreinado + d.grupoMenosTreinado} className="text-sm text-ink-2">
                   <span className="text-gold">{d.grupoMaisTreinado}</span> ficou {d.diferenca} pontos à frente de{' '}

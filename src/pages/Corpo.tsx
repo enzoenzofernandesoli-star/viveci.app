@@ -1,4 +1,4 @@
-import { Activity } from 'lucide-react'
+import { useState } from 'react'
 import { Empty } from '../components/Empty'
 import { MapaCorporal } from '../components/MapaCorporal'
 import { Divider } from '../components/ui/Surface'
@@ -10,6 +10,7 @@ import { useRotinas } from '../lib/rotinas'
 import { useVivici } from '../lib/vivici'
 
 export default function Corpo() {
+  const [mostrarTodos, setMostrarTodos] = useState(false)
   const { sessao } = useSessao()
   const perfilState = usePerfil(sessao?.user.id)
   const rotinasState = useRotinas(sessao?.user.id)
@@ -21,15 +22,20 @@ export default function Corpo() {
     0,
   )
   const resultado = viviciState.resultado
+  const gruposOrdenados = resultado
+    ? [...GRUPOS_MUSCULARES].sort((a, b) => resultado.percentuaisSemana[b] - resultado.percentuaisSemana[a])
+    : []
+  const semEstimulos = resultado ? gruposOrdenados.every((grupo) => resultado.percentuaisSemana[grupo] === 0) : false
+  const gruposVisiveis = mostrarTodos ? gruposOrdenados : gruposOrdenados.slice(0, 5)
 
   return (
     <div className="animar-entrada mx-auto w-full max-w-[1120px]">
-      <header className="flex items-end justify-between gap-5 border-b border-line/60 pb-5">
+      <header className="border-b border-line/60 pb-4">
         <div>
           <Eyebrow>Corpo</Eyebrow>
           <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.045em]">Mapa de estímulo</h1>
+          <p className="mt-1 text-xs text-ink-3">Últimos 7 dias</p>
         </div>
-        <p className="text-xs text-ink-3">Últimos 7 dias</p>
       </header>
 
       {viviciState.carregando || perfilState.carregando || rotinasState.carregando ? (
@@ -38,7 +44,7 @@ export default function Corpo() {
         <Empty text="Não foi possível carregar a análise corporal agora." />
       ) : (
         <>
-          <section aria-label="Mapa corporal interativo" className="py-7 sm:py-9">
+          <section aria-label="Mapa corporal interativo" className="py-4 sm:py-7">
             <MapaCorporal
               percentuais={resultado.percentuaisSemana}
               desequilibrios={resultado.desequilibrios}
@@ -46,6 +52,13 @@ export default function Corpo() {
               modoEditorial
             />
           </section>
+
+          {semEstimulos && (
+            <section className="border-y border-line/60 py-6 text-center">
+              <Eyebrow>Sem estímulos recentes</Eyebrow>
+              <MetaText className="mt-2">Seus treinos dos últimos 7 dias aparecerão aqui.</MetaText>
+            </section>
+          )}
 
           <Divider />
 
@@ -55,16 +68,15 @@ export default function Corpo() {
                 <Eyebrow>Leitura do período</Eyebrow>
                 <h2 id="titulo-grupos" className="mt-2 text-xl font-semibold tracking-[-0.035em]">Grupos musculares</h2>
               </div>
-              <Activity size={19} strokeWidth={1.5} className="text-ink-3" />
+              {gruposOrdenados.length > 5 && <button onClick={() => setMostrarTodos((valor) => !valor)} className="min-h-11 text-xs font-semibold text-ink-2 hover:text-ink">{mostrarTodos ? 'Mostrar menos' : 'Ver todos'}</button>}
             </div>
             <div className="mt-6 divide-y divide-line/60 border-y border-line/60">
-              {GRUPOS_MUSCULARES.map((grupo) => (
-                <div key={grupo} className="grid min-h-12 grid-cols-[7.5rem_1fr_2.75rem] items-center gap-3 text-xs sm:grid-cols-[10rem_1fr_3rem]">
+              {gruposVisiveis.map((grupo) => (
+                <div key={grupo} className="grid min-h-12 grid-cols-[7.5rem_1fr] items-center gap-3 text-xs sm:grid-cols-[10rem_1fr]">
                   <span className="text-ink-2">{grupo}</span>
                   <div className="h-1 overflow-hidden bg-line/80">
                     <div className="h-full bg-brand transition-[width] duration-500" style={{ width: `${resultado.percentuaisSemana[grupo]}%` }} />
                   </div>
-                  <span className="num text-right font-semibold">{resultado.percentuaisSemana[grupo]}%</span>
                 </div>
               ))}
             </div>
@@ -72,10 +84,10 @@ export default function Corpo() {
 
           {resultado.musculoNegligenciado && (
             <section className="border-t border-line/60 py-8">
-              <Eyebrow>Atenção técnica</Eyebrow>
+              <Eyebrow>Atenção</Eyebrow>
               <p className="mt-3 text-lg font-semibold tracking-[-0.025em]">{resultado.musculoNegligenciado.grupo}</p>
               <MetaText className="mt-1 max-w-xl">
-                Está com {resultado.musculoNegligenciado.percentual}% do volume relativo de {resultado.musculoNegligenciado.grupoReferencia} no período recente.
+                Menor estímulo relativo no período recente, comparado a {resultado.musculoNegligenciado.grupoReferencia}.
               </MetaText>
             </section>
           )}
