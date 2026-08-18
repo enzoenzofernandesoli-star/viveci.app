@@ -13,6 +13,8 @@ import Perfil from './pages/Perfil'
 import Configuracoes from './pages/Configuracoes'
 import BodyScan from './pages/BodyScan'
 import AnalisarMovimento from './pages/AnalisarMovimento'
+import Social from './pages/Social'
+import PerfilPublico from './pages/PerfilPublico'
 import Planos from './pages/Planos'
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
               <Route path="treino/rapido" element={<SessaoTreino />} />
               <Route path="treino/:id/sessao" element={<SessaoTreino />} />
               <Route path="nutricao" element={<Nutricao />} />
+              <Route path="social" element={<Social />} />
+              <Route path="social/usuario/:id" element={<PerfilPublico />} />
               <Route path="perfil" element={<Perfil />} />
               <Route path="perfil/configuracoes" element={<Configuracoes />} />
               <Route path="perfil/body-scan" element={<BodyScan />} />

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Dumbbell, Apple, User, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, Dumbbell, Users, Apple, User, type LucideIcon } from 'lucide-react'
 
 export type NavItem = {
   to: string
@@ -9,6 +9,7 @@ export type NavItem = {
 export const NAV: NavItem[] = [
   { to: '/', label: 'Início', icon: LayoutDashboard },
   { to: '/treino', label: 'Treino', icon: Dumbbell },
+  { to: '/social', label: 'Social', icon: Users },
   { to: '/nutricao', label: 'Nutrição', icon: Apple },
   { to: '/perfil', label: 'Perfil', icon: User },
 ]

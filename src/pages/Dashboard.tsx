@@ -10,6 +10,7 @@ import { useDia, somar } from '../lib/diario'
 import { hojeISO } from '../lib/data'
 import { useMetaAtiva } from '../lib/metaManual'
 import { useVivici } from '../lib/vivici'
+import { useFeedAmigos } from '../lib/social/posts'
 import type { Perfil } from '../lib/perfil'
 
 function formatoBR(n: number): string {
@@ -172,6 +173,33 @@ function CardNutricao({ userId, perfil }: { userId: string; perfil: NonNullable<
   )
 }
 
+function CardSocial({ userId }: { userId: string }) {
+  const navigate = useNavigate()
+  const { posts, carregando } = useFeedAmigos(userId)
+
+  if (carregando) return null
+
+  const hoje = new Date().toISOString().slice(0, 10)
+  const autoresHoje = new Set(posts.filter((p) => p.criadoEm.slice(0, 10) === hoje && p.autor.id !== userId).map((p) => p.autor.id))
+
+  return (
+    <div className="animar-entrada rounded-2xl border border-line bg-card p-6">
+      <h2 className="text-[17px] font-semibold">Social</h2>
+      <p className="mt-1 text-sm text-ink-2">
+        {autoresHoje.size > 0
+          ? `${autoresHoje.size} ${autoresHoje.size === 1 ? 'amigo publicou' : 'amigos publicaram'} hoje.`
+          : 'Veja o que seus amigos estão treinando.'}
+      </p>
+      <button
+        onClick={() => navigate('/social')}
+        className="mt-4 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+      >
+        Ver feed
+      </button>
+    </div>
+  )
+}
+
 function ConteudoDashboard({
   userId,
   perfil,
@@ -219,6 +247,7 @@ function ConteudoDashboard({
 
       {resultado && !carregandoVivici && <CardDailyScore resultado={resultado} />}
       <CardNutricao userId={userId} perfil={perfil} />
+      <CardSocial userId={userId} />
       {resultado && !carregandoVivici && <CardAlertas resultado={resultado} />}
 
       {carregandoVivici || !resultado ? (

@@ -3,11 +3,11 @@ import { Plus } from 'lucide-react'
 import { NAV } from '../lib/nav'
 
 export function BottomNav() {
-  const [inicio, treino, nutricao, perfil] = NAV
+  const [inicio, treino, social, nutricao, perfil] = NAV
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center border-t border-line bg-sidebar pb-[env(safe-area-inset-bottom)] lg:hidden">
-      {[inicio, treino].map(({ to, label, icon: Icon }) => (
+      {[inicio, treino, social].map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}
           to={to}

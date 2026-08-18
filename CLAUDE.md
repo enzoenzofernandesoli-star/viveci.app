@@ -117,16 +117,19 @@ Arquivos de teste (`*.test.ts`) só importam módulos **puros** (sem `import.met
 sem o client do Supabase) — por isso a lógica de negócio fica separada da
 camada de I/O em arquivos próprios (ex: `progressaoCarga.ts` puro vs `registros.ts` com I/O).
 
-**Navegação:** 4 abas fixas — Início, Treino, Nutrição, Perfil — mais um botão
-redondo flutuante no meio da barra inferior que abre o Treino Rápido
-(`/treino/rapido`). Planos não tem aba própria (acessível a partir do Perfil
-e de telas de bloqueio). Evolução não é mais rota — é a 2ª aba dentro da
-própria página de Perfil (a 1ª é Treinos). Food Scanner e Label Scanner não
-são rotas — abrem como view cheia de dentro de Nutrição (ícone de câmera em
-cada refeição). Body Scan (`/perfil/body-scan`), Configurações
-(`/perfil/configuracoes`) e Analisar movimento (`/treino/analisar/:id`) são
-rotas próprias, mas só alcançáveis a partir do Perfil/sessão de treino —
-nenhuma delas tem aba própria na navegação inferior.
+**Navegação:** 5 abas fixas — Início, Treino, Social, Nutrição, Perfil (`src/lib/nav.ts`,
+compartilhado entre `Sidebar.tsx` e `BottomNav.tsx`) — mais um botão redondo
+flutuante no meio da barra inferior que abre o Treino Rápido (`/treino/rapido`).
+Na barra inferior o botão fica entre a 3ª e a 4ª aba (grupo esquerdo com
+3 itens, direito com 2 — `BottomNav.tsx` desestrutura `NAV` manualmente,
+cuidado ao adicionar/remover item). Planos não tem aba própria (acessível a
+partir do Perfil e de telas de bloqueio). Evolução não é mais rota — é a 2ª
+aba dentro da própria página de Perfil (a 1ª é Treinos). Food Scanner e
+Label Scanner não são rotas — abrem como view cheia de dentro de Nutrição
+(ícone de câmera em cada refeição). Body Scan (`/perfil/body-scan`),
+Configurações (`/perfil/configuracoes`), Analisar movimento
+(`/treino/analisar/:id`) e Perfil público (`/social/usuario/:id`) são rotas
+próprias sem aba própria na navegação inferior.
 
 **Dependência externa de UI:** `body-muscles` (npm) — biblioteca do mapa
 corporal (SVG anatômico com 89 regiões). Ver seção "Mapa corporal" abaixo
@@ -217,12 +220,17 @@ qualquer entrega.
 - **Analisar movimento** (botão na sessão de treino) — grava/envia vídeo do
   exercício. **100% simulado**: sempre devolve a mesma mensagem avisando
   que a análise real ainda não está conectada, nunca finge diagnóstico.
+- **VIVECI Social** (`/social`) — núcleo real (sem mock): feed Amigos/Descobrir,
+  publicar foto + legenda + treino real anexado (com controle de quais dados
+  aparecem), curtir, comentar, seguir, perfil público, card "Desafio inicial"
+  com progresso calculado de verdade. **Sem vídeo, XP/rankings, notificações,
+  desafios além do inicial, moderação ou tempo real** — ver seção própria
+  abaixo pra escopo completo do que ficou de fora do MVP.
 
 **Não existe (e não tem ordem definida pra construir):** Desafio 24 Dias,
-receitas, IA de dieta personalizada, sistema social (seguidores/amigos —
-o Perfil foi inspirado visualmente num app com esse recurso, mas os 3 números
-mostrados são só estatísticas próprias, não social). Não construir nenhum
-desses sem pedido explícito.
+receitas, IA de dieta personalizada, vídeo/Stories no Social, XP e rankings,
+notificações sociais, desafios além do "Desafio inicial", moderação/denúncia,
+contas privadas. Não construir nenhum desses sem pedido explícito.
 
 ---
 
@@ -499,6 +507,50 @@ só explica que é preciso contatar o suporte. Exportar dados é real: baixa
 um JSON com perfil, rotinas, registros, sessões, medidas, diário e cardio
 do próprio usuário.
 
+### VIVECI Social — `src/pages/Social.tsx`, `src/lib/social/`
+
+Pedido explícito do dono do produto (o CLAUDE.md antes dizia pra não
+construir sistema social sem pedido explícito — isso mudou aqui). Escopo
+combinado com o usuário: núcleo real primeiro (feed, posts, curtidas,
+comentários, seguir, perfil público, desafio inicial), **sem** vídeo,
+XP/rankings, notificações, desafios além do inicial, moderação/denúncia ou
+tempo real — essas partes do prompt original (seções 28-33, 38-43, 48,
+65-73 do prompt master) não foram implementadas ainda.
+
+**Sem conta privada nessa primeira versão** — qualquer usuário autenticado
+lê qualquer post/comentário/curtida/perfil (RLS só restringe *escrita* ao
+dono, ver `sql/08_social.sql`). A tabela `perfis` só tinha a policy "dono"
+(restringia leitura ao próprio usuário) — teve que ganhar uma policy nova
+de leitura pública, senão o feed não conseguia mostrar nome/foto de outros
+autores.
+
+**`src/lib/social/posts.ts`** monta a lista de posts em lote (sem N+1):
+busca os posts, depois busca autores/curtidas/comentários/sessões em
+poucas queries `in (...)`, e junta tudo em memória. Um post pode referenciar
+uma `sessoes_concluidas.sessao_id` real (nunca duplica o treino) — o card
+mostra nome da rotina, duração, séries e volume, cada um **opcionalmente
+oculto** pelos campos `mostrar_duracao/mostrar_series/mostrar_volume` que o
+autor escolhe ao publicar (`src/components/CriarPost.tsx`). PR do post não
+foi implementado ainda (calcular PR retroativo por post seria caro demais
+pra fazer por item de feed).
+
+**Feed Amigos** = posts de quem o usuário segue + os próprios
+(`buscarSeguindoIds` em `seguidores.ts`). **Descobrir** = todos os posts
+públicos recentes, sem algoritmo de recomendação — só ordem cronológica,
+igual o prompt master pedia pra fase inicial (seção 34).
+
+**Desafio inicial** (`src/lib/social/desafioInicial.ts`, puro e testado) —
+substitui o "25% fixo" da referência visual por 4 tarefas reais de peso
+igual (perfil completo, primeira rotina, primeiro treino concluído,
+primeiro post): `calcularDesafioInicial` nunca inventa o percentual.
+Card em `src/components/CardDesafioInicial.tsx`, mostrado só na aba Amigos
+do Social, some sozinho quando chega a 100%.
+
+**Curtir/comentar/seguir** são otimistas na UI (atualiza a tela antes da
+resposta do servidor, desfaz se der erro) — sem tempo real, sem
+notificação pro autor. Curtida duplicada é impedida pela chave primária
+composta `(post_id, user_id)` de `post_likes`, não por lógica no frontend.
+
 ### Planos — `src/lib/planos.ts`
 
 Só `free` e `pro`. Hoje o único recurso realmente bloqueado é o limite de 4
@@ -517,18 +569,20 @@ ainda** — não implementar até o dono do produto detalhar como deve funcionar
 
 Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 `01_estrutura` → `02_exercicios` → `03_alimentos_desafio` → `04_storage_policies`
-→ `05_cardio` → `06_perfil_bio` → `07_preferencias`. Todos já foram rodados
-no banco de produção (`07_preferencias` foi confirmado pelo usuário) —
-mas se o app voltar a mostrar `PGRST205 / Could not find the table
-'preferencias_usuario'`, é cache de schema do PostgREST desatualizado, não
-falta de tabela: usar "Reload schema" no painel do Supabase resolve. Até
-resolver, a tela de Configurações continua funcionando com os valores
-padrão (`PREFERENCIAS_PADRAO`), só não persiste.
+→ `05_cardio` → `06_perfil_bio` → `07_preferencias` → `08_social`. Os 7
+primeiros já foram rodados no banco de produção; **`08_social`
+(`posts`/`post_likes`/`post_comments`/`seguidores` + policy nova de leitura
+pública em `perfis`) ainda não foi rodado** — até lá, o Social carrega mas
+mostra erro de feed (`PGRST205`), igual aconteceu com `07_preferencias`
+antes de rodar. Se `preferencias_usuario` voltar a dar `PGRST205` depois de
+rodada, é cache de schema do PostgREST desatualizado — "Reload schema" no
+painel do Supabase resolve, não falta tabela.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia. Avatar usa
-`<user_id>/avatar.<ext>`; Body Scan usa `<user_id>/body/<angulo>-<timestamp>.<ext>`
-— ambos passam na policy porque ela só olha o primeiro segmento do caminho.
+`<user_id>/avatar.<ext>`; Body Scan usa `<user_id>/body/<angulo>-<timestamp>.<ext>`;
+Social usa `<user_id>/social/<timestamp>.<ext>` — todos passam na policy
+porque ela só olha o primeiro segmento do caminho.
 
 Tabela `fotos_progresso` existia desde `01_estrutura.sql` mas não era usada
 por nenhuma tela até o Body Scan (ver seção "Body Scan" acima) — não é
