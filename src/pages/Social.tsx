@@ -24,8 +24,8 @@ export default function Social() {
     setSearchParams({}, { replace: true })
   }
 
-  const feedAmigos = useFeedAmigos(userId)
-  const feedDescobrir = useFeedDescobrir(userId)
+  const feedAmigos = useFeedAmigos(aba === 'amigos' ? userId : undefined)
+  const feedDescobrir = useFeedDescobrir(aba === 'descobrir' ? userId : undefined)
   const feed = aba === 'amigos' ? feedAmigos : feedDescobrir
 
   if (!sessao || !userId) {
@@ -44,6 +44,7 @@ export default function Social() {
         onFechar={fecharCriacao}
         onPublicado={() => {
           fecharCriacao()
+          setAba('amigos')
           feedAmigos.recarregar()
         }}
       />
