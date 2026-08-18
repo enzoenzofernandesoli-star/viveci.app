@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronDown, Pencil, Plus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronDown, MoreHorizontal, Pencil, Plus } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { SeletorExercicio } from '../components/SeletorExercicio'
@@ -87,6 +87,9 @@ function ExecutorTreino({
   const [ativoIndex, setAtivoIndex] = useState(0)
   const [mostrarSeletor, setMostrarSeletor] = useState(false)
   const [editandoDescanso, setEditandoDescanso] = useState(false)
+  const [menuExercicio, setMenuExercicio] = useState(false)
+  const [serieAtivaIndex, setSerieAtivaIndex] = useState(0)
+  const [referencias, setReferencias] = useState<Record<number, { ultimoPeso: number; ultimoReps: number; sugerido: number }>>({})
 
   const [descansando, setDescansando] = useState(false)
   const [segundosRestantes, setSegundosRestantes] = useState(0)
@@ -96,6 +99,7 @@ function ExecutorTreino({
   const [finalizando, setFinalizando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [novoPR, setNovoPR] = useState<{ pesoKg: number; reps: number; variacaoPercentual: number } | null>(null)
+  const [totalPR, setTotalPR] = useState(0)
 
   const sessaoConcluidaId = useRef<string | null>(null)
   const inicioMs = useRef<number>(Date.now())
@@ -145,6 +149,20 @@ function ExecutorTreino({
         }),
       )
       if (cancelado) return
+      setReferencias(
+        Object.fromEntries(
+          copiasIniciais.flatMap(({ ex, ultimo }) => {
+            if (!ultimo) return []
+            const item = rotina?.itens.find((it) => it.id === ex.itemId)
+            const repsAlvo = item?.reps_max ?? ultimo.reps
+            return [[ex.exercicioId, {
+              ultimoPeso: ultimo.peso_kg,
+              ultimoReps: ultimo.reps,
+              sugerido: sugerirProximoPeso(ultimo.peso_kg, ultimo.reps, repsAlvo, ex.exercicio.grupo_muscular),
+            }]]
+          }),
+        ),
+      )
       setExercicios((atual) =>
         atual.map((ex, i) => {
           const { ultimo } = copiasIniciais[i]
@@ -166,6 +184,16 @@ function ExecutorTreino({
   }, [])
 
   const ativo = exercicios[ativoIndex] as ExercicioSessao | undefined
+  const referenciaAtiva = ativo ? referencias[ativo.exercicioId] : undefined
+
+  function selecionarExercicio(indice: number) {
+    const exercicio = exercicios[indice]
+    const primeiroPendente = exercicio?.sets.findIndex((set) => !set.completo) ?? -1
+    setSerieAtivaIndex(primeiroPendente >= 0 ? primeiroPendente : Math.max((exercicio?.sets.length ?? 1) - 1, 0))
+    setAtivoIndex(indice)
+    setMenuExercicio(false)
+    setEditandoDescanso(false)
+  }
 
   async function adicionarExercicio(exercicioId: number) {
     const exercicio = EXERCICIOS.find((e) => e.id === exercicioId)!
@@ -228,6 +256,7 @@ function ExecutorTreino({
 
       if (resultadoPR.isPR && historico.length > 0 && resultadoPR.variacaoPercentual !== null) {
         setNovoPR({ pesoKg: peso, reps, variacaoPercentual: resultadoPR.variacaoPercentual })
+        setTotalPR((total) => total + 1)
       }
       setExercicios((atual) =>
         atual.map((ex, i) => {
@@ -238,6 +267,8 @@ function ExecutorTreino({
       )
       setSegundosRestantes(ativo.descansoSeg)
       setDescansando(true)
+      const proxima = ativo.sets.findIndex((set, indice) => indice > indiceSet && !set.completo)
+      if (proxima >= 0) setSerieAtivaIndex(proxima)
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não deu pra registrar a série.')
     }
@@ -273,22 +304,24 @@ function ExecutorTreino({
   }
 
   if (treinoConcluido) {
+    const seriesConcluidas = exercicios.reduce((total, exercicio) => total + exercicio.sets.filter((set) => set.completo).length, 0)
     return (
-      <Page title="Treino concluído">
-        <div className="mt-6 rounded-2xl border border-line bg-card p-6 text-center">
-          <p className="text-[17px] font-semibold text-ink">Treino concluído.</p>
-          <p className="mt-2 text-sm text-ink-2">
-            Duração: <span className="num text-ink">{formatoTempo(elapsedSeg)}</span> · Volume:{' '}
-            <span className="num text-ink">{formatoBR(volumeAcumulado.current)} kg</span>
-          </p>
+      <div className="animar-entrada mx-auto flex min-h-[70dvh] w-full max-w-xl flex-col justify-center py-8 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand">Treino concluído</p>
+          <p className="num mt-5 text-[64px] font-semibold leading-none tracking-[-0.07em]">{formatoTempo(elapsedSeg)}</p>
+          <p className="mt-2 text-xs text-ink-2">duração total</p>
+          <div className="mt-8 grid grid-cols-3 divide-x divide-line/60 border-y border-line/60 py-5">
+            <div><p className="num text-xl font-semibold">{seriesConcluidas}</p><p className="mt-1 text-[10px] uppercase tracking-[0.06em] text-ink-3">séries</p></div>
+            <div><p className="num text-xl font-semibold">{formatoBR(volumeAcumulado.current)}</p><p className="mt-1 text-[10px] uppercase tracking-[0.06em] text-ink-3">kg volume</p></div>
+            <div><p className={`num text-xl font-semibold ${totalPR > 0 ? 'text-gold' : ''}`}>{totalPR}</p><p className="mt-1 text-[10px] uppercase tracking-[0.06em] text-ink-3">novos PRs</p></div>
+          </div>
           <button
             onClick={() => navigate('/treino', { replace: true })}
-            className="mt-6 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+            className="mt-8 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
           >
-            Voltar
+            Concluir
           </button>
-        </div>
-      </Page>
+      </div>
     )
   }
 
@@ -309,16 +342,19 @@ function ExecutorTreino({
   }
 
   return (
-    <div className="pb-4">
-      <div className="flex items-center justify-between">
-        <button onClick={() => navigate('/treino')} aria-label="Voltar" className="text-ink-2">
-          <ChevronDown size={22} strokeWidth={1.75} />
+    <div className="mx-auto max-w-2xl pb-6">
+      <div className="sticky top-0 z-20 -mx-4 flex min-h-14 items-center justify-between border-b border-line/50 bg-app/90 px-4 backdrop-blur-lg lg:static lg:mx-0">
+        <button onClick={() => navigate('/treino')} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2">
+          <ChevronDown size={21} strokeWidth={1.75} />
         </button>
-        <span className="num text-lg font-bold text-ink">{formatoTempo(elapsedSeg)}</span>
+        <div className="text-center">
+          <p className="max-w-40 truncate text-xs font-semibold">{rotina?.nome ?? 'Treino rápido'}</p>
+          <span className="num mt-0.5 block text-[10px] text-ink-3">{formatoTempo(elapsedSeg)}</span>
+        </div>
         <button
           onClick={finalizarTreino}
           disabled={finalizando}
-          className="h-9 rounded-xl border border-line px-4 text-sm font-semibold text-ink transition-colors hover:bg-card-hover disabled:opacity-60"
+          className="min-h-11 px-2 text-xs font-semibold text-ink-2 transition-colors hover:text-ink disabled:opacity-60"
         >
           {finalizando ? '...' : 'Concluir'}
         </button>
@@ -336,24 +372,24 @@ function ExecutorTreino({
         </div>
       )}
 
-      <div className="-mx-4 mt-5 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div className="mt-5 flex items-center justify-center gap-2 overflow-x-auto pb-1">
         {exercicios.map((ex, i) => (
           <button
             key={`${ex.exercicioId}-${i}`}
-            onClick={() => setAtivoIndex(i)}
-            className={`h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 ${
-              i === ativoIndex ? 'border-brand' : 'border-line'
+            onClick={() => selecionarExercicio(i)}
+            className={`num flex size-9 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${
+              i === ativoIndex ? 'border-brand bg-brand text-white' : 'border-line text-ink-3'
             }`}
           >
-            <img src={ex.exercicio.gif} alt="" className="h-full w-full object-cover" />
+            {i + 1}
           </button>
         ))}
         <button
           onClick={() => setMostrarSeletor(true)}
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-line text-ink-3"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-line text-ink-3"
           aria-label="Adicionar exercício"
         >
-          <Plus size={20} strokeWidth={1.75} />
+          <Plus size={16} strokeWidth={1.75} />
         </button>
       </div>
 
@@ -363,33 +399,44 @@ function ExecutorTreino({
         </div>
       ) : (
         <div className="mt-6">
-          <img src={ativo.exercicio.gif} alt={ativo.exercicio.nome} className="mx-auto h-56 w-56 object-contain" />
-
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-[19px] font-bold">{ativo.exercicio.nome}</h2>
-              <p className="text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
+              <p className="num text-[10px] font-semibold text-brand">{String(ativoIndex + 1).padStart(2, '0')} / {String(exercicios.length).padStart(2, '0')}</p>
+              <h2 className="mt-2 text-[28px] font-semibold leading-[1.05] tracking-[-0.055em]">{ativo.exercicio.nome}</h2>
+              <p className="mt-2 text-sm text-ink-2">{ativo.exercicio.grupo_muscular}</p>
             </div>
-            <button
-              onClick={() => navigate(`/treino/analisar/${ativo.exercicioId}`)}
-              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink-2 transition-colors hover:border-brand hover:text-brand"
-            >
-              Analisar movimento
-            </button>
+            <div className="relative">
+              <button onClick={() => setMenuExercicio((aberto) => !aberto)} className="flex size-11 items-center justify-center text-ink-3 hover:text-ink" aria-label="Ações do exercício"><MoreHorizontal size={21} /></button>
+              {menuExercicio && (
+                <div className="absolute right-0 top-11 z-10 w-48 rounded-xl border border-line bg-card p-1.5">
+                  <button onClick={() => navigate(`/treino/analisar/${ativo.exercicioId}`)} className="min-h-11 w-full rounded-lg px-3 text-left text-xs font-semibold text-ink-2 hover:bg-card-hover hover:text-ink">Analisar movimento</button>
+                  <button onClick={() => { setEditandoDescanso(true); setMenuExercicio(false) }} className="min-h-11 w-full rounded-lg px-3 text-left text-xs font-semibold text-ink-2 hover:bg-card-hover hover:text-ink">Ajustar descanso</button>
+                </div>
+              )}
+            </div>
           </div>
 
+          <div className="mt-5 overflow-hidden rounded-2xl bg-card">
+            <img src={ativo.exercicio.gif} alt={ativo.exercicio.nome} className="mx-auto h-72 w-full object-contain mix-blend-lighten sm:h-80" />
+          </div>
+
+          {referenciaAtiva && (
+            <div className="mt-5 grid grid-cols-2 divide-x divide-line/60 border-y border-line/60 py-4">
+              <div className="pr-4"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-3">Última vez</p><p className="num mt-2 text-base font-semibold">{formatoBR(referenciaAtiva.ultimoPeso)} kg × {referenciaAtiva.ultimoReps}</p></div>
+              <div className="pl-4"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-3">Sugestão</p><p className="num mt-2 text-base font-semibold text-brand">{formatoBR(referenciaAtiva.sugerido)} kg</p></div>
+            </div>
+          )}
+
           {novoPR && (
-            <div className="mt-3 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3">
-              <p className="text-sm font-semibold text-gold">Novo PR!</p>
-              <p className="mt-0.5 text-sm text-ink">
-                <span className="num font-semibold">{formatoBR(novoPR.pesoKg)}kg</span> × {novoPR.reps} —{' '}
-                <span className="num">+{formatoBR(novoPR.variacaoPercentual)}%</span>
-              </p>
+            <div className="mt-5 border-l-2 border-gold py-2 pl-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gold">Novo PR</p>
+              <p className="mt-1 text-sm font-semibold">{ativo.exercicio.nome}</p>
+              <p className="num mt-1 text-lg font-semibold">{formatoBR(novoPR.pesoKg)} kg × {novoPR.reps} <span className="ml-2 text-xs text-gold">+{formatoBR(novoPR.variacaoPercentual)}%</span></p>
             </div>
           )}
 
           {editandoDescanso ? (
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-5 flex items-center gap-2 border-y border-line/60 py-3">
               <input
                 type="number"
                 inputMode="numeric"
@@ -399,14 +446,14 @@ function ExecutorTreino({
                   if (e.key === 'Enter') salvarDescanso(Number((e.target as HTMLInputElement).value) || DESCANSO_PADRAO)
                 }}
                 onBlur={(e) => salvarDescanso(Number(e.target.value) || DESCANSO_PADRAO)}
-                className="h-9 w-24 rounded-lg border border-line bg-card-hover px-2 text-sm text-ink focus:border-brand focus:outline-none"
+                className="h-11 w-24 rounded-lg border border-line bg-card-hover px-2 text-sm text-ink focus:border-brand focus:outline-none"
               />
               <span className="text-sm text-ink-2">segundos de descanso</span>
             </div>
           ) : (
             <button
               onClick={() => setEditandoDescanso(true)}
-              className="mt-3 flex items-center gap-1.5 text-sm text-ink-2 hover:text-ink"
+              className="mt-4 flex min-h-11 items-center gap-1.5 text-xs text-ink-2 hover:text-ink"
             >
               <Pencil size={13} strokeWidth={1.75} />
               Descanso: {Math.floor(ativo.descansoSeg / 60)}min {ativo.descansoSeg % 60}s
@@ -414,64 +461,58 @@ function ExecutorTreino({
           )}
 
           {descansando && (
-            <div className="mt-4 flex items-center justify-between rounded-xl border border-brand/30 bg-brand/10 px-4 py-3">
-              <p className="text-sm text-ink">
-                Descansando... <span className="num font-semibold text-brand">{segundosRestantes}s</span>
-              </p>
+            <div className="mt-5 flex items-center justify-between border-y border-brand/30 py-5">
+              <div><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-brand">Descanso</p><p className="num mt-1 text-[42px] font-semibold leading-none tracking-[-0.06em]">{formatoTempo(segundosRestantes)}</p></div>
               <button
                 onClick={() => setDescansando(false)}
-                className="h-8 rounded-lg border border-line px-3 text-xs font-semibold text-ink-2"
+                className="min-h-11 px-4 text-xs font-semibold text-ink-2 hover:text-ink"
               >
                 Pular
               </button>
             </div>
           )}
 
-          <div className="mt-5 grid grid-cols-[auto_1fr_1fr_auto] items-center gap-x-3 gap-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Set</span>
-            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Kg</span>
-            <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Reps</span>
-            <span />
-
-            {ativo.sets.map((linha, i) => (
-              <Fragment key={i}>
-                <span className="num text-sm text-ink-2">{i + 1}</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={linha.peso}
-                  disabled={linha.completo}
-                  onChange={(e) => atualizarSet(i, 'peso', e.target.value)}
-                  className="h-11 w-full rounded-xl border border-line bg-card-hover px-2 text-center text-sm text-ink focus:border-brand focus:outline-none disabled:opacity-50"
-                />
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={linha.reps}
-                  disabled={linha.completo}
-                  onChange={(e) => atualizarSet(i, 'reps', e.target.value)}
-                  className="h-11 w-full rounded-xl border border-line bg-card-hover px-2 text-center text-sm text-ink focus:border-brand focus:outline-none disabled:opacity-50"
-                />
-                <button
-                  onClick={() => marcarCompleto(i)}
-                  disabled={linha.completo}
-                  aria-label="Marcar série completa"
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-bold ${
-                    linha.completo ? 'border-up bg-up/15 text-up' : 'border-line text-ink-3'
-                  }`}
-                >
-                  ✓
+          <div className="mt-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-2">Séries</p>
+            <div className="mt-3 divide-y divide-line/60 border-y border-line/60">
+              {ativo.sets.map((linha, i) => i === serieAtivaIndex && !linha.completo ? (
+                <div key={i} className="border-l-2 border-brand bg-brand/5 py-4 pl-4 pr-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-brand">Série {i + 1} · atual</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <label className="text-[10px] uppercase tracking-[0.06em] text-ink-3">Carga
+                      <div className="mt-1 flex h-14 items-center rounded-xl border border-line bg-card-hover px-3"><input type="text" inputMode="decimal" value={linha.peso} onChange={(e) => atualizarSet(i, 'peso', e.target.value)} className="num min-w-0 flex-1 bg-transparent text-center text-xl font-semibold outline-none" /><span className="text-xs text-ink-3">kg</span></div>
+                    </label>
+                    <label className="text-[10px] uppercase tracking-[0.06em] text-ink-3">Repetições
+                      <div className="mt-1 flex h-14 items-center rounded-xl border border-line bg-card-hover px-3"><input type="number" inputMode="numeric" value={linha.reps} onChange={(e) => atualizarSet(i, 'reps', e.target.value)} className="num min-w-0 flex-1 bg-transparent text-center text-xl font-semibold outline-none" /><span className="text-xs text-ink-3">reps</span></div>
+                    </label>
+                  </div>
+                  <button onClick={() => marcarCompleto(i)} className="mt-3 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white hover:bg-brand-hover">Concluir série</button>
+                </div>
+              ) : (
+                <button key={i} onClick={() => !linha.completo && setSerieAtivaIndex(i)} className={`grid min-h-14 w-full grid-cols-[4rem_1fr_auto] items-center gap-3 px-2 text-left ${linha.completo ? 'opacity-45' : 'hover:bg-card/60'}`}>
+                  <span className="text-xs font-semibold text-ink-2">Série {i + 1}</span>
+                  <span className="num text-sm">{linha.peso || '—'} kg · {linha.reps || '—'} reps</span>
+                  <span className={linha.completo ? 'text-up' : 'text-ink-3'}>{linha.completo ? '✓' : '○'}</span>
                 </button>
-              </Fragment>
-            ))}
+              ))}
+            </div>
           </div>
 
           <button
             onClick={adicionarSet}
-            className="mt-4 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+            className="mt-3 min-h-11 w-full text-xs font-semibold text-ink-2 transition-colors hover:text-ink"
           >
             + Adicionar série
           </button>
+
+          <div className="mt-7 flex items-center justify-between border-t border-line/60 pt-4">
+            <button onClick={() => selecionarExercicio(Math.max(0, ativoIndex - 1))} disabled={ativoIndex === 0} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-ink-2 disabled:opacity-30"><ArrowLeft size={16} /> Anterior</button>
+            {ativoIndex < exercicios.length - 1 ? (
+              <button onClick={() => selecionarExercicio(Math.min(exercicios.length - 1, ativoIndex + 1))} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-ink">Próximo <ArrowRight size={16} /></button>
+            ) : (
+              <button onClick={finalizarTreino} disabled={finalizando} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-brand disabled:opacity-50">Concluir treino <ArrowRight size={16} /></button>
+            )}
+          </div>
         </div>
       )}
 
