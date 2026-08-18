@@ -1,28 +1,31 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RotaProtegida } from './components/RotaProtegida'
 import { RotaOnboardingCompleto } from './components/RotaOnboardingCompleto'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
-import Dashboard from './pages/Dashboard'
-import Treinos from './pages/Treinos'
-import RotinaEditor from './pages/RotinaEditor'
-import SessaoTreino from './pages/SessaoTreino'
-import Nutricao from './pages/Nutricao'
-import Perfil from './pages/Perfil'
-import Configuracoes from './pages/Configuracoes'
-import BodyScan from './pages/BodyScan'
-import AnalisarMovimento from './pages/AnalisarMovimento'
-import Social from './pages/Social'
-import PerfilPublico from './pages/PerfilPublico'
-import Planos from './pages/Planos'
-import Corpo from './pages/Corpo'
-import RecuperarSenha from './pages/RecuperarSenha'
-import RedefinirSenha from './pages/RedefinirSenha'
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Treinos = lazy(() => import('./pages/Treinos'))
+const RotinaEditor = lazy(() => import('./pages/RotinaEditor'))
+const SessaoTreino = lazy(() => import('./pages/SessaoTreino'))
+const Nutricao = lazy(() => import('./pages/Nutricao'))
+const Perfil = lazy(() => import('./pages/Perfil'))
+const Configuracoes = lazy(() => import('./pages/Configuracoes'))
+const BodyScan = lazy(() => import('./pages/BodyScan'))
+const AnalisarMovimento = lazy(() => import('./pages/AnalisarMovimento'))
+const Social = lazy(() => import('./pages/Social'))
+const PerfilPublico = lazy(() => import('./pages/PerfilPublico'))
+const Planos = lazy(() => import('./pages/Planos'))
+const Corpo = lazy(() => import('./pages/Corpo'))
+const RecuperarSenha = lazy(() => import('./pages/RecuperarSenha'))
+const RedefinirSenha = lazy(() => import('./pages/RedefinirSenha'))
 
 export default function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<div className="flex min-h-dvh items-center justify-center bg-app text-sm text-ink-2">Carregando...</div>}>
       <Routes>
         <Route path="login" element={<Login />} />
         <Route path="recuperar-senha" element={<RecuperarSenha />} />
@@ -50,6 +53,7 @@ export default function App() {
           </Route>
         </Route>
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

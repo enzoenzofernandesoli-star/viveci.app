@@ -309,7 +309,7 @@ function AbaEvolucao({
         </div>
         {carregandoFotos ? <p className="mt-5 text-sm text-ink-2">Carregando fotos...</p> : erroFotos ? <p className="mt-5 text-sm text-ink-2">Não foi possível carregar suas fotos.</p> : fotoAtual ? (
           <button onClick={() => navigate('/perfil/body-scan')} className="mt-5 block w-full text-left">
-            <img src={fotoAtual.url} alt={`Progresso — ${fotoAtual.angulo}`} className="aspect-[4/5] max-h-[560px] w-full rounded-2xl object-cover" />
+            <img src={fotoAtual.url} alt={`Progresso — ${fotoAtual.angulo}`} loading="lazy" decoding="async" className="aspect-[4/5] max-h-[560px] w-full rounded-2xl object-cover" />
             <p className="mt-3 text-xs font-semibold uppercase tracking-[0.08em] text-ink">{formatoData(fotoAtual.data)} · {fotoAtual.angulo}</p>
           </button>
         ) : (

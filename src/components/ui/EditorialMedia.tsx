@@ -18,7 +18,7 @@ export function EditorialMedia({
   return (
     <div className={`relative isolate overflow-hidden bg-card-hover ${className}`}>
       {src ? (
-        <img src={src} alt={alt} className="h-full w-full object-cover" />
+        <img src={src} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover" />
       ) : (
         <div className="h-full min-h-32 w-full bg-card-hover" role="img" aria-label={alt}>
           {fallback}

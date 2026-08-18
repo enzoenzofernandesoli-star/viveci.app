@@ -1,4 +1,4 @@
-const CACHE = 'viveci-v1'
+const CACHE = 'viveci-v2'
 
 self.addEventListener('install', () => {
   self.skipWaiting()
@@ -24,8 +24,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((resposta) => {
-        const copia = resposta.clone()
-        caches.open(CACHE).then((cache) => cache.put(event.request, copia))
+        if (resposta.ok) {
+          const copia = resposta.clone()
+          event.waitUntil(caches.open(CACHE).then((cache) => cache.put(event.request, copia)))
+        }
         return resposta
       })
       .catch(() => caches.match(event.request).then((cache) => cache || caches.match('/'))),

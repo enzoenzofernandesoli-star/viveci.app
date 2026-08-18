@@ -19,7 +19,7 @@ export default function PerfilPublico() {
   const [enviandoFollow, setEnviandoFollow] = useState(false)
 
   const { perfil, carregando: carregandoPerfil } = usePerfilPublico(id)
-  const { posts, carregando: carregandoPosts, recarregar: recarregarPosts } = usePostsDoUsuario(id, meuId)
+  const { posts, carregando: carregandoPosts, recarregar: recarregarPosts, temMais, carregarMais } = usePostsDoUsuario(id, meuId)
   const { seguindo, seguidores, seguindoTotal, carregando: carregandoRelacao, recarregar } = useRelacaoSocial(id, meuId)
 
   if (!meuId || !id) {
@@ -63,7 +63,7 @@ export default function PerfilPublico() {
           <div className="mt-8 text-center">
             <div className="mx-auto h-24 w-24 overflow-hidden rounded-full border border-line bg-card-hover">
               {perfil.foto_url ? (
-                <img src={perfil.foto_url} alt="" className="h-full w-full object-cover" />
+                <img src={perfil.foto_url} alt="" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-ink-3">
                   {perfil.nome?.[0]?.toUpperCase() ?? '?'}
@@ -103,7 +103,7 @@ export default function PerfilPublico() {
 
           <div className="mt-8">
             <p className="border-b border-line/60 pb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Publicações</p>
-            {carregandoPosts ? (
+            {carregandoPosts && posts.length === 0 ? (
               <Empty text="Carregando publicações..." />
             ) : posts.length === 0 ? (
               <Empty text="Nenhuma publicação ainda." />
@@ -119,6 +119,7 @@ export default function PerfilPublico() {
                 />
               ))
             )}
+            {temMais && <button disabled={carregandoPosts} onClick={carregarMais} className="mt-4 min-h-11 w-full text-xs font-semibold text-brand disabled:opacity-50">{carregandoPosts ? 'Carregando...' : 'Carregar mais'}</button>}
           </div>
         </>
       )}

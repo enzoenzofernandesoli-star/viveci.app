@@ -52,6 +52,8 @@ type PostBruto = {
 // ─────────────────────────────────────────────────────────────
 
 /** Monta os posts brutos com autor, curtidas, comentários e resumo de treino — tudo em lote, sem N+1. */
+const POSTS_POR_PAGINA = 15
+
 async function montarPosts(postsBrutos: PostBruto[], meuId: string): Promise<Post[]> {
   if (postsBrutos.length === 0) return []
 
@@ -94,11 +96,13 @@ async function montarPosts(postsBrutos: PostBruto[], meuId: string): Promise<Pos
   })
 }
 
-function useListaDePosts(carregarBrutos: () => Promise<PostBruto[]>, meuId: string | undefined, deps: unknown[]) {
+function useListaDePosts(carregarBrutos: (inicio: number, fim: number) => Promise<PostBruto[]>, meuId: string | undefined, deps: unknown[]) {
   const [posts, setPosts] = useState<Post[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [versao, setVersao] = useState(0)
+  const [pagina, setPagina] = useState(0)
+  const [temMais, setTemMais] = useState(false)
 
   useEffect(() => {
     if (!meuId) {
@@ -109,10 +113,13 @@ function useListaDePosts(carregarBrutos: () => Promise<PostBruto[]>, meuId: stri
     setCarregando(true)
     setErro(null)
 
-    carregarBrutos()
+    carregarBrutos(pagina * POSTS_POR_PAGINA, (pagina + 1) * POSTS_POR_PAGINA - 1)
       .then((brutos) => montarPosts(brutos, meuId))
       .then((montados) => {
-        if (!cancelado) setPosts(montados)
+        if (!cancelado) {
+          setTemMais(montados.length === POSTS_POR_PAGINA)
+          setPosts((atuais) => pagina === 0 ? montados : [...atuais, ...montados.filter((post) => !atuais.some((atual) => atual.id === post.id))])
+        }
       })
       .catch((err) => {
         if (!cancelado) setErro(err instanceof Error ? err.message : 'Não deu pra carregar o feed.')
@@ -125,15 +132,22 @@ function useListaDePosts(carregarBrutos: () => Promise<PostBruto[]>, meuId: stri
       cancelado = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meuId, versao, ...deps])
+  }, [meuId, versao, pagina, ...deps])
 
-  return { posts, carregando, erro, recarregar: () => setVersao((v) => v + 1) }
+  return {
+    posts,
+    carregando,
+    erro,
+    temMais,
+    carregarMais: () => setPagina((atual) => atual + 1),
+    recarregar: () => { setPagina(0); setVersao((v) => v + 1) },
+  }
 }
 
 /** Feed "Amigos": posts de quem o usuário segue + os próprios. */
 export function useFeedAmigos(meuId: string | undefined) {
   return useListaDePosts(
-    async () => {
+    async (inicio, fim) => {
       const seguindoIds = await buscarSeguindoIds(meuId!)
       const idsFeed = [...seguindoIds, meuId!]
       const { data, error } = await supabase
@@ -141,7 +155,7 @@ export function useFeedAmigos(meuId: string | undefined) {
         .select('*')
         .in('user_id', idsFeed)
         .order('criado_em', { ascending: false })
-        .limit(50)
+        .range(inicio, fim)
       if (error) throw error
       return (data ?? []) as PostBruto[]
     },
@@ -153,8 +167,8 @@ export function useFeedAmigos(meuId: string | undefined) {
 /** Feed "Descobrir": posts públicos recentes de todo mundo, sem algoritmo de recomendação ainda. */
 export function useFeedDescobrir(meuId: string | undefined) {
   return useListaDePosts(
-    async () => {
-      const { data, error } = await supabase.from('posts').select('*').order('criado_em', { ascending: false }).limit(50)
+    async (inicio, fim) => {
+      const { data, error } = await supabase.from('posts').select('*').order('criado_em', { ascending: false }).range(inicio, fim)
       if (error) throw error
       return (data ?? []) as PostBruto[]
     },
@@ -166,12 +180,13 @@ export function useFeedDescobrir(meuId: string | undefined) {
 /** Posts de um usuário específico — usado no perfil público. */
 export function usePostsDoUsuario(userIdAlvo: string | undefined, meuId: string | undefined) {
   return useListaDePosts(
-    async () => {
+    async (inicio, fim) => {
       const { data, error } = await supabase
         .from('posts')
         .select('*')
         .eq('user_id', userIdAlvo!)
         .order('criado_em', { ascending: false })
+        .range(inicio, fim)
       if (error) throw error
       return (data ?? []) as PostBruto[]
     },
@@ -262,11 +277,12 @@ export function useComentarios(postId: string | undefined) {
           .select('id, texto, criado_em, user_id')
           .eq('post_id', postId!)
           .order('criado_em', { ascending: true })
+          .limit(100)
         if (error) throw error
 
         const idsAutores = [...new Set((comentariosBrutos ?? []).map((c) => c.user_id))]
         const { data: perfis } =
-          idsAutores.length > 0 ? await supabase.from('perfis').select('id, nome, foto_url').in('id', idsAutores) : { data: [] }
+          idsAutores.length > 0 ? await supabase.from('perfis_publicos').select('id, nome, foto_url').in('id', idsAutores) : { data: [] }
         const perfilPorId = new Map((perfis ?? []).map((p) => [p.id, p]))
 
         if (!cancelado) {

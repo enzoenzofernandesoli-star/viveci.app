@@ -74,7 +74,7 @@ export function SeletorExercicio({ onSelecionar }: { onSelecionar: (exercicioId:
               onClick={() => onSelecionar(ex.id)}
               className="flex w-full items-center gap-3 rounded-xl border border-line bg-card px-3 py-3 text-left transition-colors hover:bg-card-hover"
             >
-              <img src={ex.gif} alt="" className="h-14 w-14 shrink-0 rounded-lg bg-card-hover object-cover" />
+              <img src={ex.gif} alt="" loading="lazy" decoding="async" className="h-14 w-14 shrink-0 rounded-lg bg-card-hover object-cover" />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-ink">{ex.nome}</p>
                 <p className="mt-1 text-xs text-ink-2">

@@ -86,7 +86,7 @@ export default function Social() {
       {aba === 'amigos' && <CardDesafioInicial userId={userId} />}
 
       <div className="mt-2 pb-4">
-        {feed.carregando ? (
+        {feed.carregando && feed.posts.length === 0 ? (
           <Empty text="Carregando publicações..." />
         ) : feed.erro ? (
           <Empty text="Não deu pra carregar o feed agora." />
@@ -107,6 +107,9 @@ export default function Social() {
               onRemovido={feed.recarregar}
             />
           ))
+        )}
+        {feed.temMais && (
+          <button disabled={feed.carregando} onClick={feed.carregarMais} className="mt-4 min-h-11 w-full text-xs font-semibold text-brand disabled:opacity-50">{feed.carregando ? 'Carregando...' : 'Carregar mais'}</button>
         )}
       </div>
     </div>
