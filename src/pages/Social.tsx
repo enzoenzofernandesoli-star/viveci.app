@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { Empty } from '../components/Empty'
 import { PostCard } from '../components/PostCard'
@@ -12,10 +12,17 @@ import { useFeedAmigos, useFeedDescobrir } from '../lib/social/posts'
 export default function Social() {
   const { sessao } = useSessao()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const userId = sessao?.user.id
   const [aba, setAba] = useState<'amigos' | 'descobrir'>('amigos')
   const [comentandoPostId, setComentandoPostId] = useState<string | null>(null)
-  const [criandoPost, setCriandoPost] = useState(false)
+  const [criandoPost, setCriandoPost] = useState(searchParams.get('criar') === '1')
+  const sessaoInicialId = searchParams.get('sessao')
+
+  function fecharCriacao() {
+    setCriandoPost(false)
+    setSearchParams({}, { replace: true })
+  }
 
   const feedAmigos = useFeedAmigos(userId)
   const feedDescobrir = useFeedDescobrir(userId)
@@ -33,9 +40,10 @@ export default function Social() {
     return (
       <CriarPost
         userId={userId}
-        onFechar={() => setCriandoPost(false)}
+        sessaoInicialId={sessaoInicialId}
+        onFechar={fecharCriacao}
         onPublicado={() => {
-          setCriandoPost(false)
+          fecharCriacao()
           feedAmigos.recarregar()
         }}
       />

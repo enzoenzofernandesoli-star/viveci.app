@@ -1,12 +1,12 @@
 {
-  "name": "Viveci",
-  "short_name": "Viveci",
-  "description": "Treino e nutrição personalizados, com plano de 12 semanas.",
+  "name": "VIVECI — Treine. Evolua. Conquiste.",
+  "short_name": "VIVECI",
+  "description": "Treinos, nutrição e evolução conectados ao seu histórico.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#05070D",
-  "theme_color": "#05070D",
+  "background_color": "#070A10",
+  "theme_color": "#070A10",
   "orientation": "portrait",
   "lang": "pt-BR",
   "icons": [

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, ChevronDown, MoreHorizontal, Pencil, Plus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronDown, Map, MoreHorizontal, Pencil, Plus, Share2 } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { SeletorExercicio } from '../components/SeletorExercicio'
@@ -321,6 +321,19 @@ function ExecutorTreino({
           >
             Concluir
           </button>
+          <div className="mt-3 flex justify-center gap-5">
+            <button onClick={() => navigate('/corpo')} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-ink-2 hover:text-ink">
+              <Map size={16} strokeWidth={1.75} /> Ver estímulos
+            </button>
+            {sessaoConcluidaId.current && (
+              <button
+                onClick={() => navigate(`/social?criar=1&sessao=${encodeURIComponent(sessaoConcluidaId.current!)}`)}
+                className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-brand"
+              >
+                <Share2 size={16} strokeWidth={1.75} /> Compartilhar treino
+              </button>
+            )}
+          </div>
       </div>
     )
   }

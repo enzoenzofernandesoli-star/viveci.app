@@ -180,21 +180,12 @@ export function useRotina(rotinaId: string | undefined) {
 
 /** Cria uma rotina vazia (e a única sessão que a acompanha) e devolve os ids. */
 export async function criarRotina(userId: string, nome: string): Promise<{ rotinaId: string; sessaoId: string }> {
-  const { data: rotina, error: erroRotina } = await supabase
-    .from('planos')
-    .insert({ user_id: userId, nome })
-    .select()
-    .single()
-  if (erroRotina) throw erroRotina
-
-  const { data: sessao, error: erroSessao } = await supabase
-    .from('plano_sessoes')
-    .insert({ plano_id: rotina.id, semana: 1, dia_semana: 1, ordem: 1, nome_sessao: nome })
-    .select()
-    .single()
-  if (erroSessao) throw erroSessao
-
-  return { rotinaId: rotina.id, sessaoId: sessao.id }
+  if (!userId) throw new Error('Usuário inválido.')
+  const { data, error } = await supabase.rpc('criar_rotina', { p_nome: nome })
+  if (error) throw error
+  const criada = data?.[0]
+  if (!criada) throw new Error('Não deu pra criar a rotina.')
+  return { rotinaId: criada.rotina_id, sessaoId: criada.sessao_id }
 }
 
 export async function renomearRotina(rotinaId: string, nome: string) {
@@ -207,24 +198,11 @@ export async function excluirRotina(rotinaId: string) {
   if (error) throw error
 }
 
-const PADRAO_ITEM = { series: 3, reps_min: 8, reps_max: 12, descanso_seg: 90 }
-
 /** Substitui a lista inteira de exercícios de uma rotina pela nova ordem/seleção. */
 export async function salvarItensRotina(sessaoId: string, exercicioIds: number[]) {
-  const { error: erroDelete } = await supabase.from('plano_itens').delete().eq('sessao_id', sessaoId)
-  if (erroDelete) throw erroDelete
-
-  if (exercicioIds.length === 0) return
-
-  const { error: erroInsert } = await supabase.from('plano_itens').insert(
-    exercicioIds.map((exercicioId, i) => ({
-      sessao_id: sessaoId,
-      exercicio_id: exercicioId,
-      ordem: i + 1,
-      ...PADRAO_ITEM,
-    })),
-  )
-  if (erroInsert) throw erroInsert
+  const itens = exercicioIds.map((exercicioId, i) => ({ exercicio_id: exercicioId, ordem: i + 1 }))
+  const { error } = await supabase.rpc('salvar_itens_rotina', { p_sessao_id: sessaoId, p_itens: itens })
+  if (error) throw error
 }
 
 /** Ajusta o tempo de descanso de um exercício específico da rotina. */

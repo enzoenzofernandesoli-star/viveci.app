@@ -249,6 +249,7 @@ const RES_DNA: [keyof DNATreino, string][] = [
 
 function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
   const [cheio, setCheio] = useState(false)
+  const semDados = perfilDNA.rotulo === 'SEM DADOS SUFICIENTES'
   useEffect(() => {
     const id = setTimeout(() => setCheio(true), 80)
     return () => clearTimeout(id)
@@ -259,7 +260,9 @@ function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
       <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Meu DNA de treino</p>
       <p className="mt-1 text-sm text-brand">{perfilDNA.rotulo}</p>
       <p className="mt-1 text-xs text-ink-2">{perfilDNA.descricao}</p>
-      <div className="mt-4 space-y-3">
+      {semDados ? (
+        <p className="mt-4 border-y border-line/60 py-4 text-sm text-ink-2">Conclua e registre seus primeiros treinos para liberar os indicadores.</p>
+      ) : <div className="mt-4 space-y-3">
         {RES_DNA.map(([chave, rotulo], i) => (
           <div key={chave}>
             <div className="flex items-center justify-between text-xs">
@@ -274,7 +277,7 @@ function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </section>
   )
 }

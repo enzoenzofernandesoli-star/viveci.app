@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Camera, Dumbbell, X } from 'lucide-react'
 import { Page } from './Page'
 import { Empty } from './Empty'
@@ -14,10 +14,12 @@ export function CriarPost({
   userId,
   onFechar,
   onPublicado,
+  sessaoInicialId,
 }: {
   userId: string
   onFechar: () => void
   onPublicado: () => void
+  sessaoInicialId?: string | null
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [arquivo, setArquivo] = useState<File | null>(null)
@@ -32,6 +34,12 @@ export function CriarPost({
   const [erro, setErro] = useState<string | null>(null)
 
   const { treinos, carregando: carregandoTreinos } = useHistoricoTreinos(userId, 10)
+
+  useEffect(() => {
+    if (!sessaoInicialId || treinoEscolhido || carregandoTreinos) return
+    const treino = treinos.find((item) => item.id === sessaoInicialId)
+    if (treino) setTreinoEscolhido(treino)
+  }, [sessaoInicialId, treinoEscolhido, carregandoTreinos, treinos])
 
   function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]

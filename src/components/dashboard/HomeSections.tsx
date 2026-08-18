@@ -85,7 +85,7 @@ export function ResumoDia({ score }: { score: DailyScore }) {
         <p id="titulo-dia" className="num text-[64px] font-semibold leading-[0.9] tracking-[-0.07em]">{score.score}</p>
         <div className="pb-0.5">
           <p className="text-sm font-medium text-ink">Seu ritmo hoje</p>
-          <MetaText className="mt-1 max-w-56">Indicador interno dos dados registrados, não uma nota de saúde.</MetaText>
+          <MetaText className="mt-1 max-w-56">Progresso dos registros feitos hoje — não é nota de saúde nem diagnóstico.</MetaText>
         </div>
       </div>
       <div className="mt-7 divide-y divide-line/60 border-y border-line/60">

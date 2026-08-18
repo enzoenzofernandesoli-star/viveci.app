@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  Bell,
   Dumbbell,
   Apple,
   Palette,
@@ -30,7 +29,6 @@ const NIVEIS = Object.keys(ROTULO_NIVEL) as Nivel[]
 type Secao =
   | 'menu'
   | 'perfil'
-  | 'notificacoes'
   | 'treinamento'
   | 'nutricao'
   | 'aparencia'
@@ -82,7 +80,6 @@ function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => voi
 
 const CATEGORIAS: { secao: Secao; icone: typeof User; titulo: string; descricao: string }[] = [
   { secao: 'perfil', icone: User, titulo: 'Perfil', descricao: 'Objetivo, nível e disponibilidade' },
-  { secao: 'notificacoes', icone: Bell, titulo: 'Notificações', descricao: 'Controle quando o VIVECI pode avisar você' },
   { secao: 'treinamento', icone: Dumbbell, titulo: 'Treinamento', descricao: 'Duração, horário e equipamentos preferidos' },
   { secao: 'nutricao', icone: Apple, titulo: 'Nutrição', descricao: 'O que aparece no seu diário alimentar' },
   { secao: 'aparencia', icone: Palette, titulo: 'Aparência', descricao: 'Animações e movimento' },
@@ -239,52 +236,6 @@ function SecaoTreinamento({ userId, onVoltar }: { userId: string; onVoltar: () =
               </Chip>
             ))}
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function SecaoNotificacoes({ userId, onVoltar }: { userId: string; onVoltar: () => void }) {
-  const { preferencias, carregando, recarregar } = usePreferencias(userId)
-  const definir = usarCampoPreferencia(userId, preferencias, recarregar)
-
-  if (carregando) return <Empty text="Carregando..." />
-
-  return (
-    <div className="pb-4">
-      <Cabecalho titulo="Notificações" onVoltar={onVoltar} />
-      <div className="mt-5 divide-y divide-line rounded-2xl border border-line bg-card px-6">
-        <LinhaSwitch label="Lembrete de treino" ativo={preferencias.notif_lembrete_treino} onChange={(v) => definir({ notif_lembrete_treino: v })} />
-        <LinhaSwitch label="Horário do treino" ativo={preferencias.notif_horario_treino} onChange={(v) => definir({ notif_horario_treino: v })} />
-        <LinhaSwitch label="Treino recomendado" ativo={preferencias.notif_treino_recomendado} onChange={(v) => definir({ notif_treino_recomendado: v })} />
-        <LinhaSwitch label="Lembrete de alimentação" ativo={preferencias.notif_lembrete_alimentacao} onChange={(v) => definir({ notif_lembrete_alimentacao: v })} />
-        <LinhaSwitch label="Novo PR" ativo={preferencias.notif_novo_pr} onChange={(v) => definir({ notif_novo_pr: v })} />
-        <LinhaSwitch label="Resumo semanal" ativo={preferencias.notif_resumo_semanal} onChange={(v) => definir({ notif_resumo_semanal: v })} />
-        <LinhaSwitch label="Recomendações do VIVECI" ativo={preferencias.notif_recomendacoes} onChange={(v) => definir({ notif_recomendacoes: v })} />
-      </div>
-
-      <div className="mt-5 rounded-2xl border border-line bg-card p-6">
-        <LinhaSwitch label="Notificações inteligentes" ativo={preferencias.notif_inteligentes} onChange={(v) => definir({ notif_inteligentes: v })} />
-        <p className="text-xs text-ink-2">O VIVECI pode utilizar seu histórico pra enviar lembretes relevantes.</p>
-      </div>
-
-      <div className="mt-5 rounded-2xl border border-line bg-card p-6">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Horário das notificações</h3>
-        <div className="mt-3 flex items-center gap-3">
-          <input
-            type="time"
-            value={preferencias.notif_inicio}
-            onChange={(e) => definir({ notif_inicio: e.target.value })}
-            className="h-11 flex-1 rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
-          />
-          <span className="text-sm text-ink-2">até</span>
-          <input
-            type="time"
-            value={preferencias.notif_fim}
-            onChange={(e) => definir({ notif_fim: e.target.value })}
-            className="h-11 flex-1 rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
-          />
         </div>
       </div>
     </div>
@@ -566,7 +517,6 @@ export default function Configuracoes() {
   const userId = sessao.user.id
 
   if (secao === 'perfil') return <SecaoPerfil userId={userId} onVoltar={() => setSecao('menu')} />
-  if (secao === 'notificacoes') return <SecaoNotificacoes userId={userId} onVoltar={() => setSecao('menu')} />
   if (secao === 'treinamento') return <SecaoTreinamento userId={userId} onVoltar={() => setSecao('menu')} />
   if (secao === 'nutricao') return <SecaoNutricao userId={userId} onVoltar={() => setSecao('menu')} />
   if (secao === 'aparencia') return <SecaoAparencia userId={userId} onVoltar={() => setSecao('menu')} />

@@ -3,3 +3,5 @@ dist
 .DS_Store
 *.local
 /videos
+/test-results
+/playwright-report
