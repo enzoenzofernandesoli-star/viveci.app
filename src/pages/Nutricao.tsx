@@ -365,6 +365,7 @@ export default function Nutricao() {
   const [refeicaoEscaneando, setRefeicaoEscaneando] = useState<Refeicao | null>(null)
   const [refeicaoRotulo, setRefeicaoRotulo] = useState<Refeicao | null>(null)
   const [editandoMeta, setEditandoMeta] = useState(false)
+  const [scannerEscolhendo, setScannerEscolhendo] = useState<'refeicao' | 'rotulo' | null>(null)
 
   const perfilCalculo: Perfil | null =
     perfil?.nome && perfil.sexo && perfil.idade && perfil.altura_cm && perfil.peso_kg && perfil.dias_semana && perfil.objetivo
@@ -448,7 +449,8 @@ export default function Nutricao() {
 
   return (
     <Page title="Nutrição">
-      <div className="mt-6 rounded-2xl border border-line bg-card p-6">
+      <p className="mt-3 text-xs font-medium text-ink-2">Hoje</p>
+      <div className="mt-5 border-b border-line/60 pb-8">
         <AnelCalorias consumido={consumido.kcal} meta={metas.meta_kcal} />
 
         <div className="mt-3 flex justify-center">
@@ -473,38 +475,39 @@ export default function Nutricao() {
           />
         )}
 
-        <div className="mt-8 space-y-5">
+        <div className="mx-auto mt-8 max-w-xl space-y-5">
           <BarraMacro label="Proteína" consumido={consumido.prot_g} meta={metas.meta_prot_g} cor="var(--color-brand)" />
           <BarraMacro label="Carboidrato" consumido={consumido.carb_g} meta={metas.meta_carb_g} cor="#8B5CF6" />
           <BarraMacro label="Gordura" consumido={consumido.gord_g} meta={metas.meta_gord_g} cor="#F5A524" />
         </div>
       </div>
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-8">
+        <div className="flex items-end justify-between border-b border-line/60 pb-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-3">Diário</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-[-0.035em]">Refeições</h2>
+          </div>
+        </div>
+        {!carregandoDia && itens.length === 0 && (
+          <div className="border-b border-line/60 py-8">
+            <p className="text-sm font-semibold text-ink">Ainda não há refeições</p>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-ink-2">Registre o que você comer para acompanhar o dia.</p>
+            <button onClick={() => setRefeicaoAdicionando('Café da manhã')} className="mt-4 min-h-11 text-sm font-semibold text-brand">
+              Adicionar alimento
+            </button>
+          </div>
+        )}
         {carregandoDia ? (
           <Empty text="Carregando refeições..." />
         ) : (
           refeicoesExibidas.map((refeicao) => {
             const itensRefeicao = itens.filter((i) => i.refeicao === refeicao)
             return (
-              <div key={refeicao} className="rounded-2xl border border-line bg-card p-6">
+              <section key={refeicao} className="border-b border-line/60 py-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-[15px] font-semibold">{refeicao}</h2>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setRefeicaoEscaneando(refeicao)}
-                      aria-label="Escanear refeição"
-                      className="text-ink-2 hover:text-brand"
-                    >
-                      <Camera size={17} strokeWidth={1.75} />
-                    </button>
-                    <button
-                      onClick={() => setRefeicaoRotulo(refeicao)}
-                      aria-label="Escanear rótulo"
-                      className="text-ink-2 hover:text-brand"
-                    >
-                      <ScanBarcode size={17} strokeWidth={1.75} />
-                    </button>
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.07em] text-ink-2">{refeicao}</h3>
+                  <div>
                     <button
                       onClick={() => setRefeicaoAdicionando(refeicao)}
                       className="text-sm font-semibold text-brand"
@@ -517,9 +520,9 @@ export default function Nutricao() {
                 {itensRefeicao.length === 0 ? (
                   <p className="mt-2 text-sm text-ink-2">Nada registrado ainda.</p>
                 ) : (
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-3 divide-y divide-line/40">
                     {itensRefeicao.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between rounded-xl bg-card-hover px-3 py-2">
+                      <div key={item.id} className="flex min-h-14 items-center justify-between py-2">
                         <div>
                           <p className="text-sm text-ink">{item.nome}</p>
                           <p className="text-xs text-ink-2">
@@ -532,7 +535,7 @@ export default function Nutricao() {
                             await removerItem(item.id)
                             recarregar()
                           }}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-ink-2 hover:bg-card"
+                          className="flex h-11 w-11 items-center justify-center text-ink-2 hover:text-ink"
                           aria-label="Remover"
                         >
                           <X size={16} strokeWidth={1.75} />
@@ -541,11 +544,49 @@ export default function Nutricao() {
                     ))}
                   </div>
                 )}
-              </div>
+              </section>
             )
           })
         )}
       </div>
+
+      <section className="mt-10 border-t border-line/60 pt-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gold">Experimental · Demonstração</p>
+            <h2 className="mt-1 text-lg font-semibold">Scanners</h2>
+            <p className="mt-1 text-xs text-ink-2">A análise visual ainda não usa IA real.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <button onClick={() => setScannerEscolhendo('refeicao')} className="flex min-h-12 items-center justify-center gap-2 border border-line text-xs font-semibold text-ink-2 hover:text-ink">
+            <Camera size={16} strokeWidth={1.75} /> Refeição
+          </button>
+          <button onClick={() => setScannerEscolhendo('rotulo')} className="flex min-h-12 items-center justify-center gap-2 border border-line text-xs font-semibold text-ink-2 hover:text-ink">
+            <ScanBarcode size={16} strokeWidth={1.75} /> Rótulo
+          </button>
+        </div>
+        {scannerEscolhendo && (
+          <div className="mt-4 border-t border-line/60 pt-4">
+            <p className="text-xs text-ink-2">Em qual refeição deseja registrar?</p>
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+              {REFEICOES_PRINCIPAIS.map((refeicao) => (
+                <button
+                  key={refeicao}
+                  onClick={() => {
+                    if (scannerEscolhendo === 'refeicao') setRefeicaoEscaneando(refeicao)
+                    else setRefeicaoRotulo(refeicao)
+                    setScannerEscolhendo(null)
+                  }}
+                  className="min-h-11 text-xs font-semibold text-brand"
+                >
+                  {refeicao}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
     </Page>
   )
 }
