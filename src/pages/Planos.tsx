@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { useSessao } from '../lib/auth'
@@ -17,20 +16,19 @@ const PLANOS: CardPlano[] = [
     id: 'free',
     nome: 'Free',
     preco: 'Grátis',
-    recursos: ['Rotinas de treino ilimitadas', 'Diário alimentar', 'Mapa corporal e evolução'],
+    recursos: ['Até 4 rotinas de treino', 'Todos os recursos atuais do VIVECI'],
   },
   {
     id: 'pro',
     nome: 'Pro',
     preco: 'Em breve',
-    recursos: ['Tudo do Free, por enquanto', 'Novos recursos chegando'],
+    recursos: ['Rotinas de treino ilimitadas', 'Todos os recursos atuais do VIVECI'],
   },
 ]
 
 export default function Planos() {
   const { sessao } = useSessao()
   const { perfil, carregando } = usePerfil(sessao?.user.id)
-  const [aviso, setAviso] = useState(false)
 
   if (carregando) {
     return (
@@ -44,17 +42,15 @@ export default function Planos() {
 
   return (
     <Page title="Planos">
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 border-y border-line/70 lg:grid lg:grid-cols-2 lg:divide-x lg:divide-line/70">
         {PLANOS.map((p) => {
           const ativo = p.id === planoAtual
           return (
-            <div key={p.id} className={`rounded-2xl border p-6 ${ativo ? 'border-brand' : 'border-line'} bg-card`}>
+            <section key={p.id} className="border-b border-line/70 py-8 last:border-b-0 lg:border-b-0 lg:px-8 lg:first:pl-0 lg:last:pr-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-[17px] font-semibold">{p.nome}</h2>
                 {ativo && (
-                  <span className="rounded-full bg-brand/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-brand">
-                    Seu plano
-                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-brand">Plano atual</span>
                 )}
               </div>
               <p className="mt-1 text-sm text-ink-2">{p.preco}</p>
@@ -67,20 +63,12 @@ export default function Planos() {
                 ))}
               </ul>
 
-              {!ativo && (
-                <button
-                  onClick={() => setAviso(true)}
-                  className="mt-5 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
-                >
-                  Assinar
-                </button>
-              )}
-            </div>
+              {!ativo && <p className="mt-6 border-t border-line/70 pt-5 text-xs leading-5 text-ink-2">O plano Pro e o pagamento ainda não estão disponíveis.</p>}
+            </section>
           )
         })}
-
-        {aviso && <p className="text-center text-sm text-ink-2">Pagamento ainda não está disponível. Volte em breve.</p>}
       </div>
+      <p className="mt-5 text-xs leading-5 text-ink-2">Hoje, a única diferença funcional entre os planos é o limite de rotinas. Nenhum recurso será cobrado ou bloqueado sem aviso.</p>
     </Page>
   )
 }

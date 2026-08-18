@@ -40,40 +40,44 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex justify-center">
-          <Logo className="text-2xl" />
+    <div className="min-h-dvh px-6 py-8 sm:px-10 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:px-16">
+      <section className="flex min-h-52 flex-col justify-between border-b border-line/70 pb-10 lg:min-h-0 lg:border-b-0 lg:border-r lg:py-8 lg:pr-16">
+        <Logo className="text-xl" />
+        <div className="mt-16 max-w-xl lg:mt-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Vim. Vi. Venci.</p>
+          <h1 className="mt-4 text-[40px] font-bold leading-[0.98] tracking-[-0.045em] text-ink sm:text-5xl lg:text-6xl">
+            Treine. Evolua.
+            <br />
+            Conquiste.
+          </h1>
+          <p className="mt-5 max-w-md text-sm leading-6 text-ink-2">
+            Seu treino, sua alimentação e sua evolução reunidos em um só lugar.
+          </p>
         </div>
+      </section>
 
-        <div className="rounded-2xl border border-line bg-card p-6">
-          <div className="mb-6 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setModo('entrar')}
-              className={`h-11 flex-1 rounded-xl text-sm font-semibold transition-colors ${
-                modo === 'entrar' ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
-              }`}
-            >
-              Entrar
-            </button>
-            <button
-              type="button"
-              onClick={() => setModo('cadastrar')}
-              className={`h-11 flex-1 rounded-xl text-sm font-semibold transition-colors ${
-                modo === 'cadastrar' ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
-              }`}
-            >
-              Criar conta
-            </button>
-          </div>
+      <main className="flex items-center py-10 lg:py-8">
+        <div className="w-full max-w-md lg:mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-2">
+            {modo === 'entrar' ? 'Acesso' : 'Novo perfil'}
+          </p>
+          <h2 className="mt-2 text-[28px] font-bold tracking-[-0.035em] text-ink">
+            {modo === 'entrar' ? 'Entre na sua conta.' : 'Crie sua conta.'}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-ink-2">
+            {modo === 'entrar' ? 'Continue de onde parou.' : 'Comece sua evolução no VIVECI.'}
+          </p>
 
           {cadastroFeito ? (
-            <p className="text-center text-sm text-ink-2">
-              Conta criada. Confira seu email para confirmar o cadastro antes de entrar.
-            </p>
+            <div className="mt-8 border-y border-line py-6">
+              <p className="text-sm font-semibold text-ink">Conta criada.</p>
+              <p className="mt-2 text-sm leading-6 text-ink-2">Confira seu email para confirmar o cadastro antes de entrar.</p>
+              <button type="button" onClick={() => { setCadastroFeito(false); setModo('entrar') }} className="mt-5 text-sm font-semibold text-brand">
+                Voltar para entrar
+              </button>
+            </div>
           ) : (
-            <form onSubmit={enviar} className="space-y-4">
+            <form onSubmit={enviar} className="mt-8 space-y-5">
               {modo === 'cadastrar' && (
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
@@ -84,7 +88,7 @@ export default function Login() {
                     required
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
-                    className="h-11 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+                    className="h-12 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                     placeholder="Seu nome"
                   />
                 </div>
@@ -98,7 +102,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+                  className="h-12 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                   placeholder="voce@email.com"
                 />
               </div>
@@ -112,7 +116,7 @@ export default function Login() {
                   minLength={6}
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+                  className="h-12 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                   placeholder="Mínimo 6 caracteres"
                 />
               </div>
@@ -128,8 +132,16 @@ export default function Login() {
               </button>
             </form>
           )}
+          {!cadastroFeito && (
+            <p className="mt-6 text-center text-sm text-ink-2">
+              {modo === 'entrar' ? 'Ainda não tem uma conta?' : 'Já tem uma conta?'}{' '}
+              <button type="button" onClick={() => setModo(modo === 'entrar' ? 'cadastrar' : 'entrar')} className="font-semibold text-brand">
+                {modo === 'entrar' ? 'Criar conta' : 'Entrar'}
+              </button>
+            </p>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

@@ -51,7 +51,7 @@ function passoValido(passo: number, r: Respostas): boolean {
 }
 
 function Titulo({ children }: { children: ReactNode }) {
-  return <h2 className="text-[22px] font-bold leading-snug">{children}</h2>
+  return <h2 className="text-[28px] font-bold leading-tight tracking-[-0.035em]">{children}</h2>
 }
 
 function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: ReactNode }) {
@@ -60,7 +60,7 @@ function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => voi
       type="button"
       onClick={onClick}
       className={`h-12 rounded-xl px-4 text-sm font-semibold transition-colors ${
-        ativo ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
+        ativo ? 'border border-brand bg-brand/10 text-brand' : 'border border-line text-ink-2 hover:border-ink-3'
       }`}
     >
       {children}
@@ -92,7 +92,7 @@ function Campo({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+        className="h-12 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
       />
     </div>
   )
@@ -155,24 +155,25 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 flex justify-center">
-          <Logo className="text-xl" />
+    <div className="min-h-dvh px-6 py-8 sm:px-10">
+      <div className="mx-auto w-full max-w-lg">
+        <div className="flex items-center justify-between">
+          <Logo className="text-lg" />
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-2">Seu contexto</p>
         </div>
 
-        <div className="mb-6 flex gap-1.5">
+        <div className="mb-12 mt-8 flex gap-1.5">
           {Array.from({ length: TOTAL_PASSOS }, (_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= passo ? 'bg-brand' : 'bg-card-hover'}`} />
+            <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= passo ? 'bg-brand' : 'bg-card-hover'}`} />
           ))}
         </div>
 
-        <div className="rounded-2xl border border-line bg-card p-6">
+        <div>
           <p className="mb-1 text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
             Passo {passo + 1} de {TOTAL_PASSOS}
           </p>
 
-          <div className="mt-3 space-y-5">
+          <div className="mt-4 min-h-64 space-y-5">
             {passo === 0 && (
               <>
                 <Titulo>Como podemos te chamar?</Titulo>
@@ -239,7 +240,7 @@ export default function Onboarding() {
 
           {erro && <p className="mt-4 text-sm text-down">{erro}</p>}
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-10 flex gap-3 border-t border-line/70 pt-6">
             {passo > 0 && (
               <button
                 type="button"

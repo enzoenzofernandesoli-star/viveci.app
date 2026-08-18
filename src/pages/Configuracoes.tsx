@@ -93,8 +93,8 @@ const CATEGORIAS: { secao: Secao; icone: typeof User; titulo: string; descricao:
 
 function Cabecalho({ titulo, onVoltar }: { titulo: string; onVoltar: () => void }) {
   return (
-    <div className="mt-6 flex items-center gap-3">
-      <button onClick={onVoltar} aria-label="Voltar" className="text-ink-2 hover:text-ink">
+    <div className="mt-6 flex items-center gap-3 border-b border-line/70 pb-5">
+      <button onClick={onVoltar} aria-label="Voltar" className="flex h-11 w-11 items-center justify-center text-ink-2 hover:text-ink">
         <ChevronLeft size={22} strokeWidth={1.75} />
       </button>
       <h2 className="text-[19px] font-bold">{titulo}</h2>
@@ -561,14 +561,14 @@ export default function Configuracoes() {
         <p className="text-sm text-ink-2">Personalize sua experiência no VIVECI</p>
       </div>
 
-      <div className="mt-5 space-y-2">
+      <div className="mt-5 divide-y divide-line/70 border-y border-line/70">
         {CATEGORIAS.map(({ secao: s, icone: Icone, titulo, descricao }) => (
           <button
             key={s}
             onClick={() => setSecao(s)}
-            className="flex w-full items-center gap-4 rounded-2xl border border-line bg-card px-5 py-4 text-left transition-colors hover:bg-card-hover"
+            className="flex min-h-20 w-full items-center gap-4 px-1 py-4 text-left transition-colors hover:bg-card-hover/40 sm:px-3"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/15 text-brand">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center text-ink-2">
               <Icone size={19} strokeWidth={1.75} />
             </div>
             <div className="min-w-0 flex-1">
