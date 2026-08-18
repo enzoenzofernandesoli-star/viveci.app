@@ -40,3 +40,11 @@ where (schemaname = 'public' and tablename in (
   'post_likes', 'post_comments', 'seguidores', 'usuarios_bloqueados', 'denuncias_social'
 )) or (schemaname = 'storage' and tablename = 'objects')
 order by schemaname, tablename, policyname;
+
+-- Deve retornar zero linhas depois da migration 13.
+select grantee, table_name, privilege_type
+from information_schema.table_privileges
+where table_schema = 'public'
+  and grantee in ('anon', 'authenticated')
+  and privilege_type in ('TRUNCATE', 'TRIGGER', 'REFERENCES')
+order by table_name, grantee, privilege_type;

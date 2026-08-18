@@ -23,7 +23,7 @@ anterior foi rotacionada. Nenhum valor foi solicitado, recebido ou registrado.
 
 Status: **confirmado pelo proprietário; não verificado programaticamente**.
 
-## Migrations 09–12
+## Migrations 09–13
 
 ### 09 — segurança, privacidade e autorização
 
@@ -54,6 +54,11 @@ Observação: criar a rotina e salvar seus itens são duas RPCs distintas. Cada 
 a rotina base já pode existir. Portanto “criação integralmente atômica” ainda não
 está comprovada pelo desenho atual.
 
+### 11 — performance
+
+Estado local esperado: índices para posts, comentários, likes, seguidores,
+registros, sessões finalizadas, diário e fotos de progresso.
+
 ### 12 — métricas sociais compartilhadas
 
 Estado local esperado: `posts_publicos` mascara duração, séries e volume não
@@ -61,10 +66,13 @@ autorizados; `posts_proprios` restringe a exportação ao titular; leitura bruta
 sensível de `posts` é revogada; exclusão usa RPC autorizada. O estado remoto e o
 teste A/B ainda não foram comprovados.
 
-### 11 — performance
+### 13 — privilégios mínimos
 
-Estado local esperado: índices para posts, comentários, likes, seguidores,
-registros, sessões finalizadas, diário e fotos de progresso.
+O inventário remoto mostrou `TRUNCATE`, `TRIGGER` e `REFERENCES` concedidos por
+padrão a `anon` e `authenticated` em todas as relações públicas. A migration 13
+remove todo acesso de `anon`, retira os três privilégios administrativos de
+`authenticated` e ajusta os privilégios padrão para relações futuras. O DML
+autenticado necessário continua sujeito às policies RLS.
 
 Status remoto das três migrations: **não comprovado**. Elas não foram reaplicadas.
 
