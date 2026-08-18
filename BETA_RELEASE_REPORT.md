@@ -1,120 +1,116 @@
-# VIVECI — relatório final de prontidão do beta
+# VIVECI — relatório final do beta fechado
 
-Auditoria concluída em 18 de agosto de 2026. Versão auditada: commit `69c6b30`, acrescido somente desta documentação da Etapa 28.
+Auditoria final: 18 de agosto de 2026. Estado de código anterior à documentação final: `fa891fd`.
 
-## 1. Etapas auditadas
+## Etapas 23–31
 
 | Etapa | Commit | Resultado |
 |---|---|---|
-| 23 — jornadas principais | `49e4f35` | Proteções contra duplicidade, onboarding persistente e primeira ação corrigidos |
-| 24 — estados e erros | `6ff477d` | Erros humanos, confirmações e submissões robustas |
-| 25 — mobile | `8c2c5bd` | Alvos de toque, teclado e viewports revisados |
-| 26 — performance | `24861f5` | Feed oculto deixou de fazer consulta desnecessária |
-| 27 — E2E | `69c6b30` | Quatro jornadas críticas adicionadas |
-| 28 — release | commit deste relatório | Auditoria final, checklist e decisão |
+| 23 | `49e4f35` | jornadas principais reforçadas |
+| 24 | `6ff477d` | estados, erros e dupla submissão |
+| 25 | `8c2c5bd` | QA mobile |
+| 26 | `24861f5` | consulta do feed oculto removida |
+| 27 | `69c6b30` | E2E críticos |
+| 28 | `17e761c` | auditoria: NO-GO |
+| 29 | `490ee90` | matriz Supabase; BLOCKED por falta de evidência remota |
+| 30 | `fa891fd` | controles de dados; BLOCKED até deploy/teste da exclusão |
+| 31 | commit deste relatório | release gate final |
 
-## 2. Classificação funcional
+## Etapa 29 — Supabase, RLS e Storage
 
-### PRONTO no código local
+**Resultado: BLOCKED.**
 
-- Onboarding, Home, rotinas manuais, sessão de treino, PR, Treino Express, Treino Rápido e cardio.
-- Corpo/mapa de estímulo, Perfil, Evolução, configurações e exportação JSON.
-- PWA instalável com cache básico network-first; não oferece sincronização offline de dados.
+O workspace tem apenas URL e chave publicável. Não há CLI vinculada, credencial administrativa segura, duas contas descartáveis ou ambiente de homologação acessível. As migrations 09–11 foram auditadas no repositório, mas não foram reaplicadas nem declaradas ativas remotamente.
 
-### BETA — depende de validação remota e uso controlado
+Buckets esperados: `midia-publica` para avatar/social, `progresso-privado` para Body Scan e `Fotos` como legado. Body Scan local grava path permanente e gera signed URL de uma hora; a privacidade remota e a migração dos legados não estão comprovadas.
 
-- Auth e recuperação de senha via Supabase.
-- Nutrição manual e diário alimentar.
-- Social com posts de foto, treino vinculado, curtidas, comentários, seguidores, bloqueio e denúncia.
-- Body Scan real para upload, timeline e comparação de fotos privadas.
-- Free/Pro: o único bloqueio funcional é o limite de quatro rotinas no Free.
+A matriz completa está em `SUPABASE_SECURITY_VALIDATION.md`. O teste A/B não foi executado. Também foi identificado um P0: flags de compartilhamento escondem métricas na UI, porém a consulta atual lê o snapshot bruto completo de `posts`; isso exige máscara/permissão no contrato do banco e validação A/B.
 
-### DEMONSTRAÇÃO — sem IA/OCR real
+## Etapa 30 — exclusão, exportação e privacidade
 
-- Food Scanner e Label Scanner.
-- Análise de movimento e análise de físico.
+**Resultado: BLOCKED.**
 
-As quatro interfaces mostram aviso explícito de demonstração ou avaliação experimental. Os resultados simulados não são apresentados como diagnóstico.
+Implementado e testado localmente:
 
-### ADIADO ou indisponível
+- Edge Function autentica o JWT e deriva o próprio usuário, sem aceitar `user_id` arbitrário;
+- service role permanece apenas no ambiente da função;
+- arquivos são listados/removidos em páginas nos três buckets antes da exclusão do Auth;
+- falha de Storage interrompe o fluxo; falha posterior não é apresentada como sucesso;
+- confirmação exige digitar `EXCLUIR`, bloqueia duplicidade, limpa estado local e encerra a sessão após sucesso;
+- exportação inclui perfil, preferências, rotinas/itens, registros, sessões, cardio, medidas, metas, diário, fotos, posts, comentários, curtidas, seguidores, bloqueios, denúncias, streak e desafio;
+- JSON é versionado, datado, inclui referências de mídia e remove chaves de tokens/senhas/segredos defensivamente;
+- Política, Termos e `DATA_LIFECYCLE.md` foram alinhados ao produto real.
 
-- Exclusão automática de conta no estado local auditado.
-- Vídeo/Stories, XP, rankings, notificações sociais, contas privadas, desafios avançados, IA de dieta e painel de moderação.
+A exclusão não é considerada funcional porque não houve deploy nem teste destrutivo remoto. Storage, Auth e Postgres não formam transação única; a limitação está documentada. Idade mínima continua como decisão necessária. Política e Termos continuam rascunhos para revisão profissional.
 
-## 3. Fluxo de dados e confiabilidade
+## Testes finais
 
-O núcleo usa Supabase Auth, Postgres com RLS e Storage. Rotinas são criadas por RPC transacional; o limite Free também existe no banco. Séries são gravadas uma vez e sessões concluídas alimentam histórico, Corpo e Intelligence Engine. Sessões interrompidas permanecem com `finalizada_em = NULL`, ficam fora do histórico e não são retomadas. Isso evita sessão concluída fantasma, mas deve ser explicado e validado no beta.
-
-Os testes locais cobrem a interface desses fluxos com backend simulado. Não foi possível provar nesta auditoria a persistência remota após novo login, email de confirmação, RLS entre duas contas nem Storage real, pois não há ambiente Supabase de teste isolado configurado.
-
-## 4. Testes e build
-
-- Unitários: **130/130** aprovados.
-- E2E: **7/7** aprovados no Chromium local.
-- E2E novos: onboarding com refresh; rotina + exercício + salvamento único; série + finalização única; registro de cardio.
-- E2E públicos existentes: login, recuperação e redirecionamento de rota privada.
+- Unitários: **131/131**.
+- E2E: **10/10** no Chromium local.
 - TypeScript/build: aprovado.
 - Lint: aprovado.
 - `git diff --check`: aprovado.
+- Nenhum valor real `sb_secret_` encontrado nos arquivos auditados.
 
-Ainda sem cobertura real: cadastro por email, links de confirmação/redefinição, alimentação, Corpo após treino, persistência após novo login, duas contas no Social, RLS e Storage. O motivo é a ausência de ambiente de teste remoto seguro; nenhuma credencial pessoal ou de produção foi usada.
+Cobertura E2E: login, recuperação, proteção de rota, onboarding com refresh, criação de rotina, série/finalização, cardio, exclusão com confirmação, falha segura da exclusão e smoke das áreas principais.
 
-## 5. Performance
+Os E2E autenticados usam backend simulado e não são evidência de RLS/Storage remoto.
 
-| Medida | Antes da Etapa 26 | Depois |
-|---|---:|---:|
-| JS inicial | 458,82 kB | 458,82 kB |
-| JS inicial gzip | 133,72 kB | 133,72 kB |
-| CSS observado | 55,14 kB | 55,84 kB |
-| Social | 11,30 kB / 3,63 kB gzip | 11,30 kB / 3,63 kB gzip |
+## Smoke, mobile e console
 
-Não houve redução segura do bundle nessa etapa. O ganho real foi comportamental: o Social agora consulta somente Amigos ou Descobrir, conforme a aba visível, em vez de buscar os dois feeds ao abrir. Paginação permanece em 15 posts e rotas pesadas continuam sob demanda.
+Home, Treino, Corpo, Nutrição, Social, Perfil e Configurações abriram em 375, 390, 430 e 1280 px sem overflow horizontal, erro de aplicação, request interna falha ou warning React observado. A fonte externa foi respondida localmente no teste para não confundir bloqueio de rede do sandbox com erro do app. Câmera, teclado nativo e instalação PWA ainda exigem aparelho real.
 
-## 6. Segurança
+## Performance final
 
-Confirmado por código e SQL disponível:
+| Item | Resultado |
+|---|---:|
+| JS inicial | 458,82 kB |
+| JS inicial gzip | 133,71 kB |
+| CSS | 55,69 kB |
+| Home hero | 110,86 kB |
+| Push | 86,67 kB |
+| Pull | 107,73 kB |
+| Legs | 109,68 kB |
+| Full Body | 100,25 kB |
+| Cardio | 96,29 kB |
 
-- `progresso-privado` é privado e Body Scan usa URL assinada de uma hora;
-- avatar e mídia social deliberadamente pública usam `midia-publica`;
-- uploads aceitam somente JPEG/PNG/WebP compatíveis e possuem limite de tamanho;
-- `perfis_publicos` expõe somente id, nome, foto e bio a autenticados;
-- plano, limite Free e snapshot de treino social possuem proteção no banco;
-- RLS restringe escrita, bloqueio e interações conforme o proprietário.
+Não houve nova otimização no release gate. Rotas pesadas continuam sob demanda e Social pagina 15 posts.
 
-Não confirmado no ambiente remoto: aplicação efetiva das migrations 09–11, policies dos buckets, migração das fotos legadas e teste cruzado com duas contas. A função de exclusão privilegiada e seu acionamento foram removidos por alteração local paralela; portanto a exclusão automática de conta está indisponível nesta versão e não pode ser prometida.
+## FINAL RELEASE GATE
 
-## 7. Privacidade e documentos
+| Item | Status | Evidência |
+|---|---|---|
+| Chave antiga rotacionada | BLOCKED | confirmação do painel ausente |
+| Migrations 09–11 | BLOCKED | somente SQL local auditado |
+| RLS com A/B | BLOCKED | duas contas não disponíveis |
+| Perfil privado | BLOCKED | desenho local correto; remoto não testado |
+| Body Scan privado | BLOCKED | bucket/signed URL esperados; remoto e legado não testados |
+| Social limitado ao compartilhado | FAIL | snapshot oculto pode ser lido no payload bruto |
+| Plano protegido | BLOCKED | trigger local; bypass remoto não testado |
+| Limite Free backend | BLOCKED | trigger local; quinta rotina remota não testada |
+| Uploads | PASS local | 4 testes de MIME/extensão/tamanho + paths por usuário |
+| Exportação | PASS local | pacote ampliado e teste de remoção de segredos |
+| Exclusão de conta | BLOCKED | implementação/E2E local; deploy e jornada real ausentes |
+| Fluxo principal | PASS local | unitários, E2E e smoke aprovados |
+| Simulações identificadas | PASS | avisos explícitos na interface |
+| Idade mínima | BLOCKED | decisão de produto/jurídica ausente |
 
-Body Scan é projetado como privado; Social e avatar são públicos por escolha de produto. Exportação de dados é funcional em JSON. A exclusão integral não está disponível no estado auditado.
+## Pendências
 
-`docs/POLITICA_PRIVACIDADE_RASCUNHO.md` e `docs/TERMOS_USO_RASCUNHO.md` são apenas estruturas: faltam responsável, contato, retenção, provedores/regiões, idade mínima, jurisdição e revisão profissional. Eles não são aconselhamento jurídico nem estão prontos para aceite de usuários reais.
+### P0
 
-## 8. PWA e metadata
+Rotação da chave; migrations/RLS/Storage A/B; migração de fotos legadas; máscara real das métricas sociais; proteção remota de plano/limite Free; deploy e teste da exclusão; decisão de idade mínima.
 
-Manifest: nome, nome curto, descrição, idioma, cores, ícones, modo standalone e orientação coerentes. HTML: idioma, viewport com safe area, description, theme-color, favicon, ícone Apple e manifest presentes. O service worker usa network-first para arquivos da mesma origem e cache básico; o produto não promete offline completo. Nenhuma referência ao antigo plano automático foi encontrada.
+### P1
 
-## 9. Console e UX real
+Completar responsável/contato/retenção/fornecedores e revisão jurídica; processo de moderação; observabilidade; testes em aparelhos reais.
 
-As jornadas E2E finalizadas não apresentaram erro de aplicação, request não tratada, imagem 404 ou warning React no resultado observado. Os avisos `NO_COLOR` vieram do processo Node/Playwright e não da aplicação. O QA automatizado de viewports não encontrou overflow horizontal no fluxo público; câmera, teclado nativo e PWA ainda exigem aparelho real.
+### P2
 
-## 10. Problemas conhecidos
+Homologação automatizada; atomicidade integral da criação de rotina; tratamento de mídia órfã; retomada/limpeza de sessões abandonadas; pipeline de thumbnails se necessário.
 
-- Sessão abandonada não pode ser retomada e permanece como registro técnico.
-- Não há homologação Supabase automatizada.
-- Moderação registra denúncias, mas não possui operação administrativa.
-- Scanners e análises são demonstrações.
-- Sem error tracking/alertas centralizados.
-
-## 11. Blockers
-
-1. Rotação da chave secreta anteriormente compartilhada não comprovada.
-2. Migrations 09–11, RLS e Storage não validados no Supabase remoto com duas contas.
-3. Fotos corporais legadas ainda dependem de migração e verificação de exposição.
-4. Exclusão integral de conta, dados e arquivos está indisponível no estado local.
-5. Política de Privacidade e Termos não estão prontos para usuários reais.
-
-## 12. Recomendação final
+## Decisão
 
 **NO-GO — BETA FECHADO**
 
-O núcleo local está estável e testado, mas segurança, privacidade e direito de exclusão ainda não têm comprovação suficiente para convidar usuários reais. O status só deve mudar para GO depois de concluir e registrar evidência para todos os itens P0 do `BETA_CHECKLIST.md`.
+O núcleo local está estável, mas os critérios mínimos de GO exigem evidência remota de isolamento, chave revogada, limite backend e exclusão real. Há ainda um vazamento potencial de métricas sociais desmarcadas no payload bruto. Segurança e privacidade prevalecem sobre o resultado dos testes locais.

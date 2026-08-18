@@ -1,45 +1,48 @@
 # VIVECI — checklist final do beta fechado
 
-Atualizado em 18 de agosto de 2026 após as Etapas 23–28. Itens locais concluídos não permanecem como pendência. Nenhum item remoto abaixo foi marcado como feito sem comprovação no ambiente de homologação.
+Release gate atualizado em 18 de agosto de 2026 após as Etapas 29–31.
 
-## P0 — bloqueia beta com usuários reais
+## P0 — BLOQUEIA BETA
 
-- [ ] Rotacionar no Supabase toda chave secreta já compartilhada e confirmar que somente a URL e a chave publicável ficam no frontend.
-- [ ] Confirmar no Supabase remoto a aplicação, em ordem, das migrations 09, 10 e 11 e validar RLS com duas contas comuns.
-- [ ] Confirmar os buckets `midia-publica` (público) e `progresso-privado` (privado), suas policies e a impossibilidade de uma segunda conta acessar um Body Scan.
-- [ ] Migrar os arquivos corporais legados conforme `sql/MIGRACAO_FOTOS_BETA.md` e confirmar que nenhuma URL pública antiga expõe fotos corporais.
-- [ ] Definir e disponibilizar um fluxo seguro de exclusão de conta, dados e arquivos. A Edge Function `excluir-conta` e seu acionamento estão removidos no estado local auditado; não anunciar exclusão automática enquanto isso não for resolvido e testado ponta a ponta.
-- [ ] Concluir Política de Privacidade e Termos de Uso com responsável, contato, retenção, idade mínima, jurisdição e revisão profissional antes de convidar usuários reais.
+- [ ] Confirmar no painel que a chave secreta anteriormente compartilhada foi revogada/rotacionada. Não enviar o valor da chave.
+- [ ] Confirmar no remoto as migrations 09–11 e executar a matriz RLS com duas contas descartáveis de homologação.
+- [ ] Provar que o perfil completo, rotinas, registros, nutrição, medidas e preferências de A não são legíveis por B.
+- [ ] Provar que `progresso-privado` é privado, que B não acessa Body Scan de A e que URLs assinadas expiram.
+- [ ] Migrar e validar fotos corporais legadas antes de remover qualquer origem.
+- [ ] Impedir no contrato do banco/API que métricas de treino desmarcadas pelo autor sejam lidas no snapshot bruto de posts.
+- [ ] Provar pelo backend que um usuário comum não altera Free para Pro e que a quinta rotina Free falha.
+- [ ] Publicar `excluir-conta`, configurar segredos somente na Edge Function e executar a jornada criar dados → exportar → excluir → confirmar Auth, banco e arquivos removidos.
+- [ ] Definir política de idade mínima antes de incluir pessoas reais no beta.
 
-## P1 — importante para o beta controlado
+## P1 — PODE ENTRAR NO BETA COM ACOMPANHAMENTO
 
-- [ ] Configurar no Auth as URLs reais de confirmação, produção e `/redefinir-senha`; testar links válidos, expirados e inválidos.
-- [ ] Executar com duas contas de homologação: cadastro, confirmação, onboarding, login, recuperação, criação de rotina, limite Free pela API, treino completo, Corpo, Social, bloqueio e denúncia.
-- [ ] Testar upload e exclusão de avatar, post e Body Scan no Storage remoto, incluindo falha de rede e arquivos inválidos.
-- [ ] Confirmar que treino concluído reaparece após novo login em histórico, Corpo, evolução, PR, DNA e recomendação com dados reais do Supabase.
-- [ ] Validar a decisão operacional para sessões abandonadas: elas ficam com `finalizada_em = NULL`, não aparecem no histórico e não são retomadas.
-- [ ] Definir quem revisa denúncias sociais; hoje elas são persistidas, mas não há painel de moderação.
-- [ ] Configurar monitoramento de erros e alertas mínimos antes de ampliar o grupo.
-- [ ] Fazer uma rodada em aparelhos reais nos tamanhos equivalentes a 375, 390 e 430 px, inclusive com teclado virtual, câmera e instalação PWA.
+- [ ] Definir responsável, contato, retenção, backups, fornecedores/regiões e procedimento de incidente nos documentos de privacidade.
+- [ ] Submeter Política de Privacidade e Termos a revisão jurídica profissional antes de lançamento público.
+- [ ] Definir responsável e processo operacional para denúncias sociais.
+- [ ] Configurar error tracking, logs e alertas mínimos.
+- [ ] Testar confirmação e recuperação de email, câmera, teclado virtual e instalação PWA em aparelhos reais.
+- [ ] Acompanhar sessões abandonadas (`finalizada_em = NULL`), que não são retomadas.
 
-## P2 — pós-beta
+## P2 — PÓS-BETA
 
-- [ ] Criar ambiente Supabase isolado para E2E autenticado automatizado e testes cruzados de RLS/Storage.
-- [ ] Avaliar retomada explícita ou limpeza programada de sessões abandonadas.
-- [ ] Criar thumbnails/processamento de mídia se o volume real do Social ou do Body Scan justificar.
-- [ ] Avaliar monitoramento de performance em dispositivos reais e rede lenta.
+- [ ] Criar Supabase isolado para automatizar E2E de Auth, RLS, Storage e duas contas.
+- [ ] Unificar criação de rotina e itens em uma única transação ou criar compensação explícita.
+- [ ] Tratar arquivos órfãos quando upload conclui e insert falha ou quando remoção de post falha.
+- [ ] Avaliar retomada/limpeza programada de sessões abandonadas.
+- [ ] Adicionar thumbnails/processamento de mídia somente quando o uso real justificar.
 
-## Validações locais concluídas
+## Concluído localmente
 
-- [x] 130 testes unitários passando.
-- [x] 7 testes E2E passando no Chromium local: login, recuperação, proteção de rota, persistência do onboarding, criação de rotina, sessão e cardio.
-- [x] TypeScript e build de produção passando.
-- [x] Lint de `src` passando.
-- [x] `git diff --check` sem erro.
-- [x] Manifest, metadata e service worker revisados; não há promessa de plano automático de 12 semanas nem de funcionamento offline completo.
-- [x] Food Scanner, Label Scanner, análise de movimento e análise de físico identificados como `DEMONSTRAÇÃO`/experimental na interface.
-- [x] Viewports automatizados 375×667, 390×844, 430×932, 1024, 1280 e 1440 sem overflow horizontal no fluxo público auditado.
+- [x] 131/131 testes unitários.
+- [x] 10/10 E2E no Chromium local, incluindo confirmação/falha da exclusão e smoke das áreas principais.
+- [x] TypeScript/build, lint e `git diff --check` aprovados.
+- [x] Smoke test em 375, 390, 430 e 1280 px: Home, Treino, Corpo, Nutrição, Social, Perfil e Configurações.
+- [x] Upload local valida MIME, extensão e tamanho.
+- [x] Exportação JSON ampliada, versionada, com referências de mídia e remoção defensiva de segredos/tokens.
+- [x] Edge Function local deriva o usuário do JWT, impede clique duplicado e não declara sucesso em falha.
+- [x] Política de Privacidade, Termos e ciclo de dados alinhados tecnicamente ao produto, ainda como rascunhos.
+- [x] Recursos simulados continuam identificados como demonstração/experimental.
 
 ## Limite da evidência
 
-Os E2E autenticados usam um backend Supabase simulado e seguro; eles validam a jornada da interface e a prevenção de duplicatas, não comprovam Auth, RLS, Storage, email ou persistência do projeto Supabase remoto. Esses pontos só podem ser marcados após homologação real.
+Os E2E autenticados usam backend Supabase simulado. Eles validam interface e comportamento local, não comprovam configuração remota, RLS, Storage, email nem exclusão real. Consulte `SUPABASE_SECURITY_VALIDATION.md`.

@@ -190,3 +190,30 @@ test('falha na exclusão não declara sucesso nem encerra a sessão', async ({ p
   await expect(page).toHaveURL(/\/perfil\/configuracoes$/)
   expect(state.exclusoesConta).toBe(1)
 })
+
+test('smoke das áreas principais não quebra em mobile ou desktop', async ({ page }) => {
+  test.setTimeout(120_000)
+  const state = baseState()
+  await mockBackend(page, state)
+  await page.route('https://fonts.googleapis.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/css', body: '' }))
+  const erros: string[] = []
+  page.on('pageerror', (erro) => erros.push(erro.message))
+  page.on('console', (mensagem) => {
+    if (mensagem.type() === 'error') erros.push(mensagem.text())
+  })
+  page.on('requestfailed', (request) => {
+    if (!request.failure()?.errorText.includes('ERR_ABORTED')) erros.push(`${request.method()} ${request.url()}`)
+  })
+
+  const rotas = ['/', '/treino', '/corpo', '/nutricao', '/social', '/perfil', '/perfil/configuracoes']
+  for (const largura of [375, 390, 430, 1280]) {
+    await page.setViewportSize({ width: largura, height: largura < 500 ? 844 : 900 })
+    for (const rota of rotas) {
+      await page.goto(rota)
+      await expect(page.locator('body')).toBeVisible()
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+    }
+  }
+
+  expect(erros).toEqual([])
+})
