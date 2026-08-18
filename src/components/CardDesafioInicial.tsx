@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronRight, Check } from 'lucide-react'
+import { ChevronDown, Check } from 'lucide-react'
 import { usePerfil } from '../lib/perfil'
 import { useRotinas } from '../lib/rotinas'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
@@ -23,36 +23,22 @@ export function CardDesafioInicial({ userId }: { userId: string }) {
   })
 
   if (desafio.percentual === 100) return null
+  const concluidas = desafio.tarefas.filter((tarefa) => tarefa.concluida).length
+  const proxima = desafio.tarefas.find((tarefa) => !tarefa.concluida)
 
   return (
     <button
       onClick={() => setAberto((v) => !v)}
-      className="animar-entrada mt-4 w-full rounded-2xl border border-line bg-card p-4 text-left"
+      className="animar-entrada mt-5 w-full border-y border-line/60 py-4 text-left"
     >
-      <div className="flex items-center gap-3">
-        <div className="relative h-11 w-11 shrink-0">
-          <svg viewBox="0 0 40 40" className="-rotate-90">
-            <circle cx="20" cy="20" r="17" fill="none" stroke="var(--color-card-hover)" strokeWidth="4" />
-            <circle
-              cx="20"
-              cy="20"
-              r="17"
-              fill="none"
-              stroke="var(--color-brand)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeDasharray={`${(desafio.percentual / 100) * 106.8} 106.8`}
-            />
-          </svg>
-          <span className="num absolute inset-0 flex items-center justify-center text-[11px] font-bold text-ink">
-            {desafio.percentual}%
-          </span>
-        </div>
+      <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">Desafio inicial</p>
-          <p className="text-xs text-ink-2">Complete os primeiros passos no VIVECI</p>
+          <div className="flex items-center justify-between"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Comece por aqui</p><span className="num text-xs text-ink-2">{concluidas} de 4</span></div>
+          <div className="mt-3 h-1 overflow-hidden bg-line"><div className="h-full bg-brand" style={{ width: `${desafio.percentual}%` }} /></div>
+          <p className="mt-3 text-sm text-ink">{proxima?.label ?? 'Complete seus primeiros passos.'}</p>
+          <p className="mt-2 text-xs font-semibold text-ink-2">Ver progresso</p>
         </div>
-        <ChevronRight size={18} strokeWidth={1.75} className="shrink-0 text-ink-3" />
+        <ChevronDown size={17} strokeWidth={1.75} className={`mt-1 shrink-0 text-ink-3 transition-transform ${aberto ? 'rotate-180' : ''}`} />
       </div>
 
       {aberto && (

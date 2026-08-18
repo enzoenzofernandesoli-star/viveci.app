@@ -46,12 +46,12 @@ export default function PerfilPublico() {
   }
 
   return (
-    <div className="animar-entrada pb-4">
-      <div className="mt-6 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} aria-label="Voltar" className="text-ink-2 hover:text-ink">
+    <div className="animar-entrada mx-auto max-w-[640px] pb-4">
+      <div className="flex min-h-14 items-center gap-3 border-b border-line/60">
+        <button onClick={() => navigate(-1)} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2 hover:text-ink">
           <ChevronLeft size={22} strokeWidth={1.75} />
         </button>
-        <h1 className="text-2xl font-bold tracking-tight">Perfil</h1>
+        <h1 className="text-lg font-semibold">Perfil</h1>
       </div>
 
       {carregandoPerfil ? (
@@ -60,8 +60,8 @@ export default function PerfilPublico() {
         <Empty text="Usuário não encontrado." />
       ) : (
         <>
-          <div className="mt-6 flex items-center gap-4">
-            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-line bg-card-hover">
+          <div className="mt-8 text-center">
+            <div className="mx-auto h-24 w-24 overflow-hidden rounded-full border border-line bg-card-hover">
               {perfil.foto_url ? (
                 <img src={perfil.foto_url} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -70,23 +70,21 @@ export default function PerfilPublico() {
                 </div>
               )}
             </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-[19px] font-bold">{perfil.nome}</h2>
-              {perfil.bio && <p className="mt-1 text-sm text-ink-2">{perfil.bio}</p>}
-            </div>
+            <h2 className="mt-5 truncate text-2xl font-semibold tracking-[-0.045em]">{perfil.nome}</h2>
+            {perfil.bio && <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-2">{perfil.bio}</p>}
           </div>
 
-          <div className="mt-6 grid grid-cols-3 gap-3 rounded-2xl border border-line bg-card p-4 text-center">
+          <div className="mt-6 grid grid-cols-3 divide-x divide-line/60 border-y border-line/60 py-4 text-center">
             <div>
-              <p className="num text-[22px] font-bold">{posts.length}</p>
+              <p className="num text-xl font-semibold">{posts.length}</p>
               <p className="text-xs text-ink-2">Publicações</p>
             </div>
             <div>
-              <p className="num text-[22px] font-bold">{carregandoRelacao ? '—' : seguidores}</p>
+              <p className="num text-xl font-semibold">{carregandoRelacao ? '—' : seguidores}</p>
               <p className="text-xs text-ink-2">Seguidores</p>
             </div>
             <div>
-              <p className="num text-[22px] font-bold">{carregandoRelacao ? '—' : seguindoTotal}</p>
+              <p className="num text-xl font-semibold">{carregandoRelacao ? '—' : seguindoTotal}</p>
               <p className="text-xs text-ink-2">Seguindo</p>
             </div>
           </div>
@@ -103,7 +101,8 @@ export default function PerfilPublico() {
             </button>
           )}
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-8">
+            <p className="border-b border-line/60 pb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Publicações</p>
             {carregandoPosts ? (
               <Empty text="Carregando publicações..." />
             ) : posts.length === 0 ? (

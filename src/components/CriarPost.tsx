@@ -67,7 +67,7 @@ export function CriarPost({
   if (anexandoTreino) {
     return (
       <Page title="Anexar treino">
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 divide-y divide-line/60 border-y border-line/60">
           {carregandoTreinos ? (
             <Empty text="Carregando seus treinos..." />
           ) : treinos.length === 0 ? (
@@ -80,7 +80,7 @@ export function CriarPost({
                   setTreinoEscolhido(t)
                   setAnexandoTreino(false)
                 }}
-                className="flex w-full items-center justify-between rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
+                className="flex min-h-16 w-full items-center justify-between py-3 text-left transition-colors hover:text-brand"
               >
                 <div>
                   <p className="text-sm font-medium text-ink">{t.nome}</p>
@@ -91,7 +91,7 @@ export function CriarPost({
           )}
           <button
             onClick={() => setAnexandoTreino(false)}
-            className="h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+            className="mt-4 h-11 w-full text-sm font-semibold text-ink-2 transition-colors hover:text-ink"
           >
             Cancelar
           </button>
@@ -102,11 +102,11 @@ export function CriarPost({
 
   return (
     <Page title="Nova publicação">
-      <div className="mt-6 space-y-5">
+      <div className="mt-6 space-y-7">
         <input ref={inputRef} type="file" accept="image/*" onChange={escolherFoto} className="hidden" />
 
         {preview ? (
-          <div className="relative overflow-hidden rounded-2xl border border-line">
+          <div className="relative overflow-hidden rounded-2xl">
             <img src={preview} alt="Prévia" className="max-h-96 w-full object-cover" />
             <button
               onClick={() => {
@@ -120,25 +120,27 @@ export function CriarPost({
             </button>
           </div>
         ) : (
+          <div>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">1 · Adicionar foto</p>
           <button
             onClick={() => inputRef.current?.click()}
-            className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-ink-3"
+            className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-ink-3"
           >
             <Camera size={24} strokeWidth={1.75} />
             <span className="text-sm">Adicionar foto</span>
-          </button>
+          </button></div>
         )}
 
-        <textarea
+        <label className="block"><span className="mb-3 block text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">2 · Escrever legenda</span><textarea
           value={legenda}
           onChange={(e) => setLegenda(e.target.value)}
           placeholder="Escreva uma legenda..."
           rows={3}
-          className="w-full resize-none rounded-xl border border-line bg-card-hover px-3 py-2 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
-        />
+          className="w-full resize-none border-y border-line/60 bg-transparent px-0 py-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
+        /></label>
 
         {treinoEscolhido ? (
-          <div className="rounded-xl border border-line bg-card p-4">
+          <div className="border-y border-line/60 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-semibold text-brand">
                 <Dumbbell size={16} strokeWidth={1.75} />
@@ -150,8 +152,9 @@ export function CriarPost({
             </div>
             <p className="mt-1 text-xs text-ink-2">{formatoData(treinoEscolhido.finalizadaEm)}</p>
 
-            <div className="mt-3 space-y-2 border-t border-line pt-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">O que mostrar</p>
+            <div className="mt-3 border-t border-line/60 pt-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-2">4 · Compartilhar</p>
+              <div className="mt-2 divide-y divide-line/60">
               {[
                 { label: 'Duração', valor: mostrarDuracao, set: setMostrarDuracao },
                 { label: 'Séries', valor: mostrarSeries, set: setMostrarSeries },
@@ -160,22 +163,20 @@ export function CriarPost({
                 <button
                   key={label}
                   onClick={() => set(!valor)}
-                  className={`h-9 rounded-full px-3 text-xs font-semibold transition-colors ${
-                    valor ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
-                  }`}
+                  className="flex min-h-11 w-full items-center justify-between text-xs font-semibold text-ink-2"
                 >
-                  {label}
+                  <span>{label}</span><span className={valor ? 'text-brand' : 'text-ink-3'}>{valor ? '✓' : '○'}</span>
                 </button>
               ))}
+              </div>
             </div>
           </div>
         ) : (
           <button
             onClick={() => setAnexandoTreino(true)}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+            className="flex min-h-14 w-full items-center justify-between border-y border-line/60 text-sm font-semibold text-ink-2 transition-colors hover:text-ink"
           >
-            <Dumbbell size={16} strokeWidth={1.75} />
-            Anexar treino
+            <span className="flex items-center gap-2"><Dumbbell size={16} strokeWidth={1.75} />3 · Vincular treino</span><span className="text-xs text-ink-3">Opcional</span>
           </button>
         )}
 
@@ -190,7 +191,7 @@ export function CriarPost({
         </button>
         <button
           onClick={onFechar}
-          className="h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+          className="h-11 w-full text-sm font-semibold text-ink-2 transition-colors hover:text-ink"
         >
           Cancelar
         </button>

@@ -26,15 +26,15 @@ export function ComentariosPost({ postId, meuId, onFechar }: { postId: string; m
   }
 
   return (
-    <div className="animar-entrada pb-4">
-      <div className="mt-6 flex items-center gap-3">
-        <button onClick={onFechar} aria-label="Voltar" className="text-ink-2 hover:text-ink">
+    <div className="animar-entrada mx-auto max-w-[640px] pb-24 lg:pb-4">
+      <div className="flex min-h-14 items-center gap-3 border-b border-line/60">
+        <button onClick={onFechar} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2 hover:text-ink">
           <ChevronLeft size={22} strokeWidth={1.75} />
         </button>
-        <h1 className="text-[19px] font-bold">Comentários</h1>
+        <h1 className="text-lg font-semibold">Comentários</h1>
       </div>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-2 divide-y divide-line/60">
         {carregando ? (
           <Empty text="Carregando comentários..." />
         ) : erro ? (
@@ -43,16 +43,16 @@ export function ComentariosPost({ postId, meuId, onFechar }: { postId: string; m
           <Empty text="Nenhum comentário ainda. Seja o primeiro." />
         ) : (
           comentarios.map((c) => (
-            <div key={c.id} className="flex gap-3 rounded-xl border border-line bg-card px-4 py-3">
+            <div key={c.id} className="flex gap-3 py-4">
               <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-card-hover">
                 {c.autor.fotoUrl && <img src={c.autor.fotoUrl} alt="" className="h-full w-full object-cover" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-ink">{c.autor.nome}</p>
-                  <p className="text-xs text-ink-2">{formatoData(c.criadoEm)}</p>
+                  <p className="text-[10px] text-ink-3">{formatoData(c.criadoEm)}</p>
                 </div>
-                <p className="mt-0.5 text-sm text-ink-2">{c.texto}</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-2">{c.texto}</p>
               </div>
             </div>
           ))

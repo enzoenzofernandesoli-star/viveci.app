@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { PostCard } from '../components/PostCard'
 import { ComentariosPost } from '../components/ComentariosPost'
@@ -24,9 +23,9 @@ export default function Social() {
 
   if (!sessao || !userId) {
     return (
-      <Page title="Social">
+      <div className="mx-auto max-w-[640px]">
         <Empty text="Carregando..." />
-      </Page>
+      </div>
     )
   }
 
@@ -48,45 +47,44 @@ export default function Social() {
   }
 
   return (
-    <Page title="Social">
-      <div className="mt-6 flex items-center justify-between">
-        <div className="flex gap-2">
+    <div className="animar-entrada mx-auto w-full max-w-[640px] pb-4">
+      <header className="flex items-end justify-between border-b border-line/60 pb-4">
+        <h1 className="text-[28px] font-semibold tracking-[-0.045em]">Social</h1>
+        <button onClick={() => setCriandoPost(true)} className="inline-flex min-h-11 items-center gap-2 text-xs font-semibold text-brand">
+          <Plus size={17} strokeWidth={1.8} /> Publicar
+        </button>
+      </header>
+      <div className="flex items-center justify-between border-b border-line/60">
+        <div className="flex">
           <button
             onClick={() => setAba('amigos')}
-            className={`h-10 rounded-full px-4 text-sm font-semibold transition-colors ${
-              aba === 'amigos' ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
+            className={`relative min-h-12 px-5 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
+              aba === 'amigos' ? 'text-ink after:absolute after:inset-x-4 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'
             }`}
           >
             Amigos
           </button>
           <button
             onClick={() => setAba('descobrir')}
-            className={`h-10 rounded-full px-4 text-sm font-semibold transition-colors ${
-              aba === 'descobrir' ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
+            className={`relative min-h-12 px-5 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
+              aba === 'descobrir' ? 'text-ink after:absolute after:inset-x-4 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'
             }`}
           >
             Descobrir
           </button>
         </div>
-        <button
-          onClick={() => setCriandoPost(true)}
-          aria-label="Nova publicação"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-hover"
-        >
-          <Plus size={20} strokeWidth={2} />
-        </button>
       </div>
 
       {aba === 'amigos' && <CardDesafioInicial userId={userId} />}
 
-      <div className="mt-5 space-y-4 pb-4">
+      <div className="mt-2 pb-4">
         {feed.carregando ? (
           <Empty text="Carregando publicações..." />
         ) : feed.erro ? (
           <Empty text="Não deu pra carregar o feed agora." />
         ) : feed.posts.length === 0 ? (
           aba === 'amigos' ? (
-            <Empty text="Seu feed está vazio. Siga pessoas na aba Descobrir ou publique seu primeiro treino." />
+            <div className="py-12 text-center"><p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink">Ainda não há atividade</p><p className="mx-auto mt-2 max-w-xs text-sm text-ink-2">Siga pessoas para acompanhar os treinos delas.</p><button onClick={() => setAba('descobrir')} className="mt-5 min-h-11 text-xs font-semibold text-brand">Explorar</button></div>
           ) : (
             <Empty text="Nenhuma publicação por aqui ainda." />
           )
@@ -102,6 +100,6 @@ export default function Social() {
           ))
         )}
       </div>
-    </Page>
+    </div>
   )
 }

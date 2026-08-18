@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Heart, MessageCircle, Dumbbell } from 'lucide-react'
+import { Heart, MessageCircle } from 'lucide-react'
 import type { Post } from '../lib/social/posts'
 import { curtir, descurtir } from '../lib/social/posts'
 import { EditorialMedia } from './ui/EditorialMedia'
@@ -55,14 +55,14 @@ export function PostCard({
   }
 
   return (
-    <div className="animar-entrada overflow-hidden rounded-2xl border border-line bg-card">
-      <button onClick={() => onAbrirAutor(post.autor.id)} className="flex items-center gap-3 p-4 text-left">
+    <article className="animar-entrada border-b border-line/60 py-6 first:pt-4">
+      <button onClick={() => onAbrirAutor(post.autor.id)} className="flex w-full items-center gap-3 text-left">
         <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-card-hover">
           {post.autor.fotoUrl && <img src={post.autor.fotoUrl} alt="" className="h-full w-full object-cover" />}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-ink">{post.autor.nome}</p>
-          <p className="text-xs text-ink-2">{formatoData(post.criadoEm)}</p>
+          <p className="mt-0.5 truncate text-xs text-ink-2">{post.resumoTreino ? `${post.resumoTreino.nome} · ` : ''}{formatoData(post.criadoEm)}</p>
         </div>
       </button>
 
@@ -70,24 +70,20 @@ export function PostCard({
         <EditorialMedia
           src={post.fotoUrl}
           alt={`Publicação de ${post.autor.nome}`}
-          className="max-h-[420px] w-full"
+          className="mt-4 aspect-[4/5] max-h-[620px] w-full rounded-2xl"
         />
       )}
 
-      <div className="p-4">
-        {post.legenda && <p className="text-sm text-ink">{post.legenda}</p>}
+      <div className="pt-4">
+        {post.legenda && <p className="line-clamp-3 text-sm leading-relaxed text-ink">{post.legenda}</p>}
 
         {post.resumoTreino && (
-          <div className="mt-3 rounded-xl border border-line bg-card-hover p-3">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.06em] text-brand">
-              <Dumbbell size={14} strokeWidth={1.75} />
-              {post.resumoTreino.nome}
-            </div>
-            <div className="mt-2 flex gap-4 text-sm text-ink-2">
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-x-2 text-xs text-ink-2">
               {post.mostrarDuracao && post.resumoTreino.duracaoSeg !== null && (
-                <span>{formatoDuracao(post.resumoTreino.duracaoSeg)}</span>
+                <span>{formatoDuracao(post.resumoTreino.duracaoSeg)} ·</span>
               )}
-              {post.mostrarSeries && <span>{post.resumoTreino.numeroSeries} séries</span>}
+              {post.mostrarSeries && <span>{post.resumoTreino.numeroSeries} séries ·</span>}
               {post.mostrarVolume && post.resumoTreino.volumeTotalKg !== null && (
                 <span className="num">{formatoBR(post.resumoTreino.volumeTotalKg)} kg</span>
               )}
@@ -95,17 +91,17 @@ export function PostCard({
           </div>
         )}
 
-        <div className="mt-3 flex items-center gap-5">
+        <div className="mt-4 flex items-center gap-6">
           <button onClick={alternarCurtida} className="flex items-center gap-1.5 text-sm text-ink-2">
             <Heart size={19} strokeWidth={1.75} className={curtido ? 'fill-brand text-brand' : ''} />
             <span className="num">{contagem}</span>
           </button>
-          <button onClick={() => onAbrirComentarios(post.id)} className="flex items-center gap-1.5 text-sm text-ink-2">
+          <button onClick={() => onAbrirComentarios(post.id)} className="flex items-center gap-1.5 text-xs text-ink-2">
             <MessageCircle size={19} strokeWidth={1.75} />
-            <span className="num">{post.contagemComentarios}</span>
+            <span className="num">{post.contagemComentarios} comentários</span>
           </button>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
