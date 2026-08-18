@@ -86,7 +86,7 @@ function AbaCardio({ userId }: { userId: string }) {
 
   return (
     <div className="pt-7">
-      <div className="mb-7">
+      <div className="mb-7 max-w-2xl">
         <WorkoutCategoryCover categoria="cardio" />
       </div>
       <div className="border-b border-line/60 pb-9">
