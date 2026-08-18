@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { entrar, cadastrar, useSessao } from '../lib/auth'
+import homeHero from '../assets/viveci/home-hero.webp'
 
 type Modo = 'entrar' | 'cadastrar'
 
@@ -40,24 +41,17 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-dvh px-6 py-8 sm:px-10 lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:px-16">
-      <section className="flex min-h-52 flex-col justify-between border-b border-line/70 pb-10 lg:min-h-0 lg:border-b-0 lg:border-r lg:py-8 lg:pr-16">
-        <Logo className="text-xl" />
-        <div className="mt-16 max-w-xl lg:mt-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">Vim. Vi. Venci.</p>
-          <h1 className="mt-4 text-[40px] font-bold leading-[0.98] tracking-[-0.045em] text-ink sm:text-5xl lg:text-6xl">
-            Treine. Evolua.
-            <br />
-            Conquiste.
-          </h1>
-          <p className="mt-5 max-w-md text-sm leading-6 text-ink-2">
-            Seu treino, sua alimentação e sua evolução reunidos em um só lugar.
-          </p>
-        </div>
+    <div className="min-h-dvh px-6 py-8 sm:px-10 lg:grid lg:grid-cols-2 lg:gap-0 lg:p-0">
+      <section className="relative hidden min-h-dvh overflow-hidden border-r border-line/60 lg:block">
+        <img src={homeHero} alt="" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[38%_center]" />
+        <div className="absolute inset-0 bg-black/15" />
+        <Logo className="absolute left-10 top-9 text-xl" />
+        <p className="absolute bottom-10 left-10 text-[10px] font-semibold uppercase tracking-[0.18em] text-silver">Treine · Evolua · Conquiste</p>
       </section>
 
-      <main className="flex items-center py-10 lg:py-8">
+      <main className="flex items-center lg:px-14 lg:py-10">
         <div className="w-full max-w-md lg:mx-auto">
+          <Logo className="mb-16 text-xl lg:hidden" />
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-2">
             {modo === 'entrar' ? 'Acesso' : 'Novo perfil'}
           </p>

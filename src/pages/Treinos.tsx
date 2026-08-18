@@ -13,6 +13,8 @@ import { calcularRitmo, formatoRitmo } from '../lib/ritmo'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
 import { reconstruirTreinoExpress } from '../lib/treinoExpress'
 import type { Rotina } from '../lib/rotinas'
+import { classificarRotina } from '../lib/categoriaTreino'
+import { WorkoutCategoryCover } from '../components/WorkoutCategoryCover'
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -244,11 +246,14 @@ function AbaForca({
         <div className="mt-5 border-b border-line/60">
           {rotinas.map((r, i) => {
             const resumo = resumoRotina(r)
+            const categoria = classificarRotina(r.itens.map((item) => item.exercicio))
             return <div
               key={r.id}
-              className="animar-entrada relative border-t border-line/60 py-5 first:border-t-0"
+              className="animar-entrada relative grid gap-5 border-t border-line/60 py-6 first:border-t-0 md:grid-cols-[15rem_1fr]"
               style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
             >
+              <WorkoutCategoryCover categoria={categoria} />
+              <div className="flex min-w-0 flex-col justify-between py-1">
               <div className="flex items-start justify-between gap-3 pr-1">
                 <div className="min-w-0">
                   <h2 className="truncate text-[22px] font-semibold leading-none tracking-[-0.045em]">{r.nome}</h2>
@@ -274,6 +279,7 @@ function AbaForca({
               >
                 Começar <ArrowRight size={16} />
               </button>
+              </div>
             </div>
           })}
         </div>
