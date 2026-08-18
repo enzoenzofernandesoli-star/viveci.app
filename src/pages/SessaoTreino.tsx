@@ -17,6 +17,7 @@ import { sugerirProximoPeso } from '../lib/progressaoCarga'
 import { detectarPR } from '../lib/recordesPessoais'
 import { reconstruirTreinoExpress, type ItemParaExpress } from '../lib/treinoExpress'
 import { EXERCICIOS, type Exercicio } from '../data/exercicios'
+import { mensagemErro } from '../lib/mensagemErro'
 
 const DESCANSO_PADRAO = 90
 
@@ -116,7 +117,7 @@ function ExecutorTreino({
       .then((id) => {
         sessaoConcluidaId.current = id
       })
-      .catch((err) => setErro(err instanceof Error ? err.message : 'Não deu pra iniciar a sessão.'))
+      .catch((err) => setErro(mensagemErro(err, 'Não deu pra iniciar a sessão. Tente novamente.')))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -278,7 +279,7 @@ function ExecutorTreino({
       const proxima = ativo.sets.findIndex((set, indice) => indice > indiceSet && !set.completo)
       if (proxima >= 0) setSerieAtivaIndex(proxima)
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não deu pra registrar a série.')
+      setErro(mensagemErro(err, 'Não deu pra registrar a série. Tente novamente.'))
     } finally {
       seriesEmGravacao.current.delete(chaveSerie)
       setSerieSalvando((atual) => atual === chaveSerie ? null : atual)
@@ -310,7 +311,7 @@ function ExecutorTreino({
       }
       setTreinoConcluido(true)
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não deu pra concluir o treino.')
+      setErro(mensagemErro(err, 'Não deu pra concluir o treino. Tente novamente.'))
     } finally {
       finalizacaoEmCurso.current = false
       setFinalizando(false)

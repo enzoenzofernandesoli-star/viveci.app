@@ -17,3 +17,19 @@ test('traduz falha de conexão', () => {
 test('não expõe erro técnico desconhecido', () => {
   assert.equal(mensagemErro(new Error('PGRST204 internal detail'), 'Tente novamente.'), 'Tente novamente.')
 })
+
+test('traduz bloqueio de autorização sem expor RLS', () => {
+  assert.equal(mensagemErro(new Error('new row violates row-level security policy'), 'Falhou'), 'Sua sessão não permite esta ação. Entre novamente e tente de novo.')
+})
+
+test('traduz registro duplicado', () => {
+  assert.equal(mensagemErro(new Error('duplicate key value violates unique constraint 23505'), 'Falhou'), 'Este registro já foi salvo. Atualize a tela antes de tentar novamente.')
+})
+
+test('traduz violação de validação do banco', () => {
+  assert.equal(mensagemErro(new Error('violates check constraint 23514'), 'Falhou'), 'Os dados informados não são válidos. Revise os campos e tente novamente.')
+})
+
+test('traduz timeout', () => {
+  assert.equal(mensagemErro(new Error('Request timed out'), 'Falhou'), 'A operação demorou demais. Verifique sua conexão e tente novamente.')
+})

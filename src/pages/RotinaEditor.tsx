@@ -9,6 +9,7 @@ import { usePerfil } from '../lib/perfil'
 import { useRotina, useRotinas, criarRotina, renomearRotina, salvarItensRotina } from '../lib/rotinas'
 import { limiteRotinasAtingido } from '../lib/planos'
 import { EXERCICIOS, type Exercicio } from '../data/exercicios'
+import { mensagemErro } from '../lib/mensagemErro'
 
 type ItemDraft = { exercicioId: number; exercicio: Exercicio }
 
@@ -87,7 +88,7 @@ export default function RotinaEditor() {
       }
       navigate('/treino', { replace: true })
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não deu pra salvar a rotina.')
+      setErro(mensagemErro(err, 'Não deu pra salvar a rotina. Tente novamente.'))
     } finally {
       salvamentoEmCurso.current = false
       setSalvando(false)

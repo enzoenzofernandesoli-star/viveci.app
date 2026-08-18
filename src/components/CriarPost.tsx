@@ -5,6 +5,7 @@ import { Empty } from './Empty'
 import { useHistoricoTreinos, type TreinoHistorico } from '../lib/historicoTreinos'
 import { criarPost } from '../lib/social/posts'
 import { LIMITE_LEGENDA } from '../lib/social/limites'
+import { mensagemErro } from '../lib/mensagemErro'
 
 function formatoData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
@@ -32,6 +33,7 @@ export function CriarPost({
   const [mostrarVolume, setMostrarVolume] = useState(true)
   const [publicando, setPublicando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const publicacaoEmCurso = useRef(false)
 
   const { treinos, carregando: carregandoTreinos } = useHistoricoTreinos(userId, 10)
 
@@ -50,10 +52,12 @@ export function CriarPost({
   }
 
   async function publicar() {
+    if (publicacaoEmCurso.current) return
     if (!arquivo && legenda.trim().length === 0 && !treinoEscolhido) {
       setErro('Adicione uma foto, um texto ou um treino pra publicar.')
       return
     }
+    publicacaoEmCurso.current = true
     setPublicando(true)
     setErro(null)
     try {
@@ -67,8 +71,9 @@ export function CriarPost({
       })
       onPublicado()
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não deu pra publicar agora.')
+      setErro(mensagemErro(err, 'Não deu pra publicar agora. Tente novamente.'))
     } finally {
+      publicacaoEmCurso.current = false
       setPublicando(false)
     }
   }

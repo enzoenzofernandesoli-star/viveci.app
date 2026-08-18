@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Bike, Bolt, ChevronRight, Dumbbell, MoreHorizontal, Plus, Lock, X } from 'lucide-react'
 import { Empty } from '../components/Empty'
@@ -15,6 +15,7 @@ import { reconstruirTreinoExpress } from '../lib/treinoExpress'
 import type { Rotina } from '../lib/rotinas'
 import { classificarRotina } from '../lib/categoriaTreino'
 import { WorkoutCategoryCover } from '../components/WorkoutCategoryCover'
+import { mensagemErro } from '../lib/mensagemErro'
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -62,8 +63,10 @@ function AbaCardio({ userId }: { userId: string }) {
   const [distancia, setDistancia] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [erroForm, setErroForm] = useState<string | null>(null)
+  const registroEmCurso = useRef(false)
 
   async function registrar() {
+    if (registroEmCurso.current) return
     const duracaoMin = Number(duracao)
     const distanciaKm = distancia.trim() === '' ? null : Number(distancia.replace(',', '.'))
     if (Number.isNaN(duracaoMin) || duracaoMin <= 0) {
@@ -71,6 +74,7 @@ function AbaCardio({ userId }: { userId: string }) {
       return
     }
     setErroForm(null)
+    registroEmCurso.current = true
     setEnviando(true)
     try {
       await registrarCardio(userId, { equipamento, duracao_min: Math.round(duracaoMin), distancia_km: distanciaKm })
@@ -78,8 +82,9 @@ function AbaCardio({ userId }: { userId: string }) {
       setDistancia('')
       recarregar()
     } catch (err) {
-      setErroForm(err instanceof Error ? err.message : 'Não deu pra registrar.')
+      setErroForm(mensagemErro(err, 'Não deu pra registrar o cardio. Tente novamente.'))
     } finally {
+      registroEmCurso.current = false
       setEnviando(false)
     }
   }
@@ -361,6 +366,7 @@ export default function Treinos() {
   const limiteAtingido = limiteRotinasAtingido(plano, rotinas.length)
 
   async function apagar(id: string) {
+    if (!window.confirm('Excluir esta rotina? Esta ação não pode ser desfeita.')) return
     setExcluindo(id)
     try {
       await excluirRotina(id)

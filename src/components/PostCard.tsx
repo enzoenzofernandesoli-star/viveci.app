@@ -72,7 +72,7 @@ export function PostCard({
       </button><button onClick={() => setMenuAberto((v) => !v)} aria-label="Ações da publicação" className="flex size-11 items-center justify-center text-ink-3"><MoreHorizontal size={19} /></button></div>
 
       {menuAberto && <div className="mt-2 flex gap-4 border-y border-line/60 py-2 text-xs font-semibold">
-        {post.autor.id === meuId ? <button onClick={async () => { await excluirPost(post.id); onRemovido?.() }} className="min-h-11 text-down">Excluir publicação</button> : <><button onClick={async () => { await denunciarPost(meuId, post.id); setMensagem('Denúncia registrada.'); setMenuAberto(false) }} className="min-h-11 text-ink-2">Denunciar</button><button onClick={async () => { await bloquearUsuario(meuId, post.autor.id); setMensagem('Usuário bloqueado.'); setMenuAberto(false); onRemovido?.() }} className="min-h-11 text-ink-2">Bloquear</button></>}
+        {post.autor.id === meuId ? <button onClick={async () => { if (!window.confirm('Excluir esta publicação? Esta ação não pode ser desfeita.')) return; await excluirPost(post.id); onRemovido?.() }} className="min-h-11 text-down">Excluir publicação</button> : <><button onClick={async () => { await denunciarPost(meuId, post.id); setMensagem('Denúncia registrada.'); setMenuAberto(false) }} className="min-h-11 text-ink-2">Denunciar</button><button onClick={async () => { await bloquearUsuario(meuId, post.autor.id); setMensagem('Usuário bloqueado.'); setMenuAberto(false); onRemovido?.() }} className="min-h-11 text-ink-2">Bloquear</button></>}
       </div>}
       {mensagem && <p className="mt-2 text-xs text-ink-2">{mensagem}</p>}
 

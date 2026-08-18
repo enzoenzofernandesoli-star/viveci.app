@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ChevronLeft, MoreHorizontal } from 'lucide-react'
 import { Empty } from './Empty'
 import { useComentarios, comentar, excluirComentario } from '../lib/social/posts'
@@ -14,16 +14,20 @@ export function ComentariosPost({ postId, meuId, onFechar }: { postId: string; m
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [menu, setMenu] = useState<string | null>(null)
+  const envioEmCurso = useRef(false)
 
   async function enviar() {
+    if (envioEmCurso.current) return
     const limpo = texto.trim()
     if (limpo.length === 0) return
+    envioEmCurso.current = true
     setEnviando(true)
     try {
       await comentar(postId, meuId, limpo)
       setTexto('')
       recarregar()
     } finally {
+      envioEmCurso.current = false
       setEnviando(false)
     }
   }
