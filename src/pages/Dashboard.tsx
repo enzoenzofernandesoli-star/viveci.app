@@ -1,7 +1,6 @@
-import { MapaCorporal } from '../components/MapaCorporal'
 import { Empty } from '../components/Empty'
 import { HeroTreino } from '../components/dashboard/HeroTreino'
-import { MotivosRecomendacao, ProgressoRecente, ResumoDia, ResumoNutricao, ResumoSocial } from '../components/dashboard/HomeSections'
+import { MotivosRecomendacao, ProgressoRecente, ResumoDia } from '../components/dashboard/HomeSections'
 import { Divider } from '../components/ui/Surface'
 import { Eyebrow } from '../components/ui/Typography'
 import { useSessao } from '../lib/auth'
@@ -10,7 +9,6 @@ import { somar, useDia } from '../lib/diario'
 import { useMetaAtiva } from '../lib/metaManual'
 import { usePerfil, type Perfil as PerfilCalculo } from '../lib/perfil'
 import { useRotinas } from '../lib/rotinas'
-import { useFeedAmigos } from '../lib/social/posts'
 import { useVivici } from '../lib/vivici'
 
 function ConteudoHome({ userId, perfil }: { userId: string; perfil: NonNullable<ReturnType<typeof usePerfil>['perfil']> }) {
@@ -29,7 +27,6 @@ function ConteudoHome({ userId, perfil }: { userId: string; perfil: NonNullable<
   }
   const metaState = useMetaAtiva(userId, perfilParaMeta)
   const viviciState = useVivici(userId, rotinasState.rotinas, perfil.dias_semana, consumido.kcal, metaState.metas?.meta_kcal ?? 0)
-  const socialState = useFeedAmigos(userId)
 
   const recomendacao = viviciState.resultado?.recomendacao ?? null
   const rotinaRecomendada = recomendacao ? rotinasState.rotinas.find((rotina) => rotina.id === recomendacao.rotinaId) : undefined
@@ -61,36 +58,9 @@ function ConteudoHome({ userId, perfil }: { userId: string; perfil: NonNullable<
       <Divider />
 
       {viviciState.resultado && (
-        <ProgressoRecente eventos={viviciState.resultado.eventosPR} negligenciado={viviciState.resultado.musculoNegligenciado} />
+        <ProgressoRecente eventos={viviciState.resultado.eventosPR} negligenciado={null} />
       )}
-
-      <section aria-labelledby="titulo-corpo" className="py-9 lg:py-12">
-        <div className="mb-5 flex items-end justify-between gap-4">
-          <div>
-            <Eyebrow>Seu corpo</Eyebrow>
-            <h2 id="titulo-corpo" className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Mapa de estímulo</h2>
-          </div>
-          <p className="text-xs text-ink-3">Últimos 7 dias</p>
-        </div>
-        {viviciState.carregando || !viviciState.resultado ? (
-          <Empty text="Carregando mapa corporal..." />
-        ) : (
-          <MapaCorporal
-            percentuais={viviciState.resultado.percentuaisSemana}
-            desequilibrios={viviciState.resultado.desequilibrios}
-            estatisticasPorGrupo={viviciState.resultado.estatisticasPorGrupo}
-            modoEditorial
-          />
-        )}
-      </section>
-
-      <Divider />
-      <div className="grid lg:grid-cols-2 lg:gap-14">
-        {viviciState.resultado && <ResumoDia score={viviciState.resultado.dailyScore} />}
-        <ResumoNutricao consumido={consumido} metas={metaState.metas} carregando={diarioState.carregando || metaState.carregando} erro={diarioState.erro ?? metaState.erro} />
-      </div>
-      <Divider />
-      <ResumoSocial posts={socialState.posts} carregando={socialState.carregando} erro={socialState.erro} meuId={userId} />
+      {viviciState.resultado && <ResumoDia score={viviciState.resultado.dailyScore} />}
     </div>
   )
 }

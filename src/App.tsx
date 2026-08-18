@@ -16,6 +16,7 @@ import AnalisarMovimento from './pages/AnalisarMovimento'
 import Social from './pages/Social'
 import PerfilPublico from './pages/PerfilPublico'
 import Planos from './pages/Planos'
+import Corpo from './pages/Corpo'
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="treino/:id/sessao" element={<SessaoTreino />} />
               <Route path="nutricao" element={<Nutricao />} />
               <Route path="social" element={<Social />} />
+              <Route path="corpo" element={<Corpo />} />
               <Route path="social/usuario/:id" element={<PerfilPublico />} />
               <Route path="perfil" element={<Perfil />} />
               <Route path="perfil/configuracoes" element={<Configuracoes />} />
