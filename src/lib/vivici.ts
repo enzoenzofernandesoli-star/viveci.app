@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase.ts'
-import { EXERCICIOS } from '../data/exercicios.ts'
+import { EXERCICIOS, type GrupoMuscular } from '../data/exercicios.ts'
 import type { Rotina } from './rotinas.ts'
 import {
   calcularVolumePorGrupo,
   calcularPercentuais,
   detectarDesequilibrios,
   detectarMusculoNegligenciado,
+  calcularEstatisticasPorGrupo,
   type PercentualPorGrupo,
   type Desequilibrio,
   type MusculoNegligenciado,
+  type EstatisticasGrupo,
 } from './mapaCorporal.ts'
 import { calcularDNA, interpretarDNA, type DNATreino, type PerfilDNA } from './dnaTreino.ts'
 import { calcularConsistencia } from './consistencia.ts'
@@ -28,6 +30,7 @@ export type ResultadoVivici = {
   percentuaisSemana: PercentualPorGrupo
   desequilibrios: Desequilibrio[]
   musculoNegligenciado: MusculoNegligenciado | null
+  estatisticasPorGrupo: Record<GrupoMuscular, EstatisticasGrupo>
   recomendacao: RecomendacaoTreino | null
   eventosPR: EventoPR[]
   dailyScore: DailyScore
@@ -105,6 +108,10 @@ export function useVivici(
 
         const eventosPR = detectarEventosPR(registros).filter((e) => e.atual.data >= seteDiasAtras)
 
+        const trintaDiasAtras = new Date(Date.now() - 30 * DIA_MS).toISOString()
+        const registros30d = registros.filter((r) => r.data >= trintaDiasAtras)
+        const estatisticasPorGrupo = calcularEstatisticasPorGrupo(registros30d, EXERCICIOS, hojeISO)
+
         const ultimoTreinoPorRotina: Record<string, string | null> = {}
         for (const rotina of rotinas) {
           const datasDaRotina = sessoes.filter((s) => s.sessao_id === rotina.sessaoId).map((s) => s.finalizada_em)
@@ -137,6 +144,7 @@ export function useVivici(
             percentuaisSemana,
             desequilibrios,
             musculoNegligenciado,
+            estatisticasPorGrupo,
             recomendacao,
             eventosPR,
             dailyScore,

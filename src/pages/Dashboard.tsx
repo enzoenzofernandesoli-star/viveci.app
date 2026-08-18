@@ -224,7 +224,11 @@ function ConteudoDashboard({
       {carregandoVivici || !resultado ? (
         <Empty text="Carregando mapa corporal..." />
       ) : (
-        <MapaCorporal percentuais={resultado.percentuaisSemana} desequilibrios={resultado.desequilibrios} />
+        <MapaCorporal
+          percentuais={resultado.percentuaisSemana}
+          desequilibrios={resultado.desequilibrios}
+          estatisticasPorGrupo={resultado.estatisticasPorGrupo}
+        />
       )}
     </div>
   )

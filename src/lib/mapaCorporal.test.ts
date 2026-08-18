@@ -5,7 +5,9 @@ import {
   calcularPercentuais,
   detectarDesequilibrios,
   detectarMusculoNegligenciado,
+  calcularEstatisticasPorGrupo,
   type RegistroParaMapa,
+  type RegistroParaEstatisticas,
 } from './mapaCorporal.ts'
 import { EXERCICIOS } from '../data/exercicios.ts'
 
@@ -107,6 +109,39 @@ test('não alerta músculo negligenciado com menos de 2 grupos treinados', () =>
   const registros: RegistroParaMapa[] = [{ exercicio_id: 6, peso_kg: 100, reps: 1 }]
   const percentuais = calcularPercentuais(calcularVolumePorGrupo(registros, EXERCICIOS))
   assert.equal(detectarMusculoNegligenciado(percentuais), null)
+})
+
+const HOJE = '2026-08-17T12:00:00.000Z'
+
+test('calcularEstatisticasPorGrupo: grupo nunca treinado fica zerado', () => {
+  const stats = calcularEstatisticasPorGrupo([], EXERCICIOS, HOJE)
+  assert.deepEqual(stats['Panturrilha'], { treinos: 0, series: 0, volumeKg: 0, ultimoEstimuloDias: null })
+})
+
+test('calcularEstatisticasPorGrupo: conta treinos (dias distintos) e séries de um isolado', () => {
+  const registros: RegistroParaEstatisticas[] = [
+    { exercicio_id: 29, peso_kg: 20, reps: 10, data: '2026-08-15' },
+    { exercicio_id: 29, peso_kg: 20, reps: 10, data: '2026-08-10' },
+  ]
+  const stats = calcularEstatisticasPorGrupo(registros, EXERCICIOS, HOJE)
+  assert.equal(stats['Bíceps'].treinos, 2)
+  assert.equal(stats['Bíceps'].series, 2)
+  assert.equal(stats['Bíceps'].ultimoEstimuloDias, 2)
+})
+
+test('calcularEstatisticasPorGrupo: exercício composto conta série pro grupo secundário também', () => {
+  const registros: RegistroParaEstatisticas[] = [{ exercicio_id: 1, peso_kg: 100, reps: 10, data: '2026-08-17' }]
+  const stats = calcularEstatisticasPorGrupo(registros, EXERCICIOS, HOJE)
+  assert.equal(stats['Peito'].series, 1)
+  assert.equal(stats['Tríceps'].series, 1)
+  assert.equal(stats['Ombros'].series, 1)
+  assert.equal(stats['Peito'].ultimoEstimuloDias, 0)
+})
+
+test('calcularEstatisticasPorGrupo: volumeKg bate com calcularVolumePorGrupo arredondado', () => {
+  const registros: RegistroParaEstatisticas[] = [{ exercicio_id: 6, peso_kg: 50, reps: 10, data: '2026-08-17' }]
+  const stats = calcularEstatisticasPorGrupo(registros, EXERCICIOS, HOJE)
+  assert.equal(stats['Peito'].volumeKg, 500)
 })
 
 function volumesFixos(parcial: Partial<Record<string, number>>) {

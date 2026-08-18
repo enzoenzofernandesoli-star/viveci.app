@@ -36,12 +36,12 @@ body {
    (que marca data-reduzir-movimento="true" na <html> via Layout.tsx). */
 
 @keyframes entrada {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes escala-entrada {
-  from { opacity: 0; transform: scale(0.96); }
+  from { opacity: 0; transform: scale(0.94); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -51,11 +51,11 @@ body {
 }
 
 .animar-entrada {
-  animation: entrada 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: entrada 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animar-escala {
-  animation: escala-entrada 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: escala-entrada 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .animar-pulso {

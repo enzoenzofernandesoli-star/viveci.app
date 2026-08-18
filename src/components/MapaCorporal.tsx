@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BodyChart, ViewSide, filterMuscles } from 'body-muscles'
 import type { GrupoMuscular } from '../data/exercicios'
-import type { PercentualPorGrupo, Desequilibrio } from '../lib/mapaCorporal'
+import type { PercentualPorGrupo, Desequilibrio, EstatisticasGrupo } from '../lib/mapaCorporal'
 
 const GRUPOS_FRENTE: GrupoMuscular[] = ['Ombros', 'Peito', 'Bíceps', 'Abdômen', 'Quadríceps']
 const GRUPOS_COSTAS: GrupoMuscular[] = ['Costas', 'Tríceps', 'Glúteos', 'Posterior', 'Panturrilha']
@@ -73,9 +73,16 @@ const ID_PARA_GRUPO: Record<string, GrupoMuscular> = {
  * (proibido gradiente colorido). Depois de cada render/hover da lib, repintamos
  * os paths na ordem em que `filterMuscles` os devolve — é a mesma ordem em que
  * a lib os insere no SVG — com `muscle-off` ou `brand` em opacidade, igual ao
- * resto do app.
+ * resto do app. Também anexamos o clique aqui: cada path vira clicável e
+ * seleciona o grupo correspondente (o grupo selecionado ganha contorno).
  */
-function repintar(container: HTMLElement, vista: ViewSide, percentuais: PercentualPorGrupo) {
+function repintar(
+  container: HTMLElement,
+  vista: ViewSide,
+  percentuais: PercentualPorGrupo,
+  selecionado: GrupoMuscular | null,
+  onClicar: (grupo: GrupoMuscular) => void,
+) {
   const ordenado = filterMuscles(vista)
   const paths = container.querySelectorAll<SVGPathElement>('.body-chart-muscle')
   ordenado.forEach((musculo, i) => {
@@ -83,32 +90,92 @@ function repintar(container: HTMLElement, vista: ViewSide, percentuais: Percentu
     if (!el) return
     const grupo = ID_PARA_GRUPO[musculo.id]
     const percentual = grupo ? percentuais[grupo] : 0
+    const ativo = grupo !== undefined && grupo === selecionado
     el.setAttribute('fill', percentual > 0 ? 'var(--color-brand)' : 'var(--color-muscle-off)')
     el.style.fillOpacity = percentual > 0 ? String(0.35 + (percentual / 100) * 0.65) : '1'
-    el.setAttribute('stroke', 'var(--color-line)')
-    el.setAttribute('stroke-width', '0.15')
+    el.setAttribute('stroke', ativo ? 'var(--color-ink)' : 'var(--color-line)')
+    el.setAttribute('stroke-width', ativo ? '0.6' : '0.15')
     el.style.filter = 'none'
+    el.style.cursor = grupo ? 'pointer' : 'default'
+    el.onclick = grupo ? () => onClicar(grupo) : null
   })
+}
+
+function PainelMusculo({
+  grupo,
+  percentual,
+  estatisticas,
+  onFechar,
+}: {
+  grupo: GrupoMuscular
+  percentual: number
+  estatisticas: EstatisticasGrupo | undefined
+  onFechar: () => void
+}) {
+  return (
+    <div className="animar-escala mt-4 rounded-xl border border-line bg-card-hover p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-ink">{grupo}</h3>
+        <button onClick={onFechar} aria-label="Fechar" className="text-xs font-semibold text-ink-2 hover:text-ink">
+          Fechar
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-ink-2">Últimos 7 dias: {percentual}% do volume máximo</p>
+      <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <p className="num font-semibold text-ink">{estatisticas?.treinos ?? 0}</p>
+          <p className="text-xs text-ink-2">treinos (30d)</p>
+        </div>
+        <div>
+          <p className="num font-semibold text-ink">{estatisticas?.series ?? 0}</p>
+          <p className="text-xs text-ink-2">séries (30d)</p>
+        </div>
+        <div>
+          <p className="num font-semibold text-ink">{(estatisticas?.volumeKg ?? 0).toLocaleString('pt-BR')} kg</p>
+          <p className="text-xs text-ink-2">volume (30d)</p>
+        </div>
+        <div>
+          <p className="num font-semibold text-ink">
+            {estatisticas?.ultimoEstimuloDias === null || estatisticas?.ultimoEstimuloDias === undefined
+              ? '—'
+              : estatisticas.ultimoEstimuloDias === 0
+                ? 'Hoje'
+                : `${estatisticas.ultimoEstimuloDias}d`}
+          </p>
+          <p className="text-xs text-ink-2">último estímulo</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function MapaCorporal({
   percentuais,
   desequilibrios,
+  estatisticasPorGrupo,
 }: {
   percentuais: PercentualPorGrupo
   desequilibrios: Desequilibrio[]
+  estatisticasPorGrupo?: Record<GrupoMuscular, EstatisticasGrupo>
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<BodyChart | null>(null)
   const [vista, setVista] = useState<ViewSide>(ViewSide.FRONT)
+  const [selecionado, setSelecionado] = useState<GrupoMuscular | null>(null)
 
   // a lib guarda o callback de hover só na criação; usamos refs pra sempre ler
-  // a vista/percentuais atuais, e adiamos o repaint porque a lib pinta a cor
-  // dela mesma DEPOIS de chamar onMuscleHover (senão a nossa cor é sobrescrita).
+  // a vista/percentuais/seleção atuais, e adiamos o repaint porque a lib pinta
+  // a cor dela mesma DEPOIS de chamar onMuscleHover (senão nossa cor é sobrescrita).
   const vistaRef = useRef(vista)
   const percentuaisRef = useRef(percentuais)
+  const selecionadoRef = useRef(selecionado)
   vistaRef.current = vista
   percentuaisRef.current = percentuais
+  selecionadoRef.current = selecionado
+
+  function selecionarGrupo(grupo: GrupoMuscular) {
+    setSelecionado((atual) => (atual === grupo ? null : grupo))
+  }
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -118,11 +185,13 @@ export function MapaCorporal({
       showViewLabel: false,
       onMuscleHover: () => {
         setTimeout(() => {
-          if (containerRef.current) repintar(containerRef.current, vistaRef.current, percentuaisRef.current)
+          if (containerRef.current) {
+            repintar(containerRef.current, vistaRef.current, percentuaisRef.current, selecionadoRef.current, selecionarGrupo)
+          }
         }, 0)
       },
     })
-    repintar(containerRef.current, vistaRef.current, percentuaisRef.current)
+    repintar(containerRef.current, vistaRef.current, percentuaisRef.current, selecionadoRef.current, selecionarGrupo)
     return () => chartRef.current?.destroy()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -130,8 +199,8 @@ export function MapaCorporal({
   useEffect(() => {
     if (!chartRef.current || !containerRef.current) return
     chartRef.current.update({ view: vista })
-    repintar(containerRef.current, vista, percentuais)
-  }, [vista, percentuais])
+    repintar(containerRef.current, vista, percentuais, selecionado, selecionarGrupo)
+  }, [vista, percentuais, selecionado])
 
   const grupos = vista === ViewSide.FRONT ? GRUPOS_FRENTE : GRUPOS_COSTAS
 
@@ -161,18 +230,34 @@ export function MapaCorporal({
         </div>
       </div>
 
-      <p className="mt-1 text-xs text-ink-2">Volume treinado nos últimos 7 dias.</p>
+      <p className="mt-1 text-xs text-ink-2">Toque num músculo pra ver os detalhes. Volume dos últimos 7 dias.</p>
 
       <div ref={containerRef} className="mx-auto w-56 [&_svg]:mx-auto [&_svg]:!max-h-none" />
 
       <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2">
         {grupos.map((g) => (
-          <div key={g} className="flex items-center justify-between text-sm">
-            <span className="text-ink-2">{g}</span>
+          <button
+            key={g}
+            type="button"
+            onClick={() => selecionarGrupo(g)}
+            className={`flex items-center justify-between rounded-lg px-2 py-1 text-sm transition-colors ${
+              selecionado === g ? 'bg-brand/15' : 'hover:bg-card-hover'
+            }`}
+          >
+            <span className={selecionado === g ? 'text-brand' : 'text-ink-2'}>{g}</span>
             <span className="num text-ink">{percentuais[g]}%</span>
-          </div>
+          </button>
         ))}
       </div>
+
+      {selecionado && (
+        <PainelMusculo
+          grupo={selecionado}
+          percentual={percentuais[selecionado]}
+          estatisticas={estatisticasPorGrupo?.[selecionado]}
+          onFechar={() => setSelecionado(null)}
+        />
+      )}
 
       {desequilibrios.length > 0 && (
         <div className="mt-5 space-y-2 border-t border-line pt-4">

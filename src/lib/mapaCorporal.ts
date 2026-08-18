@@ -119,3 +119,56 @@ export function detectarDesequilibrios(percentuais: PercentualPorGrupo): Desequi
   }
   return alertas
 }
+
+const DIA_MS = 24 * 60 * 60 * 1000
+
+export type EstatisticasGrupo = {
+  treinos: number
+  series: number
+  volumeKg: number
+  ultimoEstimuloDias: number | null
+}
+
+export type RegistroParaEstatisticas = RegistroParaMapa & { data: string }
+
+/**
+ * Estatísticas por grupo muscular pro painel de detalhe do mapa corporal
+ * (clicar num músculo mostra isso). `treinos` = dias distintos com pelo
+ * menos uma série que toca o grupo (primário ou secundário); `series` conta
+ * toda série que toca o grupo, sem o split 70/30 usado no volume — aqui é
+ * "quantas séries trabalharam esse músculo", não peso deslocado.
+ */
+export function calcularEstatisticasPorGrupo(
+  registros: RegistroParaEstatisticas[],
+  catalogo: Exercicio[],
+  referenciaISO: string,
+): Record<GrupoMuscular, EstatisticasGrupo> {
+  const stats = {} as Record<GrupoMuscular, EstatisticasGrupo>
+  for (const g of GRUPOS_MUSCULARES) stats[g] = { treinos: 0, series: 0, volumeKg: 0, ultimoEstimuloDias: null }
+
+  const volumes = calcularVolumePorGrupo(registros, catalogo)
+  for (const g of GRUPOS_MUSCULARES) stats[g].volumeKg = Math.round(volumes[g])
+
+  const datasPorGrupo = {} as Record<GrupoMuscular, Set<string>>
+  const ultimaDataPorGrupo = {} as Record<GrupoMuscular, string>
+  for (const g of GRUPOS_MUSCULARES) datasPorGrupo[g] = new Set()
+
+  for (const registro of registros) {
+    const exercicio = catalogo.find((e) => e.id === registro.exercicio_id)
+    if (!exercicio) continue
+    for (const g of [exercicio.grupo_muscular, ...exercicio.grupos_secundarios]) {
+      stats[g].series++
+      datasPorGrupo[g].add(registro.data)
+      if (!ultimaDataPorGrupo[g] || registro.data > ultimaDataPorGrupo[g]) ultimaDataPorGrupo[g] = registro.data
+    }
+  }
+
+  const referencia = new Date(referenciaISO).getTime()
+  for (const g of GRUPOS_MUSCULARES) {
+    stats[g].treinos = datasPorGrupo[g].size
+    const ultima = ultimaDataPorGrupo[g]
+    stats[g].ultimoEstimuloDias = ultima ? Math.floor((referencia - new Date(ultima).getTime()) / DIA_MS) : null
+  }
+
+  return stats
+}

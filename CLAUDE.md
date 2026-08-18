@@ -171,6 +171,8 @@ qualquer entrega.
   proteína/gordura, recalcula carboidrato como resto).
 - **Mapa corporal** — corpo anatômico real via `body-muscles`, frente/costas,
   cores por intensidade real dos últimos 7 dias, alerta de desequilíbrio.
+  Clicar num músculo (SVG ou legenda) abre painel com treinos/séries/volume/
+  último estímulo dos últimos 30 dias.
 - **Dashboard** — dados reais: recomendação "O que eu treino hoje?" (com
   motivo), Daily Score, nutrição do dia, alerta de PR recente, alerta de
   músculo negligenciado, mapa corporal.
@@ -314,16 +316,25 @@ conforme a intensidade. Alerta de desequilíbrio quando um grupo passa 25 pontos
 do antagonista (Peito↔Costas, Bíceps↔Tríceps, Quadríceps↔Posterior).
 **Os percentuais vêm do histórico real — nunca valores fixos.**
 
-O corpo em si é renderizado pela lib `body-muscles` (89 regiões anatômicas
-reais, frente/costas). Ela colore por gradiente amarelo→vermelho por padrão,
-o que **fere a regra de "proibido gradiente colorido"** — por isso
-`MapaCorporal.tsx` repinta cada `path` na mão (`muscle-off`/`brand` + opacidade)
-logo depois de todo `chart.update()`. Os 89 IDs da lib são mapeados pros nossos
-10 grupos musculares em `ID_PARA_GRUPO`; IDs sem grupo correspondente (mão, pé,
-joelho...) ficam neutros. **Cuidado com hover:** a lib pinta a própria cor de
-hover *depois* de disparar `onMuscleHover`, então o repaint customizado
-precisa rodar num `setTimeout(0)` senão a cor da lib vaza de volta — já foi
-bug, não reintroduzir.
+O corpo em si é renderizado pela lib `body-muscles` (40 regiões anatômicas
+por vista, frente/costas — nem todas são "músculo" de verdade: cabeça, mão,
+pé, joelho e cotovelo entram na mesma lista, só ficam neutras por não terem
+grupo em `ID_PARA_GRUPO`). Ela colore por gradiente amarelo→vermelho por
+padrão, o que **fere a regra de "proibido gradiente colorido"** — por isso
+`MapaCorporal.tsx` repinta cada `path` na mão (`muscle-off`/`brand` +
+opacidade) logo depois de todo `chart.update()`. **Cuidado com hover:** a
+lib pinta a própria cor de hover *depois* de disparar `onMuscleHover`, então
+o repaint customizado precisa rodar num `setTimeout(0)` senão a cor da lib
+vaza de volta — já foi bug, não reintroduzir.
+
+**Clicar num músculo** (path do SVG ou linha da legenda abaixo do corpo)
+seleciona o grupo e abre um painel com treinos/séries/volume/último estímulo
+dos últimos 30 dias (`calcularEstatisticasPorGrupo` em `mapaCorporal.ts`,
+alimentado por `vivici.ts`). Clicar de novo no mesmo grupo fecha o painel.
+Regiões sem grupo (cabeça, mão...) não são clicáveis (`cursor: default`,
+sem `onclick`). A lib expõe cada `path` com `role="button"` e
+`aria-label` com o nome em inglês — isso é só acessibilidade da lib, o
+clique físico no elemento é o que dispara nossa seleção, não o texto.
 
 ### Diário alimentar — `src/lib/diario.ts`, `src/lib/alimentos.ts`
 
