@@ -163,6 +163,10 @@ Na Etapa 34, o proprietário optou por adiar o inventário remoto. O relatório
 Foram adicionadas compensações locais para reduzir órfãos quando upload conclui e
 a persistência posterior falha; isso não substitui a validação dos buckets.
 
+Na Etapa 35, a Edge Function `excluir-conta` foi auditada localmente. Publicação,
+conta descartável, exportação e exclusão integral remotas foram adiadas pelo
+proprietário e permanecem **BLOCKED**. Ver `ACCOUNT_DELETION_VALIDATION.md`.
+
 ## Uploads e órfãos
 
 - frontend valida MIME, extensão coerente e tamanho (5 MB avatar; 10 MB post e
