@@ -20,14 +20,12 @@ Corrigido no repositório:
 - snapshot de treino social derivado no banco e validado pelo proprietário;
 - exclusão de post/comentário próprio, bloqueio e denúncia;
 - recuperação de senha oficial do Supabase;
-- exclusão privilegiada de conta isolada em Edge Function;
 - nenhum valor `sb_secret_` encontrado no código ou histórico Git acessível.
 
 Pendente de comprovação externa:
 
 - rotação da chave secreta comprometida;
 - aplicação das migrations 09–11;
-- publicação e teste da função `excluir-conta`;
 - teste cruzado com duas contas após as policies entrarem no Supabase.
 
 ## 3. Privacidade
@@ -77,12 +75,11 @@ Adequado para beta controlado após migrations: Amigos, Discover cronológico, p
 
 1. Rotacionar a chave secreta comprometida no Supabase.
 2. Aplicar migrations 09, 10 e 11 na ordem.
-3. Publicar `excluir-conta` e configurar seus segredos apenas no ambiente da função.
-4. Configurar URLs de recuperação/redirecionamento do Auth.
-5. Migrar fotos legadas conforme `sql/MIGRACAO_FOTOS_BETA.md`.
-6. Testar policies, bloqueio, plano, Storage e exclusão com duas contas.
-7. Executar todo o `BETA_CHECKLIST.md` em ambiente de homologação.
-8. Providenciar revisão jurídica dos rascunhos de privacidade e termos.
+3. Configurar URLs de recuperação/redirecionamento do Auth.
+4. Migrar fotos legadas conforme `sql/MIGRACAO_FOTOS_BETA.md`.
+5. Testar policies, bloqueio, plano e Storage com duas contas.
+6. Executar todo o `BETA_CHECKLIST.md` em ambiente de homologação.
+7. Providenciar revisão jurídica dos rascunhos de privacidade e termos.
 
 ## 12. Checklist beta com 3–5 usuários
 
@@ -93,7 +90,6 @@ Cada participante deve criar conta, concluir onboarding, criar rotina, iniciar t
 - Rotação da chave secreta ainda não comprovada.
 - Migrations de segurança/integridade ainda não comprovadas no Supabase remoto.
 - Privacidade efetiva dos arquivos legados ainda depende da migração de Storage.
-- Exclusão de conta ainda depende de deploy e teste da Edge Function.
 
 ## 14. P1
 
