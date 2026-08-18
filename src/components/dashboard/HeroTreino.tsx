@@ -4,8 +4,8 @@ import type { RecomendacaoTreino } from '../../lib/recomendacaoTreino'
 import type { Rotina } from '../../lib/rotinas'
 import { reconstruirTreinoExpress } from '../../lib/treinoExpress'
 import { Button } from '../ui/Button'
-import { EditorialMedia } from '../ui/EditorialMedia'
 import { Eyebrow } from '../ui/Typography'
+import { WorkoutCover } from '../ui/WorkoutCover'
 
 const FOTOS_HERO = import.meta.glob('../../assets/viveci/home-hero.{jpg,jpeg,png,webp,avif}', {
   eager: true,
@@ -72,12 +72,11 @@ export function HeroTreino({
 
   if (!recomendacao) {
     return (
-      <EditorialMedia
+      <WorkoutCover
         src={FOTO_HERO}
-        alt="Espaço preparado para a recomendação de treino"
+        alt=""
         fallback={<FundoEditorial />}
-        className="min-h-[400px] rounded-[var(--radius-media)] border border-line/60"
-        overlayClassName="p-6 sm:p-8"
+        className="border-y border-line/60 lg:rounded-[var(--radius-media)] lg:border"
       >
         <Eyebrow className="text-silver">Hoje</Eyebrow>
         <h1 className="mt-3 max-w-[12ch] text-[34px] font-semibold leading-[1.02] tracking-[-0.05em] sm:text-[42px]">
@@ -91,20 +90,19 @@ export function HeroTreino({
         <Button onClick={() => navigate('/treino')} className="mt-7 w-full sm:w-auto">
           Ver minhas rotinas <ArrowRight size={17} />
         </Button>
-      </EditorialMedia>
+      </WorkoutCover>
     )
   }
 
   return (
-    <EditorialMedia
+    <WorkoutCover
       src={FOTO_HERO}
-      alt={`Treino recomendado: ${recomendacao.nome}`}
+      alt=""
       fallback={<FundoEditorial />}
-      className="min-h-[450px] rounded-[var(--radius-media)] border border-line/60 sm:min-h-[520px]"
-      overlayClassName="media-overlay-progressive p-6 sm:p-9"
+      className="border-y border-line/60 lg:rounded-[var(--radius-media)] lg:border"
     >
       <Eyebrow className="text-silver">Hoje</Eyebrow>
-      <h1 className="mt-3 max-w-[13ch] text-[42px] font-semibold leading-[0.98] tracking-[-0.06em] text-ink sm:text-[54px] lg:text-[62px]">
+      <h1 className="mt-3 max-w-[13ch] text-[40px] font-semibold leading-[0.98] tracking-[-0.06em] text-ink sm:text-[50px] lg:text-[48px] xl:text-[56px]">
         {nomeExibido}
       </h1>
       {grupos.length > 0 && (
@@ -112,7 +110,7 @@ export function HeroTreino({
           {grupos.join(' · ')}
         </p>
       )}
-      <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-2">
+      <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-silver/80">
         {rotina && (
           <span className="inline-flex items-center gap-2">
             <Dumbbell size={15} strokeWidth={1.7} /> {rotina.itens.length} exercícios
@@ -130,6 +128,6 @@ export function HeroTreino({
       >
         Começar treino <ArrowRight size={17} />
       </Button>
-    </EditorialMedia>
+    </WorkoutCover>
   )
 }

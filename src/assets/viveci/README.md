@@ -1,9 +1,8 @@
 # Fotografia editorial da Home
 
-Adicione aqui a fotografia esportiva definitiva com o nome:
+Fotografia esportiva oficial:
 
-`home-hero.webp`
+`home-hero.webp` — 1024 × 1536, WebP otimizado, carregamento prioritário na Home.
 
-Também são aceitos `.jpg`, `.jpeg`, `.png` e `.avif`. Recomendação: imagem
-vertical ou 4:5, com pelo menos 1600 px de altura e espaço escuro para texto no
-lado esquerdo/inferior. O build detecta o arquivo automaticamente.
+O build detecta o arquivo automaticamente. O fallback geométrico aparece apenas
+se o asset não estiver disponível ou falhar durante o carregamento.
