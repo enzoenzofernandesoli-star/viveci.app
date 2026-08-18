@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { useSessao } from '../lib/auth'
 import { usePerfil, atualizarPerfil, ROTULO_OBJETIVO, type Sexo, type Objetivo } from '../lib/perfil'
+import { mensagemErro } from '../lib/mensagemErro'
 
 const TOTAL_PASSOS = 6
 
@@ -51,7 +52,7 @@ function passoValido(passo: number, r: Respostas): boolean {
 }
 
 function Titulo({ children }: { children: ReactNode }) {
-  return <h2 className="text-[28px] font-bold leading-tight tracking-[-0.035em]">{children}</h2>
+  return <h2 className="text-[28px] font-semibold leading-tight tracking-[-0.035em]">{children}</h2>
 }
 
 function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: ReactNode }) {
@@ -59,11 +60,13 @@ function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => voi
     <button
       type="button"
       onClick={onClick}
-      className={`h-12 rounded-xl px-4 text-sm font-semibold transition-colors ${
-        ativo ? 'border border-brand bg-brand/10 text-brand' : 'border border-line text-ink-2 hover:border-ink-3'
+      aria-pressed={ativo}
+      className={`flex min-h-12 w-full items-center justify-between border-b px-1 text-left text-sm font-semibold transition-colors ${
+        ativo ? 'border-brand text-ink' : 'border-line/70 text-ink-2 hover:text-ink'
       }`}
     >
       {children}
+      <span className={`size-2 rounded-full ${ativo ? 'bg-brand' : 'bg-line'}`} aria-hidden="true" />
     </button>
   )
 }
@@ -144,7 +147,7 @@ export default function Onboarding() {
       })
       navigate('/', { replace: true })
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Algo deu errado. Tente de novo.')
+      setErro(mensagemErro(err, 'Não foi possível salvar seu contexto. Tente novamente.'))
     } finally {
       setEnviando(false)
     }
@@ -185,7 +188,7 @@ export default function Onboarding() {
               <>
                 <Titulo>Qual seu sexo biológico?</Titulo>
                 <p className="text-sm text-ink-2">Usamos isso só pra calcular sua meta calórica com mais precisão.</p>
-                <div className="flex gap-3">
+                <div>
                   <Chip ativo={r.sexo === 'masculino'} onClick={() => setR({ ...r, sexo: 'masculino' })}>
                     Masculino
                   </Chip>
@@ -214,7 +217,7 @@ export default function Onboarding() {
             {passo === 4 && (
               <>
                 <Titulo>Qual seu objetivo?</Titulo>
-                <div className="flex flex-wrap gap-3">
+                <div>
                   {(Object.entries(ROTULO_OBJETIVO) as [Objetivo, string][]).map(([valor, rotulo]) => (
                     <Chip key={valor} ativo={r.objetivo === valor} onClick={() => setR({ ...r, objetivo: valor })}>
                       {rotulo}
@@ -227,7 +230,7 @@ export default function Onboarding() {
             {passo === 5 && (
               <>
                 <Titulo>Quantos dias por semana?</Titulo>
-                <div className="flex flex-wrap gap-3">
+                <div>
                   {[1, 2, 3, 4, 5, 6].map((dias) => (
                     <Chip key={dias} ativo={r.dias_semana === dias} onClick={() => setR({ ...r, dias_semana: dias })}>
                       {dias}x

@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { entrar, cadastrar, useSessao } from '../lib/auth'
 import homeHero from '../assets/viveci/home-hero.webp'
+import { mensagemErro } from '../lib/mensagemErro'
 
 type Modo = 'entrar' | 'cadastrar'
 
@@ -34,7 +35,7 @@ export default function Login() {
         setCadastroFeito(true)
       }
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Algo deu errado. Tente de novo.')
+      setErro(mensagemErro(err, 'Não foi possível continuar. Tente novamente.'))
     } finally {
       setEnviando(false)
     }
