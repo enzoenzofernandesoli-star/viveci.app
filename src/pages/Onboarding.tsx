@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { useSessao } from '../lib/auth'
@@ -111,6 +111,28 @@ export default function Onboarding() {
   const [r, setR] = useState<Respostas>(RESPOSTAS_INICIAIS)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [rascunhoCarregado, setRascunhoCarregado] = useState(false)
+  const envioEmCurso = useRef(false)
+
+  useEffect(() => {
+    if (!userId) return
+    try {
+      const salvo = sessionStorage.getItem(`viveci:onboarding:${userId}`)
+      if (salvo) {
+        const dados = JSON.parse(salvo) as { passo?: number; respostas?: Respostas }
+        if (dados.respostas) setR(dados.respostas)
+        if (Number.isInteger(dados.passo) && dados.passo! >= 0 && dados.passo! < TOTAL_PASSOS) setPasso(dados.passo!)
+      }
+    } catch {
+      sessionStorage.removeItem(`viveci:onboarding:${userId}`)
+    }
+    setRascunhoCarregado(true)
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId || !rascunhoCarregado) return
+    sessionStorage.setItem(`viveci:onboarding:${userId}`, JSON.stringify({ passo, respostas: r }))
+  }, [passo, r, rascunhoCarregado, userId])
 
   if (carregando) {
     return (
@@ -126,12 +148,14 @@ export default function Onboarding() {
   const ultimoPasso = passo === TOTAL_PASSOS - 1
 
   async function avancar() {
+    if (envioEmCurso.current) return
     if (!valido) return
     if (!ultimoPasso) {
       setPasso((p) => p + 1)
       return
     }
     if (!userId) return
+    envioEmCurso.current = true
     setEnviando(true)
     setErro(null)
     try {
@@ -145,10 +169,12 @@ export default function Onboarding() {
         dias_semana: r.dias_semana,
         onboarding_completo: true,
       })
+      sessionStorage.removeItem(`viveci:onboarding:${userId}`)
       navigate('/', { replace: true })
     } catch (err) {
       setErro(mensagemErro(err, 'Não foi possível salvar seu contexto. Tente novamente.'))
     } finally {
+      envioEmCurso.current = false
       setEnviando(false)
     }
   }

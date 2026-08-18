@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Dumbbell, X } from 'lucide-react'
 import { Page } from '../components/Page'
@@ -27,6 +27,7 @@ export default function RotinaEditor() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [carregou, setCarregou] = useState(false)
+  const salvamentoEmCurso = useRef(false)
 
   useEffect(() => {
     if (editando && rotina && !carregou) {
@@ -45,6 +46,7 @@ export default function RotinaEditor() {
   }
 
   function adicionarExercicio(exercicioId: number) {
+    if (itens.some((item) => item.exercicioId === exercicioId)) return
     const exercicio = EXERCICIOS.find((e) => e.id === exercicioId)!
     setItens((atual) => [...atual, { exercicioId, exercicio }])
     setMostrarSeletor(false)
@@ -55,10 +57,12 @@ export default function RotinaEditor() {
   }
 
   async function salvar() {
+    if (salvamentoEmCurso.current) return
     if (!sessao || nome.trim().length === 0) {
       setErro('Dá um nome pra rotina antes de salvar.')
       return
     }
+    salvamentoEmCurso.current = true
     setSalvando(true)
     setErro(null)
     try {
@@ -85,6 +89,7 @@ export default function RotinaEditor() {
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não deu pra salvar a rotina.')
     } finally {
+      salvamentoEmCurso.current = false
       setSalvando(false)
     }
   }
@@ -93,7 +98,7 @@ export default function RotinaEditor() {
     return (
       <Page title="Adicionar exercício">
         <div className="mt-6">
-          <SeletorExercicio onSelecionar={adicionarExercicio} />
+          <SeletorExercicio onSelecionar={adicionarExercicio} selecionados={itens.map((item) => item.exercicioId)} />
           <button
             onClick={() => setMostrarSeletor(false)}
             className="mt-4 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
@@ -110,6 +115,7 @@ export default function RotinaEditor() {
       <div className="mt-6 space-y-5">
         <input
           type="text"
+          maxLength={80}
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           placeholder="Título da rotina"
@@ -147,8 +153,9 @@ export default function RotinaEditor() {
           </div>
         )}
 
-        <button
-          onClick={() => setMostrarSeletor(true)}
+          <button
+            onClick={() => setMostrarSeletor(true)}
+            disabled={salvando}
           className="h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
         >
           + Adicionar exercício
@@ -159,6 +166,7 @@ export default function RotinaEditor() {
         <div className="flex gap-3">
           <button
             onClick={() => navigate('/treino')}
+            disabled={salvando}
             className="h-12 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
           >
             Cancelar

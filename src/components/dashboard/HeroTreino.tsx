@@ -87,8 +87,8 @@ export function HeroTreino({
             ? 'Crie sua primeira rotina para o VIVECI começar a usar seu histórico.'
             : 'Ainda não há dados suficientes para indicar uma rotina agora.'}
         </p>
-        <Button onClick={() => navigate('/treino')} className="mt-7 w-full sm:w-auto">
-          Ver minhas rotinas <ArrowRight size={17} />
+        <Button onClick={() => navigate(semRotinas ? '/treino/nova' : '/treino')} className="mt-7 w-full sm:w-auto">
+          {semRotinas ? 'Criar primeira rotina' : 'Ver minhas rotinas'} <ArrowRight size={17} />
         </Button>
       </WorkoutCover>
     )

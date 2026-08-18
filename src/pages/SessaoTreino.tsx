@@ -100,11 +100,14 @@ function ExecutorTreino({
   const [erro, setErro] = useState<string | null>(null)
   const [novoPR, setNovoPR] = useState<{ pesoKg: number; reps: number; variacaoPercentual: number } | null>(null)
   const [totalPR, setTotalPR] = useState(0)
+  const [serieSalvando, setSerieSalvando] = useState<string | null>(null)
 
   const sessaoConcluidaId = useRef<string | null>(null)
   const inicioMs = useRef<number>(Date.now())
   const volumeAcumulado = useRef(0)
   const sessaoIniciada = useRef(false)
+  const seriesEmGravacao = useRef(new Set<string>())
+  const finalizacaoEmCurso = useRef(false)
 
   useEffect(() => {
     if (sessaoIniciada.current) return
@@ -232,6 +235,8 @@ function ExecutorTreino({
 
   async function marcarCompleto(indiceSet: number) {
     if (!ativo) return
+    const chaveSerie = `${ativoIndex}:${indiceSet}`
+    if (seriesEmGravacao.current.has(chaveSerie) || ativo.sets[indiceSet]?.completo) return
     const linha = ativo.sets[indiceSet]
     const peso = Number(linha.peso.replace(',', '.'))
     const reps = Number(linha.reps)
@@ -240,6 +245,8 @@ function ExecutorTreino({
       return
     }
     setErro(null)
+    seriesEmGravacao.current.add(chaveSerie)
+    setSerieSalvando(chaveSerie)
     try {
       const historico = await buscarHistoricoExercicio(userId, ativo.exercicioId)
       const dataAgora = new Date().toISOString()
@@ -272,6 +279,9 @@ function ExecutorTreino({
       if (proxima >= 0) setSerieAtivaIndex(proxima)
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não deu pra registrar a série.')
+    } finally {
+      seriesEmGravacao.current.delete(chaveSerie)
+      setSerieSalvando((atual) => atual === chaveSerie ? null : atual)
     }
   }
 
@@ -289,6 +299,8 @@ function ExecutorTreino({
   }
 
   async function finalizarTreino() {
+    if (finalizacaoEmCurso.current) return
+    finalizacaoEmCurso.current = true
     setFinalizando(true)
     setErro(null)
     try {
@@ -300,6 +312,7 @@ function ExecutorTreino({
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não deu pra concluir o treino.')
     } finally {
+      finalizacaoEmCurso.current = false
       setFinalizando(false)
     }
   }
@@ -343,7 +356,7 @@ function ExecutorTreino({
     return (
       <Page title="Adicionar exercício">
         <div className="mt-6">
-          <SeletorExercicio onSelecionar={adicionarExercicio} />
+          <SeletorExercicio onSelecionar={adicionarExercicio} selecionados={exercicios.map((exercicio) => exercicio.exercicioId)} />
           <button
             onClick={() => setMostrarSeletor(false)}
             className="mt-4 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
@@ -508,7 +521,7 @@ function ExecutorTreino({
                       <div className="mt-1 flex h-14 items-center rounded-xl border border-line bg-card-hover px-3"><input type="number" inputMode="numeric" value={linha.reps} onChange={(e) => atualizarSet(i, 'reps', e.target.value)} className="num min-w-0 flex-1 bg-transparent text-center text-xl font-semibold outline-none" /><span className="text-xs text-ink-3">reps</span></div>
                     </label>
                   </div>
-                  <button onClick={() => marcarCompleto(i)} className="mt-3 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white hover:bg-brand-hover">Concluir série</button>
+                  <button disabled={serieSalvando === `${ativoIndex}:${i}`} onClick={() => marcarCompleto(i)} className="mt-3 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60">{serieSalvando === `${ativoIndex}:${i}` ? 'Salvando...' : 'Concluir série'}</button>
                 </div>
               ) : (
                 <button key={i} onClick={() => !linha.completo && setSerieAtivaIndex(i)} className={`grid min-h-14 w-full grid-cols-[4rem_1fr_auto] items-center gap-3 px-2 text-left ${linha.completo ? 'opacity-45' : 'hover:bg-card/60'}`}>
