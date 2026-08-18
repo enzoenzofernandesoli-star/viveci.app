@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { classificarRotina } from './categoriaTreino.ts'
+import { arquivoCategoriaTreino, classificarRotina } from './categoriaTreino.ts'
 
 test('classifica peito, ombros e tríceps como push', () => {
   assert.equal(classificarRotina([
@@ -38,3 +38,10 @@ test('empate ambíguo usa full body', () => {
 test('rotina vazia não recebe categoria', () => {
   assert.equal(classificarRotina([]), null)
 })
+
+test('mapeia Push para a fotografia oficial', () => assert.equal(arquivoCategoriaTreino('push'), 'push.webp'))
+test('mapeia Pull para a fotografia oficial', () => assert.equal(arquivoCategoriaTreino('pull'), 'pull.webp'))
+test('mapeia Legs para a fotografia oficial', () => assert.equal(arquivoCategoriaTreino('legs'), 'legs.webp'))
+test('mapeia Full Body para a fotografia oficial', () => assert.equal(arquivoCategoriaTreino('fullbody'), 'fullbody.webp'))
+test('mapeia Cardio para a fotografia oficial', () => assert.equal(arquivoCategoriaTreino('cardio'), 'cardio.webp'))
+test('categoria desconhecida preserva o fallback', () => assert.equal(arquivoCategoriaTreino('desconhecida'), null))

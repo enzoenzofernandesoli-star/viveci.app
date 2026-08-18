@@ -1,6 +1,20 @@
 import type { GrupoMuscular } from '../data/exercicios.ts'
 
 export type CategoriaTreino = 'push' | 'pull' | 'legs' | 'fullbody'
+export type CategoriaVisualTreino = CategoriaTreino | 'cardio'
+
+const ARQUIVOS_CATEGORIA: Record<CategoriaVisualTreino, string> = {
+  push: 'push.webp',
+  pull: 'pull.webp',
+  legs: 'legs.webp',
+  fullbody: 'fullbody.webp',
+  cardio: 'cardio.webp',
+}
+
+export function arquivoCategoriaTreino(categoria: string | null): string | null {
+  if (!categoria || !(categoria in ARQUIVOS_CATEGORIA)) return null
+  return ARQUIVOS_CATEGORIA[categoria as CategoriaVisualTreino]
+}
 
 type ExercicioParaCategoria = {
   grupo_muscular: GrupoMuscular
