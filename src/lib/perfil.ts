@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { TAMANHO_MAX_AVATAR, validarImagem } from './uploadSeguro'
 import type { Plano } from './planos'
 
 export type Sexo = 'masculino' | 'feminino'
@@ -61,6 +62,8 @@ export type PerfilDB = {
   criado_em: string
 }
 
+export type PerfilPublico = Pick<PerfilDB, 'id' | 'nome' | 'foto_url' | 'bio'>
+
 // ─────────────────────────────────────────────────────────────
 // PONTO DE TROCA PARA O SUPABASE — tabela `perfis`
 // ─────────────────────────────────────────────────────────────
@@ -100,6 +103,23 @@ export function usePerfil(userId: string | undefined) {
   return { perfil, carregando, erro, recarregar: () => setVersao((v) => v + 1) }
 }
 
+export function usePerfilPublico(userId: string | undefined) {
+  const [perfil, setPerfil] = useState<PerfilPublico | null>(null)
+  const [carregando, setCarregando] = useState(true)
+
+  useEffect(() => {
+    if (!userId) { setPerfil(null); setCarregando(false); return }
+    let cancelado = false
+    setCarregando(true)
+    supabase.from('perfis_publicos').select('id, nome, foto_url, bio').eq('id', userId).maybeSingle().then(({ data }) => {
+      if (!cancelado) { setPerfil(data as PerfilPublico | null); setCarregando(false) }
+    })
+    return () => { cancelado = true }
+  }, [userId])
+
+  return { perfil, carregando }
+}
+
 export async function atualizarPerfil(userId: string, dados: Partial<PerfilDB>) {
   const { error } = await supabase.from('perfis').update(dados).eq('id', userId)
   if (error) throw error
@@ -107,17 +127,21 @@ export async function atualizarPerfil(userId: string, dados: Partial<PerfilDB>) 
 
 /** Sobe a foto de perfil pro bucket `Fotos` e já salva a URL em `perfis.foto_url`. */
 export async function enviarFotoPerfil(userId: string, arquivo: File): Promise<string> {
-  const extensao = arquivo.name.split('.').pop() ?? 'jpg'
-  const caminho = `${userId}/avatar.${extensao}`
+  const { extensao } = validarImagem(arquivo, TAMANHO_MAX_AVATAR)
+  const caminho = `${userId}/avatar/avatar-${Date.now()}.${extensao}`
 
-  const { error: erroUpload } = await supabase.storage.from('Fotos').upload(caminho, arquivo, {
-    upsert: true,
+  const { error: erroUpload } = await supabase.storage.from('midia-publica').upload(caminho, arquivo, {
+    upsert: false,
     cacheControl: '3600',
+    contentType: arquivo.type,
   })
   if (erroUpload) throw erroUpload
 
-  const { data } = supabase.storage.from('Fotos').getPublicUrl(caminho)
+  const { data } = supabase.storage.from('midia-publica').getPublicUrl(caminho)
   const url = `${data.publicUrl}?v=${Date.now()}`
   await atualizarPerfil(userId, { foto_url: url })
+  const { data: anteriores } = await supabase.storage.from('midia-publica').list(`${userId}/avatar`)
+  const obsoletos = (anteriores ?? []).filter((item) => item.name !== caminho.split('/').at(-1)).map((item) => `${userId}/avatar/${item.name}`)
+  if (obsoletos.length > 0) await supabase.storage.from('midia-publica').remove(obsoletos)
   return url
 }

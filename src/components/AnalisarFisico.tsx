@@ -201,7 +201,7 @@ export function AnalisarFisico({
         <div className="animar-entrada mt-6 space-y-5">
           <div className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-3">
             <p className="text-xs text-gold">
-              Simulação — o VIVECI ainda não tem uma IA de análise corporal conectada. Esses números são de exemplo,
+              DEMONSTRAÇÃO — o VIVECI ainda não tem uma IA de análise corporal conectada. Esses números são fixos e servem apenas para demonstrar a interface,
               não uma medição real da sua foto. Confiança: {resultado.confiancaPercentual}%.
             </p>
           </div>
@@ -210,7 +210,7 @@ export function AnalisarFisico({
             <div className="flex gap-4">
               {preview && <img src={preview} alt="" className="h-32 w-24 shrink-0 rounded-xl object-cover" />}
               <div className="flex-1">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-2">Resultado simulado</span>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-2">Demonstração — não é análise real</span>
                 <p className="num animar-escala text-[52px] font-semibold leading-none tracking-[-0.06em] text-brand">{resultado.pontuacao.overall}</p>
               </div>
             </div>

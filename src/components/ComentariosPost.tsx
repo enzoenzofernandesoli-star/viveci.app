@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, MoreHorizontal } from 'lucide-react'
 import { Empty } from './Empty'
-import { useComentarios, comentar } from '../lib/social/posts'
+import { useComentarios, comentar, excluirComentario } from '../lib/social/posts'
+import { denunciarComentario } from '../lib/social/moderacao'
+import { LIMITE_COMENTARIO } from '../lib/social/limites'
 
 function formatoData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -11,6 +13,7 @@ export function ComentariosPost({ postId, meuId, onFechar }: { postId: string; m
   const { comentarios, carregando, erro, recarregar } = useComentarios(postId)
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [menu, setMenu] = useState<string | null>(null)
 
   async function enviar() {
     const limpo = texto.trim()
@@ -50,9 +53,10 @@ export function ComentariosPost({ postId, meuId, onFechar }: { postId: string; m
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-ink">{c.autor.nome}</p>
-                  <p className="text-[10px] text-ink-3">{formatoData(c.criadoEm)}</p>
+                  <div className="flex items-center gap-2"><p className="text-[10px] text-ink-3">{formatoData(c.criadoEm)}</p><button onClick={() => setMenu(menu === c.id ? null : c.id)} aria-label="Ações do comentário" className="flex size-8 items-center justify-center text-ink-3"><MoreHorizontal size={16} /></button></div>
                 </div>
                 <p className="mt-1 text-sm leading-relaxed text-ink-2">{c.texto}</p>
+                {menu === c.id && <div className="mt-2 flex gap-4 text-xs font-semibold">{c.autor.id === meuId ? <button onClick={async () => { await excluirComentario(c.id); setMenu(null); recarregar() }} className="min-h-11 text-down">Excluir</button> : <button onClick={async () => { await denunciarComentario(meuId, c.id); setMenu(null) }} className="min-h-11 text-ink-2">Denunciar</button>}</div>}
               </div>
             </div>
           ))
@@ -65,6 +69,7 @@ export function ComentariosPost({ postId, meuId, onFechar }: { postId: string; m
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Adicione um comentário..."
+          maxLength={LIMITE_COMENTARIO}
           className="h-11 flex-1 rounded-xl border border-line bg-card-hover px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
         />
         <button

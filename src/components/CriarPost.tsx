@@ -4,6 +4,7 @@ import { Page } from './Page'
 import { Empty } from './Empty'
 import { useHistoricoTreinos, type TreinoHistorico } from '../lib/historicoTreinos'
 import { criarPost } from '../lib/social/posts'
+import { LIMITE_LEGENDA } from '../lib/social/limites'
 
 function formatoData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
@@ -136,6 +137,7 @@ export function CriarPost({
           onChange={(e) => setLegenda(e.target.value)}
           placeholder="Escreva uma legenda..."
           rows={3}
+          maxLength={LIMITE_LEGENDA}
           className="w-full resize-none border-y border-line/60 bg-transparent px-0 py-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
         /></label>
 

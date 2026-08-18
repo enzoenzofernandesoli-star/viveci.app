@@ -87,7 +87,7 @@ export default function AnalisarMovimento() {
 
         {feedback && (
           <div className="mt-5 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-left">
-            <p className="text-xs text-gold">Simulação</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gold">Demonstração — sem análise real</p>
             <p className="mt-1 text-sm text-ink">{feedback}</p>
           </div>
         )}

@@ -17,12 +17,16 @@ import Social from './pages/Social'
 import PerfilPublico from './pages/PerfilPublico'
 import Planos from './pages/Planos'
 import Corpo from './pages/Corpo'
+import RecuperarSenha from './pages/RecuperarSenha'
+import RedefinirSenha from './pages/RedefinirSenha'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="login" element={<Login />} />
+        <Route path="recuperar-senha" element={<RecuperarSenha />} />
+        <Route path="redefinir-senha" element={<RedefinirSenha />} />
         <Route element={<RotaProtegida />}>
           <Route path="onboarding" element={<Onboarding />} />
           <Route element={<RotaOnboardingCompleto />}>

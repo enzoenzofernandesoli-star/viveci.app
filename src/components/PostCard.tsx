@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Heart, MessageCircle } from 'lucide-react'
+import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
 import type { Post } from '../lib/social/posts'
-import { curtir, descurtir } from '../lib/social/posts'
+import { curtir, descurtir, excluirPost } from '../lib/social/posts'
+import { bloquearUsuario, denunciarPost } from '../lib/social/moderacao'
 import { EditorialMedia } from './ui/EditorialMedia'
 
 function formatoBR(n: number): string {
@@ -27,15 +28,19 @@ export function PostCard({
   meuId,
   onAbrirComentarios,
   onAbrirAutor,
+  onRemovido,
 }: {
   post: Post
   meuId: string
   onAbrirComentarios: (postId: string) => void
   onAbrirAutor: (autorId: string) => void
+  onRemovido?: () => void
 }) {
   const [curtido, setCurtido] = useState(post.curtiPorMim)
   const [contagem, setContagem] = useState(post.contagemCurtidas)
   const [enviando, setEnviando] = useState(false)
+  const [menuAberto, setMenuAberto] = useState(false)
+  const [mensagem, setMensagem] = useState<string | null>(null)
 
   async function alternarCurtida() {
     if (enviando) return
@@ -56,7 +61,7 @@ export function PostCard({
 
   return (
     <article className="animar-entrada border-b border-line/60 py-6 first:pt-4">
-      <button onClick={() => onAbrirAutor(post.autor.id)} className="flex w-full items-center gap-3 text-left">
+      <div className="flex items-center gap-2"><button onClick={() => onAbrirAutor(post.autor.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-card-hover">
           {post.autor.fotoUrl && <img src={post.autor.fotoUrl} alt="" className="h-full w-full object-cover" />}
         </div>
@@ -64,7 +69,12 @@ export function PostCard({
           <p className="truncate text-sm font-semibold text-ink">{post.autor.nome}</p>
           <p className="mt-0.5 truncate text-xs text-ink-2">{post.resumoTreino ? `${post.resumoTreino.nome} · ` : ''}{formatoData(post.criadoEm)}</p>
         </div>
-      </button>
+      </button><button onClick={() => setMenuAberto((v) => !v)} aria-label="Ações da publicação" className="flex size-11 items-center justify-center text-ink-3"><MoreHorizontal size={19} /></button></div>
+
+      {menuAberto && <div className="mt-2 flex gap-4 border-y border-line/60 py-2 text-xs font-semibold">
+        {post.autor.id === meuId ? <button onClick={async () => { await excluirPost(post.id); onRemovido?.() }} className="min-h-11 text-down">Excluir publicação</button> : <><button onClick={async () => { await denunciarPost(meuId, post.id); setMensagem('Denúncia registrada.'); setMenuAberto(false) }} className="min-h-11 text-ink-2">Denunciar</button><button onClick={async () => { await bloquearUsuario(meuId, post.autor.id); setMensagem('Usuário bloqueado.'); setMenuAberto(false); onRemovido?.() }} className="min-h-11 text-ink-2">Bloquear</button></>}
+      </div>}
+      {mensagem && <p className="mt-2 text-xs text-ink-2">{mensagem}</p>}
 
       {post.fotoUrl && (
         <EditorialMedia

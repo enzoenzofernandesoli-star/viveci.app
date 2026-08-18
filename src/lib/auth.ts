@@ -46,3 +46,13 @@ export async function cadastrar(email: string, senha: string, nome: string) {
 export async function sair() {
   await supabase.auth.signOut()
 }
+
+export async function solicitarRecuperacaoSenha(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/redefinir-senha` })
+  if (error) throw error
+}
+
+export async function redefinirSenha(senha: string) {
+  const { error } = await supabase.auth.updateUser({ password: senha })
+  if (error) throw error
+}

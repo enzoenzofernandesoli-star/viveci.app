@@ -106,7 +106,7 @@ export function EscanearRotulo({
           <div className="animar-entrada space-y-5">
             <div className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-3">
               <p className="text-xs text-gold">
-                Simulação — o VIVECI ainda não tem OCR conectado. Confiança da leitura: {resultado.confiancaPercentual}%.
+                DEMONSTRAÇÃO — o VIVECI ainda não tem OCR conectado. O rótulo abaixo é um exemplo fixo. Confiança demonstrativa: {resultado.confiancaPercentual}%.
               </p>
             </div>
 

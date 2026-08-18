@@ -96,6 +96,7 @@ export default function Social() {
               meuId={userId}
               onAbrirComentarios={setComentandoPostId}
               onAbrirAutor={(id) => navigate(id === userId ? '/perfil' : `/social/usuario/${id}`)}
+              onRemovido={feed.recarregar}
             />
           ))
         )}

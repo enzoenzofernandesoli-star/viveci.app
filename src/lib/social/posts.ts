@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase.ts'
 import { buscarSeguindoIds } from './seguidores.ts'
+import { TAMANHO_MAX_POST, validarImagem } from '../uploadSeguro.ts'
+import { LIMITE_COMENTARIO, LIMITE_LEGENDA, validarTextoSocial } from './limites.ts'
 
 export type Autor = { id: string; nome: string; fotoUrl: string | null }
 
@@ -36,6 +38,11 @@ type PostBruto = {
   mostrar_series: boolean
   mostrar_volume: boolean
   criado_em: string
+  foto_path: string | null
+  treino_nome: string | null
+  treino_duracao_seg: number | null
+  treino_series: number | null
+  treino_volume_kg: number | null
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -50,52 +57,23 @@ async function montarPosts(postsBrutos: PostBruto[], meuId: string): Promise<Pos
 
   const idsUsuarios = [...new Set(postsBrutos.map((p) => p.user_id))]
   const idsPosts = postsBrutos.map((p) => p.id)
-  const idsSessao = [...new Set(postsBrutos.map((p) => p.sessao_concluida_id).filter((id): id is string => id !== null))]
-
-  const [{ data: perfis }, { data: likes }, { data: comentarios }, { data: sessoes }] = await Promise.all([
-    supabase.from('perfis').select('id, nome, foto_url').in('id', idsUsuarios),
+  const [{ data: perfis }, { data: likes }, { data: comentarios }] = await Promise.all([
+    supabase.from('perfis_publicos').select('id, nome, foto_url').in('id', idsUsuarios),
     supabase.from('post_likes').select('post_id, user_id').in('post_id', idsPosts),
     supabase.from('post_comments').select('post_id').in('post_id', idsPosts),
-    idsSessao.length > 0
-      ? supabase.from('sessoes_concluidas').select('id, sessao_id, volume_total_kg, duracao_seg').in('id', idsSessao)
-      : Promise.resolve({ data: [] as { id: string; sessao_id: string | null; volume_total_kg: number | null; duracao_seg: number | null }[] }),
   ])
 
-  const idsPlanoSessao = [...new Set((sessoes ?? []).map((s) => s.sessao_id).filter((id): id is string => id !== null))]
-  const { data: planoSessoes } =
-    idsPlanoSessao.length > 0
-      ? await supabase.from('plano_sessoes').select('id, plano_id, nome_sessao').in('id', idsPlanoSessao)
-      : { data: [] as { id: string; plano_id: string; nome_sessao: string | null }[] }
-
-  const idsPlano = [...new Set((planoSessoes ?? []).map((s) => s.plano_id))]
-  const { data: planos } = idsPlano.length > 0 ? await supabase.from('planos').select('id, nome').in('id', idsPlano) : { data: [] as { id: string; nome: string }[] }
-
-  const { data: registrosContagem } =
-    idsSessao.length > 0
-      ? await supabase.from('registros').select('sessao_id').in('sessao_id', (sessoes ?? []).map((s) => s.sessao_id).filter((id): id is string => id !== null))
-      : { data: [] as { sessao_id: string | null }[] }
-
   const perfilPorId = new Map((perfis ?? []).map((p) => [p.id, p]))
-  const nomePorPlano = new Map((planos ?? []).map((p) => [p.id, p.nome as string]))
-  const nomePorPlanoSessao = new Map((planoSessoes ?? []).map((s) => [s.id, nomePorPlano.get(s.plano_id) ?? 'Treino']))
-  const sessaoConcluidaPorId = new Map((sessoes ?? []).map((s) => [s.id, s]))
-  const seriesPorSessaoId = new Map<string, number>()
-  for (const r of registrosContagem ?? []) {
-    if (!r.sessao_id) continue
-    seriesPorSessaoId.set(r.sessao_id, (seriesPorSessaoId.get(r.sessao_id) ?? 0) + 1)
-  }
 
   return postsBrutos.map((p) => {
     const likesDoPost = (likes ?? []).filter((l) => l.post_id === p.id)
     const perfilAutor = perfilPorId.get(p.user_id)
-    const sessaoConcluida = p.sessao_concluida_id ? sessaoConcluidaPorId.get(p.sessao_concluida_id) : undefined
-
-    const resumoTreino: ResumoTreino | null = sessaoConcluida
+    const resumoTreino: ResumoTreino | null = p.sessao_concluida_id && p.treino_nome
       ? {
-          nome: sessaoConcluida.sessao_id ? (nomePorPlanoSessao.get(sessaoConcluida.sessao_id) ?? 'Treino rápido') : 'Treino rápido',
-          duracaoSeg: sessaoConcluida.duracao_seg,
-          volumeTotalKg: sessaoConcluida.volume_total_kg,
-          numeroSeries: sessaoConcluida.sessao_id ? (seriesPorSessaoId.get(sessaoConcluida.sessao_id) ?? 0) : 0,
+          nome: p.treino_nome,
+          duracaoSeg: p.treino_duracao_seg,
+          volumeTotalKg: p.treino_volume_kg,
+          numeroSeries: p.treino_series ?? 0,
         }
       : null
 
@@ -214,18 +192,21 @@ export async function criarPost(
   },
 ) {
   let fotoUrl: string | null = null
+  let fotoPath: string | null = null
   if (dados.arquivoFoto) {
-    const extensao = dados.arquivoFoto.name.split('.').pop() ?? 'jpg'
+    const { extensao } = validarImagem(dados.arquivoFoto, TAMANHO_MAX_POST)
     const caminho = `${userId}/social/${Date.now()}.${extensao}`
-    const { error: erroUpload } = await supabase.storage.from('Fotos').upload(caminho, dados.arquivoFoto)
+    const { error: erroUpload } = await supabase.storage.from('midia-publica').upload(caminho, dados.arquivoFoto, { contentType: dados.arquivoFoto.type })
     if (erroUpload) throw erroUpload
-    fotoUrl = supabase.storage.from('Fotos').getPublicUrl(caminho).data.publicUrl
+    fotoUrl = supabase.storage.from('midia-publica').getPublicUrl(caminho).data.publicUrl
+    fotoPath = caminho
   }
 
   const { error } = await supabase.from('posts').insert({
     user_id: userId,
-    legenda: dados.legenda || null,
+    legenda: validarTextoSocial(dados.legenda, LIMITE_LEGENDA, 'Legenda') || null,
     foto_url: fotoUrl,
+    foto_path: fotoPath,
     sessao_concluida_id: dados.sessaoConcluidaId,
     mostrar_duracao: dados.mostrarDuracao,
     mostrar_series: dados.mostrarSeries,
@@ -242,6 +223,14 @@ export async function curtir(postId: string, userId: string) {
 export async function descurtir(postId: string, userId: string) {
   const { error } = await supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', userId)
   if (error) throw error
+}
+
+export async function excluirPost(postId: string) {
+  const { data: post, error: erroBusca } = await supabase.from('posts').select('foto_path').eq('id', postId).single()
+  if (erroBusca) throw erroBusca
+  const { error } = await supabase.from('posts').delete().eq('id', postId)
+  if (error) throw error
+  if (post.foto_path) await supabase.storage.from('midia-publica').remove([post.foto_path])
 }
 
 export type Comentario = {
@@ -311,6 +300,11 @@ export function useComentarios(postId: string | undefined) {
 }
 
 export async function comentar(postId: string, userId: string, texto: string) {
-  const { error } = await supabase.from('post_comments').insert({ post_id: postId, user_id: userId, texto })
+  const { error } = await supabase.from('post_comments').insert({ post_id: postId, user_id: userId, texto: validarTextoSocial(texto, LIMITE_COMENTARIO, 'Comentário') })
+  if (error) throw error
+}
+
+export async function excluirComentario(comentarioId: string) {
+  const { error } = await supabase.from('post_comments').delete().eq('id', comentarioId)
   if (error) throw error
 }

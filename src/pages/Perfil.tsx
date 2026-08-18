@@ -21,6 +21,7 @@ import { ROTULO_PLANO } from '../lib/planos'
 import { useVivici } from '../lib/vivici'
 import type { DNATreino, PerfilDNA } from '../lib/dnaTreino'
 import { useFotosProgresso } from '../lib/bodyScan'
+import { LIMITE_BIO } from '../lib/social/limites'
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -364,6 +365,7 @@ function EditarPerfil({
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={3}
+          maxLength={LIMITE_BIO}
           placeholder="Fale um pouco sobre você"
           className="w-full resize-none rounded-xl border border-line bg-app px-3 py-2 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
         />

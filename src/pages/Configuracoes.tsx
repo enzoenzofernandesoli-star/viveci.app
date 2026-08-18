@@ -20,6 +20,7 @@ import { usePerfil, atualizarPerfil, ROTULO_OBJETIVO, ROTULO_NIVEL, type Objetiv
 import { usePreferencias, salvarPreferencias, type Preferencias } from '../lib/preferencias'
 import { supabase } from '../lib/supabase'
 import type { Equipamento } from '../data/exercicios'
+import { montarPacoteExportacao } from '../lib/exportacao'
 
 const EQUIPAMENTOS: Equipamento[] = ['Barra', 'Halter', 'Cabo', 'Máquina', 'Peso corporal', 'Elástico']
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -337,14 +338,15 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
   const [confirmando, setConfirmando] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
   const [mensagem, setMensagem] = useState<string | null>(null)
+  const [confirmandoConta, setConfirmandoConta] = useState(false)
 
   async function excluirFotos() {
     setExcluindo(true)
     setMensagem(null)
     try {
-      const { data: arquivos } = await supabase.storage.from('Fotos').list(userId)
+      const { data: arquivos } = await supabase.storage.from('midia-publica').list(`${userId}/avatar`)
       if (arquivos && arquivos.length > 0) {
-        await supabase.storage.from('Fotos').remove(arquivos.map((a) => `${userId}/${a.name}`))
+        await supabase.storage.from('midia-publica').remove(arquivos.map((a) => `${userId}/avatar/${a.name}`))
       }
       await atualizarPerfil(userId, { foto_url: null })
       setMensagem('Suas fotos foram removidas.')
@@ -398,11 +400,9 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
       </div>
 
       <div className="mt-5 rounded-2xl border border-line bg-card p-6">
-        <h3 className="text-[17px] font-semibold">Excluir dados ou conta</h3>
-        <p className="mt-1 text-sm text-ink-2">
-          Excluir todos os seus dados ou encerrar sua conta exige confirmação manual por segurança. Entre em contato
-          pelo suporte pra solicitar — respondemos em até 48h.
-        </p>
+        <h3 className="text-[17px] font-semibold">Excluir conta</h3>
+        <p className="mt-1 text-sm text-ink-2">Remove sua conta, dados e arquivos. Esta ação não pode ser desfeita e depende da função segura do backend estar publicada.</p>
+        {confirmandoConta ? <div className="mt-4 flex gap-3"><button onClick={() => setConfirmandoConta(false)} className="h-11 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-2">Cancelar</button><button onClick={async () => { setExcluindo(true); setMensagem(null); const { error } = await supabase.functions.invoke('excluir-conta'); if (error) { setMensagem('A exclusão segura ainda não está disponível. Tente novamente ou contate o suporte.'); setExcluindo(false); return } await supabase.auth.signOut(); window.location.assign('/login') }} disabled={excluindo} className="h-11 flex-1 rounded-xl bg-down text-sm font-semibold text-white disabled:opacity-50">Excluir definitivamente</button></div> : <button onClick={() => setConfirmandoConta(true)} className="mt-4 min-h-11 text-sm font-semibold text-down">Excluir minha conta</button>}
       </div>
     </div>
   )
@@ -416,25 +416,48 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
     setExportando(true)
     setErro(null)
     try {
-      const [perfil, planos, registros, sessoes, medidas, diario, cardio] = await Promise.all([
+      const [perfil, preferencias, planos, registros, sessoes, medidas, metas, diario, cardio, fotos, posts, comentarios, likes, seguidores, seguindo, bloqueios] = await Promise.all([
         supabase.from('perfis').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('preferencias_usuario').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('planos').select('*').eq('user_id', userId),
         supabase.from('registros').select('*').eq('user_id', userId),
         supabase.from('sessoes_concluidas').select('*').eq('user_id', userId),
         supabase.from('medidas').select('*').eq('user_id', userId),
+        supabase.from('metas_nutricionais').select('*').eq('user_id', userId),
         supabase.from('diario_alimentar').select('*').eq('user_id', userId),
         supabase.from('cardio_sessoes').select('*').eq('user_id', userId),
+        supabase.from('fotos_progresso').select('id, data, angulo, storage_bucket, storage_path').eq('user_id', userId),
+        supabase.from('posts').select('*').eq('user_id', userId),
+        supabase.from('post_comments').select('*').eq('user_id', userId),
+        supabase.from('post_likes').select('*').eq('user_id', userId),
+        supabase.from('seguidores').select('*').eq('seguido_id', userId),
+        supabase.from('seguidores').select('*').eq('seguidor_id', userId),
+        supabase.from('usuarios_bloqueados').select('*').eq('bloqueador_id', userId),
       ])
-      const pacote = {
-        exportado_em: new Date().toISOString(),
+      const idsPlanos = (planos.data ?? []).map((plano) => plano.id)
+      const sessoesRotina = idsPlanos.length > 0 ? await supabase.from('plano_sessoes').select('*').in('plano_id', idsPlanos) : { data: [] }
+      const idsSessoesRotina = (sessoesRotina.data ?? []).map((sessao) => sessao.id)
+      const itens = idsSessoesRotina.length > 0 ? await supabase.from('plano_itens').select('*').in('sessao_id', idsSessoesRotina) : { data: [] }
+      const pacote = montarPacoteExportacao(userId, {
         perfil: perfil.data,
+        preferencias: preferencias.data,
         rotinas: planos.data,
+        sessoes_rotina: sessoesRotina.data,
+        itens_rotina: itens.data,
         registros: registros.data,
         sessoes: sessoes.data,
         medidas: medidas.data,
+        metas_nutricionais: metas.data,
         diario_alimentar: diario.data,
         cardio: cardio.data,
-      }
+        fotos: fotos.data,
+        posts: posts.data,
+        comentarios: comentarios.data,
+        curtidas: likes.data,
+        seguidores: seguidores.data,
+        seguindo: seguindo.data,
+        bloqueios: bloqueios.data,
+      }, new Date().toISOString())
       const blob = new Blob([JSON.stringify(pacote, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

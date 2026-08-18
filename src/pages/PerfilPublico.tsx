@@ -6,7 +6,7 @@ import { Empty } from '../components/Empty'
 import { PostCard } from '../components/PostCard'
 import { ComentariosPost } from '../components/ComentariosPost'
 import { useSessao } from '../lib/auth'
-import { usePerfil } from '../lib/perfil'
+import { usePerfilPublico } from '../lib/perfil'
 import { usePostsDoUsuario } from '../lib/social/posts'
 import { useRelacaoSocial, seguir, deixarDeSeguir } from '../lib/social/seguidores'
 
@@ -18,8 +18,8 @@ export default function PerfilPublico() {
   const [comentandoPostId, setComentandoPostId] = useState<string | null>(null)
   const [enviandoFollow, setEnviandoFollow] = useState(false)
 
-  const { perfil, carregando: carregandoPerfil } = usePerfil(id)
-  const { posts, carregando: carregandoPosts } = usePostsDoUsuario(id, meuId)
+  const { perfil, carregando: carregandoPerfil } = usePerfilPublico(id)
+  const { posts, carregando: carregandoPosts, recarregar: recarregarPosts } = usePostsDoUsuario(id, meuId)
   const { seguindo, seguidores, seguindoTotal, carregando: carregandoRelacao, recarregar } = useRelacaoSocial(id, meuId)
 
   if (!meuId || !id) {
@@ -115,6 +115,7 @@ export default function PerfilPublico() {
                   meuId={meuId}
                   onAbrirComentarios={setComentandoPostId}
                   onAbrirAutor={() => {}}
+                  onRemovido={recarregarPosts}
                 />
               ))
             )}

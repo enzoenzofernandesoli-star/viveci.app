@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { entrar, cadastrar, useSessao } from '../lib/auth'
 
@@ -105,6 +105,7 @@ export default function Login() {
                   className="h-12 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                   placeholder="voce@email.com"
                 />
+                {modo === 'entrar' && <Link to="/recuperar-senha" className="mt-2 inline-flex min-h-11 items-center text-xs font-semibold text-ink-2 hover:text-brand">Esqueci minha senha</Link>}
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
