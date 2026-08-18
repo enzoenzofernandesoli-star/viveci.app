@@ -128,7 +128,7 @@ export function CriarPost({
                 setPreview(null)
               }}
               aria-label="Remover foto"
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-app/70 text-white"
+              className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-full bg-app/70 text-white"
             >
               <X size={16} strokeWidth={2} />
             </button>

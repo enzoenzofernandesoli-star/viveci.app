@@ -67,6 +67,12 @@ body {
 :where(button, input, select, textarea):disabled { cursor: not-allowed; }
 img, video { display: block; max-width: 100%; }
 
+@media (max-width: 1023px) {
+  body:has(input:focus, textarea:focus, select:focus) .bottom-nav {
+    display: none;
+  }
+}
+
 /* Glow azul discreto — reservado pro CTA principal da Home e pro item ativo
    da navegação. Nunca aplicar em cards comuns; é o único elemento "premium"
    de destaque, exagerar aqui quebra o minimalismo do design system. */

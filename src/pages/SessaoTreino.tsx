@@ -405,7 +405,7 @@ function ExecutorTreino({
           <button
             key={`${ex.exercicioId}-${i}`}
             onClick={() => selecionarExercicio(i)}
-            className={`num flex size-9 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${
+            className={`num flex size-11 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${
               i === ativoIndex ? 'border-brand bg-brand text-white' : 'border-line text-ink-3'
             }`}
           >
@@ -414,7 +414,7 @@ function ExecutorTreino({
         ))}
         <button
           onClick={() => setMostrarSeletor(true)}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-line text-ink-3"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full border border-dashed border-line text-ink-3"
           aria-label="Adicionar exercício"
         >
           <Plus size={16} strokeWidth={1.75} />

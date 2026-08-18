@@ -22,7 +22,7 @@ function ItemNav({ item }: { item: (typeof NAV)[number] }) {
 
 export function BottomNav() {
   return (
-    <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-20 border-t border-line/50 bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden">
+    <nav aria-label="Navegação principal" className="bottom-nav fixed inset-x-0 bottom-0 z-20 border-t border-line/50 bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden">
       <div className="mx-auto flex max-w-[520px] items-stretch px-1">
         {NAV.map((item) => <ItemNav key={item.to} item={item} />)}
       </div>

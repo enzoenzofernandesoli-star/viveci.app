@@ -47,7 +47,7 @@ function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => voi
     <button
       type="button"
       onClick={onClick}
-      className={`h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors ${
+      className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors ${
         ativo ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
       }`}
     >
