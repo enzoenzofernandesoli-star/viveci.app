@@ -257,8 +257,8 @@ function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
 
   return (
     <section className="animar-entrada border-b border-line/60 py-7">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Meu DNA de treino</p>
-      <p className="mt-1 text-sm text-brand">{perfilDNA.rotulo}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">DNA de treino · histórico</p>
+      <p className="mt-1 text-sm text-ink">{perfilDNA.rotulo}</p>
       <p className="mt-1 text-xs text-ink-2">{perfilDNA.descricao}</p>
       {semDados ? (
         <p className="mt-4 border-y border-line/60 py-4 text-sm text-ink-2">Conclua e registre seus primeiros treinos para liberar os indicadores.</p>

@@ -155,7 +155,8 @@ export default function BodyScan() {
       </section>
 
       <section className="mt-7 border-b border-line/60 pb-7">
-        <div className="flex items-center gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gold">Experimental · Demonstração</p>
+        <div className="mt-2 flex items-center gap-2">
           <Sparkles size={17} strokeWidth={1.75} className="text-ink-3" />
           <h2 className="text-base font-semibold">Análise de físico</h2>
         </div>

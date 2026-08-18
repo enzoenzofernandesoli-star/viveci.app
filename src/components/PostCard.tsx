@@ -67,7 +67,7 @@ export function PostCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-ink">{post.autor.nome}</p>
-          <p className="mt-0.5 truncate text-xs text-ink-2">{post.resumoTreino ? `${post.resumoTreino.nome} · ` : ''}{formatoData(post.criadoEm)}</p>
+          <p className="mt-0.5 truncate text-xs text-ink-2">{formatoData(post.criadoEm)}</p>
         </div>
       </button><button onClick={() => setMenuAberto((v) => !v)} aria-label="Ações da publicação" className="flex size-11 items-center justify-center text-ink-3"><MoreHorizontal size={19} /></button></div>
 
@@ -88,7 +88,8 @@ export function PostCard({
         {post.legenda && <p className="line-clamp-3 text-sm leading-relaxed text-ink">{post.legenda}</p>}
 
         {post.resumoTreino && (
-          <div className="mt-3">
+          <div className="mt-4 border-l border-brand/60 pl-3">
+            <p className="text-xs font-semibold text-ink">{post.resumoTreino.nome}</p>
             <div className="flex flex-wrap gap-x-2 text-xs text-ink-2">
               {post.mostrarDuracao && post.resumoTreino.duracaoSeg !== null && (
                 <span>{formatoDuracao(post.resumoTreino.duracaoSeg)} ·</span>
