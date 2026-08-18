@@ -54,7 +54,7 @@ O navegador pode usar local/session storage para sessão gerenciada pelo Supabas
 
 Dados podem ser processados pelos fornecedores necessários à operação. Conteúdo social escolhido pelo usuário é compartilhado com outros usuários autenticados. Dados privados não devem compor perfis públicos.
 
-O desenho utiliza autenticação, RLS, separação de buckets, URLs assinadas, validação de upload e privilégio administrativo isolado em Edge Function. Incidentes e contatos de segurança precisam de procedimento: **[PROCEDIMENTO PENDENTE]**.
+O desenho utiliza autenticação, RLS, separação de buckets, URLs assinadas, validação de upload e privilégio administrativo isolado em Edge Function. O procedimento mínimo de incidente e pausa do beta está em `BETA_OPERATIONS.md`; responsáveis e canais formais continuam pendentes.
 
 ## 8. Exportação, correção e exclusão
 

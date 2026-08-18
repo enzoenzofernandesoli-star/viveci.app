@@ -46,7 +46,7 @@ O usuário pode exportar dados em JSON; fotos aparecem como referências, não c
 
 ## 9. Disponibilidade e beta
 
-O serviço pode mudar, ficar indisponível ou conter erros durante o beta. Sessões interrompidas não são retomadas. Cache PWA não significa funcionamento offline completo. Suporte, continuidade e encerramento do beta: **[DEFINIÇÃO PENDENTE]**.
+O serviço pode mudar, ficar indisponível ou conter erros durante o beta. Sessões interrompidas não são retomadas. Cache PWA não significa funcionamento offline completo. O procedimento operacional mínimo está em `BETA_OPERATIONS.md`; suporte, continuidade e encerramento formal continuam como **[DEFINIÇÃO PENDENTE]**.
 
 ## 10. Propriedade intelectual
 
