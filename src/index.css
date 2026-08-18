@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-app: #05070D;
+  --color-app: #070A10;
   --color-sidebar: #080B12;
-  --color-card: #0E1219;
-  --color-card-hover: #141A24;
-  --color-line: #1B2231;
-  --color-brand: #2F6BFF;
-  --color-brand-hover: #1E56E0;
-  --color-ink: #FFFFFF;
-  --color-ink-2: #9AA4B8;
-  --color-ink-3: #5A6478;
+  --color-card: #0D111A;
+  --color-card-hover: #131826;
+  --color-line: #202735;
+  --color-brand: #0066FF;
+  --color-brand-hover: #0052CC;
+  --color-silver: #BFC3CA;
+  --color-ink: #F4F5F7;
+  --color-ink-2: #7E8795;
+  --color-ink-3: #545B68;
   --color-up: #22C55E;
   --color-down: #EF4444;
   --color-gold: #F5A524;
@@ -29,6 +30,13 @@ body {
 }
 
 .num { font-variant-numeric: tabular-nums; }
+
+/* Glow azul discreto — reservado pro CTA principal da Home e pro item ativo
+   da navegação. Nunca aplicar em cards comuns; é o único elemento "premium"
+   de destaque, exagerar aqui quebra o minimalismo do design system. */
+.brilho-brand {
+  box-shadow: 0 0 28px -6px rgba(0, 102, 255, 0.45);
+}
 
 /* ───────────────────────── Microinterações ─────────────────────────
    Regra 39 do CLAUDE.md: elegante, nunca exagerado. Tudo aqui respeita

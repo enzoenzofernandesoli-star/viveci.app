@@ -24,7 +24,7 @@ export function BottomNav() {
       ))}
 
       <div className="flex flex-1 justify-center">
-        <NavLink to="/treino/rapido" className="-mt-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-lg transition-colors hover:bg-brand-hover">
+        <NavLink to="/treino/rapido" className="brilho-brand -mt-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-hover">
           <Plus size={26} strokeWidth={2} />
         </NavLink>
       </div>

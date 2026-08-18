@@ -51,7 +51,7 @@ function CardRecomendacao({
       </ul>
       <button
         onClick={() => navigate(`/treino/${rotinaId}/sessao`)}
-        className="mt-4 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+        className="brilho-brand mt-4 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
       >
         Começar treino
       </button>

@@ -70,34 +70,50 @@ hex solto no componente.
 
 | Token | Valor | Uso |
 |---|---|---|
-| `app` | `#05070D` | fundo geral |
+| `app` | `#070A10` | fundo geral — preto azulado profundo |
 | `sidebar` | `#080B12` | barra lateral e barra inferior |
-| `card` | `#0E1219` | cards e painéis |
-| `card-hover` | `#141A24` | hover e superfícies elevadas |
-| `line` | `#1B2231` | bordas de 1px |
-| `brand` | `#2F6BFF` | **única cor de ação** |
-| `brand-hover` | `#1E56E0` | hover do botão primário |
-| `ink` | `#FFFFFF` | texto principal |
-| `ink-2` | `#9AA4B8` | labels e legendas |
-| `ink-3` | `#5A6478` | estados inativos |
+| `card` | `#0D111A` | cards e painéis |
+| `card-hover` | `#131826` | hover e superfícies elevadas |
+| `line` | `#202735` | bordas de 1px |
+| `brand` | `#0066FF` | **única cor de ação** |
+| `brand-hover` | `#0052CC` | hover do botão primário |
+| `silver` | `#BFC3CA` | acento decorativo premium (gráficos, ícones em destaque) — nunca em botão/ação |
+| `ink` | `#F4F5F7` | texto principal (quase branco, não branco puro) |
+| `ink-2` | `#7E8795` | labels e legendas |
+| `ink-3` | `#545B68` | estados inativos |
 | `up` / `down` | `#22C55E` / `#EF4444` | **só** em variação numérica |
 | `gold` | `#F5A524` | só conquista, troféu e streak |
 | `muscle-off` | `#3A4252` | músculo não treinado no mapa |
 
+Paleta reformulada (2026-08-18) pra uma identidade mais "premium/masculino/
+tecnológico" (pedido explícito do usuário, referência: Apple Fitness+ +
+Garmin + Nike Training Club). Trocar valor de token é sempre feito só em
+`src/index.css` — nunca hex solto no componente — e propaga pro app inteiro
+automaticamente por causa da arquitetura de tokens.
+
 **Tipografia:** Sora. H1 28px/700. Título de card 17px/600. Número de destaque
 44px/700 com a classe `.num` (tabular-nums). Texto 14px. Label 12px maiúscula
-com tracking 0.06em em `ink-2`.
+com tracking 0.06em em `ink-2`. No logotipo/wordmark "VIVECI", usar letter
+spacing largo (`tracking-widest` ou maior) — é a única exceção ao texto
+compacto do resto do app.
 
 **Card:** `bg-card`, borda 1px `line`, radius 16px, padding 24px, **sem sombra**.
 **Botão primário:** `bg-brand`, texto branco 600, radius 12px, altura 48px.
 **Chip ativo:** fundo azul translúcido + texto `brand`. Inativo: borda `line` + `ink-2`.
 
+**Glow azul (`.brilho-brand` em `src/index.css`):** `box-shadow` sutil,
+reservado só pro CTA principal da Home ("Começar treino" dentro do card de
+recomendação) e pro botão flutuante de Treino Rápido na navegação — nunca em
+cards comuns nem em todo botão `bg-brand`. Isso é a única exceção à regra
+"sem sombra"; usar com moderação é o que faz parecer premium, exagerar faz
+parecer genérico.
+
 **Proibido:** gradiente colorido, sombra pesada, emoji como ícone de interface,
 mais de uma cor de ação por tela. Ícones: `lucide-react`, `strokeWidth={1.75}`.
 
 **Exceção única:** as três barras de macro do diário alimentar usam
-Proteína `#2F6BFF`, Carboidrato `#8B5CF6`, Gordura `#F5A524` — três barras
-iguais seriam ilegíveis.
+Proteína `#0066FF` (= `brand`), Carboidrato `#8B5CF6`, Gordura `#F5A524` —
+três barras iguais seriam ilegíveis.
 
 ---
 

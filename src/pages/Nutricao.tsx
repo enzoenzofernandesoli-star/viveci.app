@@ -474,7 +474,7 @@ export default function Nutricao() {
         )}
 
         <div className="mt-8 space-y-5">
-          <BarraMacro label="Proteína" consumido={consumido.prot_g} meta={metas.meta_prot_g} cor="#2F6BFF" />
+          <BarraMacro label="Proteína" consumido={consumido.prot_g} meta={metas.meta_prot_g} cor="var(--color-brand)" />
           <BarraMacro label="Carboidrato" consumido={consumido.carb_g} meta={metas.meta_carb_g} cor="#8B5CF6" />
           <BarraMacro label="Gordura" consumido={consumido.gord_g} meta={metas.meta_gord_g} cor="#F5A524" />
         </div>
