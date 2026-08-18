@@ -9,13 +9,13 @@ Este procedimento é operacional, não aconselhamento jurídico ou profissional.
   produto e compatíveis com a política de idade ainda a definir.
 - Manter uma lista controlada de convites e revogar o acesso pelo Supabase Auth
   quando necessário.
-- Não usar contas pessoais para testes de segurança ou exclusão.
+- Não usar contas pessoais para testes de segurança.
 
 ## Registro de problemas
 
 Registrar data, área, passos para reproduzir, impacto e versão. Não incluir senha,
 JWT, chave, foto corporal ou outro dado sensível em tickets. Problemas de acesso
-indevido, Body Scan, exclusão ou segredo exposto têm prioridade P0.
+indevido, Body Scan ou segredo exposto têm prioridade P0.
 
 ## Incidente
 
@@ -36,11 +36,9 @@ incidente exigir. Este roteiro não substitui análise jurídica ou de seguranç
   evidência necessária.
 - Não reabrir o beta até repetir os testes remotos relacionados e registrar PASS.
 
-## Exclusão e privacidade
+## Privacidade
 
-- Solicitações devem usar o canal oficial ainda pendente de definição.
-- Enquanto `excluir-conta` não estiver publicada e testada, tratar a solicitação
-  manualmente por operador autorizado e registrar cada origem de dado verificada.
-- Não declarar exclusão concluída sem confirmar Auth, banco e Storage.
+- O produto não oferece exclusão de conta pelo aplicativo nesta versão.
+- Solicitações de privacidade dependem de canal e procedimento formais ainda
+  pendentes de definição pelo responsável do produto.
 - Relatos de privacidade devem ser registrados sem copiar o conteúdo sensível.
-

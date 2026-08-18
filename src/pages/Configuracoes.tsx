@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft,
@@ -83,7 +83,7 @@ const CATEGORIAS: { secao: Secao; icone: typeof User; titulo: string; descricao:
   { secao: 'treinamento', icone: Dumbbell, titulo: 'Treinamento', descricao: 'Duração, horário e equipamentos preferidos' },
   { secao: 'nutricao', icone: Apple, titulo: 'Nutrição', descricao: 'O que aparece no seu diário alimentar' },
   { secao: 'aparencia', icone: Palette, titulo: 'Aparência', descricao: 'Animações e movimento' },
-  { secao: 'privacidade', icone: ShieldCheck, titulo: 'Privacidade e segurança', descricao: 'Gerencie seus dados e sua conta' },
+  { secao: 'privacidade', icone: ShieldCheck, titulo: 'Privacidade e segurança', descricao: 'Entenda seus dados e gerencie sua foto' },
   { secao: 'dados', icone: Database, titulo: 'Meus dados', descricao: 'Exporte tudo que o VIVECI guarda de você' },
   { secao: 'aplicativo', icone: Smartphone, titulo: 'Aplicativo', descricao: 'Versão e cache' },
   { secao: 'sobre', icone: Info, titulo: 'Sobre', descricao: 'Sobre o VIVECI' },
@@ -289,9 +289,6 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
   const [confirmando, setConfirmando] = useState(false)
   const [excluindo, setExcluindo] = useState(false)
   const [mensagem, setMensagem] = useState<string | null>(null)
-  const [confirmandoConta, setConfirmandoConta] = useState(false)
-  const [confirmacaoConta, setConfirmacaoConta] = useState('')
-  const exclusaoContaIniciada = useRef(false)
 
   async function excluirFotos() {
     setExcluindo(true)
@@ -308,25 +305,6 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
     } finally {
       setExcluindo(false)
       setConfirmando(false)
-    }
-  }
-
-  async function excluirConta() {
-    if (confirmacaoConta !== 'EXCLUIR' || exclusaoContaIniciada.current) return
-    exclusaoContaIniciada.current = true
-    setExcluindo(true)
-    setMensagem(null)
-    try {
-      const { error } = await supabase.functions.invoke('excluir-conta')
-      if (error) throw error
-      sessionStorage.clear()
-      localStorage.removeItem('viveci-onboarding-rascunho')
-      await supabase.auth.signOut({ scope: 'local' })
-      window.location.replace('/login')
-    } catch {
-      exclusaoContaIniciada.current = false
-      setExcluindo(false)
-      setMensagem('Não foi possível excluir sua conta por completo. Nenhum sucesso foi confirmado. Tente novamente ou contate o suporte.')
     }
   }
 
@@ -369,46 +347,6 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
           </button>
         )}
         {mensagem && <p className="mt-3 text-xs text-ink-2">{mensagem}</p>}
-      </div>
-
-      <div className="mt-5 rounded-2xl border border-line bg-card p-6">
-        <h3 className="text-[17px] font-semibold">Excluir conta</h3>
-        <p className="mt-1 text-sm text-ink-2">Remove sua conta, seus dados e seus arquivos. Esta ação não pode ser desfeita.</p>
-        {confirmandoConta ? (
-          <div className="mt-4">
-            <label htmlFor="confirmar-exclusao-conta" className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
-              Digite EXCLUIR para confirmar
-            </label>
-            <input
-              id="confirmar-exclusao-conta"
-              value={confirmacaoConta}
-              onChange={(evento) => setConfirmacaoConta(evento.target.value.toUpperCase())}
-              disabled={excluindo}
-              autoComplete="off"
-              className="mt-2 h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none disabled:opacity-60"
-            />
-            <div className="mt-3 flex gap-3">
-              <button
-                onClick={() => { setConfirmandoConta(false); setConfirmacaoConta('') }}
-                disabled={excluindo}
-                className="h-11 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-2 disabled:opacity-60"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={excluirConta}
-                disabled={excluindo || confirmacaoConta !== 'EXCLUIR'}
-                className="h-11 flex-1 rounded-xl bg-down text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {excluindo ? 'Excluindo...' : 'Excluir definitivamente'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button onClick={() => setConfirmandoConta(true)} className="mt-4 min-h-11 text-sm font-semibold text-down">
-            Excluir minha conta
-          </button>
-        )}
       </div>
 
     </div>

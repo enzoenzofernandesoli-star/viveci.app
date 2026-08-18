@@ -40,9 +40,9 @@ Nome, bio, avatar e posts podem ser vistos por outros usuários autenticados. Bo
 
 No beta atual, o Free permite até quatro rotinas e o Pro remove esse limite. Não existe cobrança ativa documentada. Preço, contratação e cancelamento só podem ser adicionados quando houver modelo comercial definido.
 
-## 8. Exportação e encerramento
+## 8. Exportação
 
-O usuário pode exportar dados em JSON; fotos aparecem como referências, não como binários. A exclusão integral depende da Edge Function segura e só pode ser considerada disponível depois de deploy e teste remoto. Falha parcial não deve ser apresentada como sucesso.
+O usuário pode exportar dados em JSON; fotos aparecem como referências, não como binários. O aplicativo não oferece exclusão de conta pelo próprio usuário nesta versão.
 
 ## 9. Disponibilidade e beta
 

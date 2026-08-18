@@ -2,17 +2,13 @@
 
 Data: 18 de agosto de 2026.
 
-## Resultado da Etapa 29
+## Resultado atualizado da Etapa 29
 
-**BLOCKED**
+**PASS parcial com pendências específicas**
 
-Ambiente auditado: repositório local e configuração pública do frontend. O
-workspace possui somente `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`; não há
-Supabase CLI vinculado, credencial administrativa segura nem duas contas de
-homologação disponíveis. Nenhuma credencial pessoal ou de produção foi usada.
-
-Este documento separa configuração local esperada de configuração remota
-comprovada. Nada listado como esperado foi marcado como ativo no projeto remoto.
+O repositório foi auditado localmente e a configuração remota foi validada pelo
+proprietário no painel oficial, com duas contas descartáveis. Nenhuma credencial,
+senha, token ou URL assinada foi copiada para este documento.
 
 ## Chave anteriormente compartilhada
 
@@ -74,53 +70,46 @@ remove todo acesso de `anon`, retira os três privilégios administrativos de
 `authenticated` e ajusta os privilégios padrão para relações futuras. O DML
 autenticado necessário continua sujeito às policies RLS.
 
-Status remoto das três migrations: **não comprovado**. Elas não foram reaplicadas.
+Status remoto: estruturas das migrations 09–11 confirmadas; migration 12 aplicada
+e validada; migration 13 aplicada e consulta de privilégios excessivos retornou
+zero linhas.
 
 ## Matriz de acesso esperada
 
 | Recurso | Próprio usuário | Outro autenticado | Evidência remota |
 |---|---|---|---|
-| Perfil completo (`perfis`) | leitura/escrita própria | não | não testada |
-| Perfil público mínimo | sim | `id`, nome, avatar e bio | não testada |
-| Rotinas, sessões e itens | sim | não | não testada |
-| Registros e sessões concluídas | sim | não | não testada |
-| Cardio, medidas, nutrição, metas e preferências | sim | não | não testada |
-| Body Scan e metadados | sim | não | não testada |
-| Posts | sim | leitura social | não testada |
-| Comentários, likes e seguidores | conforme autoria/interação | leitura social | não testada |
-| Avatar e foto social | pública | pública | não testada |
-| Foto corporal nova | URL assinada para o dono | não | não testada |
+| Perfil completo (`perfis`) | leitura/escrita própria | não | PASS A/B para leitura |
+| Perfil público mínimo | sim | `id`, nome, avatar e bio | PASS A/B |
+| Rotinas, sessões e itens | sim | não | PASS A/B para rotina/sessão |
+| Registros e sessões concluídas | sim | não | PASS A/B |
+| Cardio, medidas, nutrição, metas e preferências | sim | não | nutrição PASS; demais pendentes |
+| Body Scan e metadados | sim | não | PASS A/B com 3 registros reais |
+| Posts | sim | leitura social limitada | PASS A/B para flags de métricas |
+| Comentários, likes e seguidores | conforme autoria/interação | leitura social | interação normal PASS; abuso pendente |
+| Avatar e foto social | pública | pública | PASS pela interface |
+| Foto corporal nova | URL assinada para o dono | não | RLS PASS; expiração prática pendente |
 | Bloqueios e denúncias | somente autor/denunciante | não | não testada |
 
 ## Teste A/B
 
-Não executado. Não existem duas contas de teste nem ambiente Supabase isolado
-configurado. Testes locais com backend simulado não foram usados como evidência
-de RLS.
+Executado remotamente com duas contas descartáveis. B recebeu zero linhas do
+perfil completo, rotinas, sessões, registros, diário e Body Scan de A, mas recebeu
+o perfil público. No sentido inverso, A recebeu zero linhas dos 3 registros e 3
+objetos privados de Body Scan de B. O post de A com somente duração autorizada
+retornou duração presente, séries `NULL` e volume `NULL` para B.
 
-Precisam ser validados remotamente:
-
-1. B não lê perfil completo, rotinas, registros, diário, medidas, preferências ou
-   Body Scan de A;
-2. B lê somente o perfil público e conteúdo social de A;
-3. A não altera `plano` para Pro e a quinta rotina Free falha pela API;
-4. bloqueios e autoria impedem interações indevidas.
+Conta B Free criou quatro rotinas. A quinta foi bloqueada na interface e pelo RPC
+`criar_rotina` com `23514`; a contagem continuou em quatro. A tentativa de mudar
+`perfis.plano` para Pro falhou com `42501` e o plano permaneceu `free`.
 
 ## Etapa 33 — validação remota
 
-**Resultado: BLOCKED.**
+**Resultado atualizado: PASS parcial com pendências específicas.**
 
-Foi criado `sql/VALIDAR_SEGURANCA_REMOTA.sql`, somente leitura, para inventariar
-funções, triggers, views, índices, buckets e policies. O proprietário optou por
-adiar sua execução. Portanto:
-
-- migrations 09–12 não foram confirmadas nem reaplicadas;
-- nenhuma conta descartável A/B foi criada;
-- perfil privado, plano, limite Free, rotina e Social não foram testados no remoto;
-- a matriz de acesso continua sendo expectativa local, não evidência operacional.
-
-Não existe commit, teste mockado ou inspeção de SQL local que substitua essa
-validação.
+O inventário somente leitura foi executado. Migrations 09–13, views, funções,
+triggers, índices, buckets e policies foram verificados; duas contas descartáveis
+foram usadas nos testes descritos acima. Permanecem pendentes apenas os itens
+marcados como tal na matriz, sem extrapolar a evidência coletada.
 
 ## Social e treino associado — correção local da Etapa 32
 
@@ -141,8 +130,7 @@ O feed passou a consultar `posts_publicos` e ainda filtra as métricas no client
 como defesa adicional. Posts antigos permanecem compatíveis porque o contrato é
 calculado sobre as linhas existentes; nenhuma cópia de treino foi criada.
 
-Status local: **corrigido e testado**. Status remoto: **não comprovado até aplicar
-a migration 12 e executar o teste A/B inspecionando o payload**.
+Status local e remoto: **corrigido e testado A/B**.
 
 ## Storage
 
@@ -155,13 +143,14 @@ Uso local encontrado:
 
 Novos Body Scans guardam bucket/path, geram URL assinada por uma hora e não
 persistem a signed URL. A geração passa pela RLS esperada do proprietário.
-Buckets, flags e policies remotos: **não comprovados**.
+Buckets, flags e policies remotos: **confirmados**. A privacidade do Body Scan foi
+testada A/B; a expiração prática da signed URL permanece pendente.
 
 ## Fotos legadas
 
-`fotos_progresso` originalmente guardava uma URL. Registros sem `storage_path`
-continuam exibindo essa URL como fallback. Portanto fotos antigas podem continuar
-públicas até a migração real.
+O inventário remoto encontrou zero registros/fotos corporais legados. O bucket
+`Fotos` é privado e contém 6 objetos de paths de avatar/social, sendo 1 avatar
+referenciado e 5 sem referência inequívoca; todos foram preservados.
 
 A ordem segura permanece:
 
@@ -173,21 +162,20 @@ A ordem segura permanece:
 
 Não houve cópia, exclusão ou alteração automática de arquivos.
 
-Na Etapa 34, o proprietário optou por adiar o inventário remoto. O relatório
-`STORAGE_MIGRATION_REPORT.md` permanece com contagens “não medido” e zero ações.
-Foram adicionadas compensações locais para reduzir órfãos quando upload conclui e
-a persistência posterior falha; isso não substitui a validação dos buckets.
+O relatório `STORAGE_MIGRATION_REPORT.md` contém as contagens reais. Foram
+adicionadas compensações locais para reduzir órfãos quando upload conclui e a
+persistência posterior falha.
 
-Na Etapa 35, a Edge Function `excluir-conta` foi auditada localmente. Publicação,
-conta descartável, exportação e exclusão integral remotas foram adiadas pelo
-proprietário e permanecem **BLOCKED**. Ver `ACCOUNT_DELETION_VALIDATION.md`.
+Na revisão remota posterior, o proprietário decidiu que o aplicativo não deve
+oferecer exclusão de conta. A opção, a chamada e a Edge Function local foram
+removidas; deploy e teste destrutivo deixaram de fazer parte do escopo do produto.
 
 ## Release gate da Etapa 37
 
 O proprietário confirmou a rotação da chave antiga sem fornecer o novo valor.
-As demais verificações remotas foram explicitamente adiadas. Portanto, migrations
-09–12, matriz A/B, buckets, Body Scan, limite Free, plano e exclusão integral
-permanecem **BLOCKED**, independentemente dos testes locais aprovados.
+Migrations 09–13, matriz A/B principal, buckets, Body Scan, limite Free, plano e
+privacidade social foram comprovados remotamente. As pendências restantes estão
+registradas de forma específica, sem manter bloqueios já resolvidos.
 
 ## Uploads e órfãos
 
@@ -205,13 +193,10 @@ permanecem **BLOCKED**, independentemente dos testes locais aprovados.
 
 Não foi implementado garbage collector nesta etapa.
 
-## Ações manuais para desbloquear
+## Pendências remotas restantes
 
-1. confirmar rotação/revogação da chave antiga;
-2. inspecionar migrations 09–11 no remoto sem reaplicação cega;
-3. confirmar/aplicar a migration 12 e validar métricas ocultas no payload A/B;
-4. criar duas contas descartáveis em homologação e executar a matriz A/B;
-5. confirmar buckets/policies e migrar fotos legadas com cópia antes da remoção;
-6. registrar evidências sem tokens, senhas, URLs assinadas ou dados pessoais.
-
-Até essas ações terminarem, a Etapa 29 não pode receber `PASS`.
+1. comprovar na prática a expiração de uma URL assinada;
+2. testar tentativa explícita de sobrescrever path de outro usuário;
+3. completar a matriz A/B de medidas, preferências, cardio, bloqueios e denúncias;
+4. decidir a retenção dos cinco objetos legados sem referência inequívoca;
+5. continuar registrando evidências sem tokens, senhas, URLs assinadas ou dados pessoais.

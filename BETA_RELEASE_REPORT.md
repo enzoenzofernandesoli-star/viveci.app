@@ -13,7 +13,7 @@ Auditoria final: 18 de agosto de 2026. Gate executado após o commit `e03e096`.
 | 27 | `69c6b30` | E2E críticos |
 | 28 | `17e761c` | auditoria: NO-GO |
 | 29 | `490ee90` | matriz Supabase; BLOCKED por falta de evidência remota |
-| 30 | `fa891fd` | controles de dados; BLOCKED até deploy/teste da exclusão |
+| 30 | `fa891fd` | controles de dados; fluxo de exclusão removido posteriormente |
 | 31 | commit deste relatório | release gate final |
 
 ## Etapas 32–37
@@ -23,47 +23,47 @@ Auditoria final: 18 de agosto de 2026. Gate executado após o commit `e03e096`.
 | 32 | `b785923` | correção local da exposição de métricas; remoto pendente |
 | 33 | `4dd4460` | rotação confirmada pelo proprietário; RLS remota BLOCKED |
 | 34 | `2176b2d` | compensação de uploads e plano de migração; remoto BLOCKED |
-| 35 | `1b4c891` | função auditada localmente; deploy/exclusão real BLOCKED |
+| 35 | `1b4c891` | fluxo posteriormente removido por decisão do produto |
 | 36 | `e03e096` | operação documentada; idade mínima continua P0 |
 | 37 | commit deste relatório | release gate definitivo |
 
 ## Etapa 29 — Supabase, RLS e Storage
 
-**Resultado: BLOCKED.**
+**Resultado atualizado: PASS parcial com pendências específicas.**
 
-O workspace tem apenas URL e chave publicável. Não há CLI vinculada, credencial administrativa segura, duas contas descartáveis ou ambiente de homologação acessível. As migrations 09–11 foram auditadas no repositório, mas não foram reaplicadas nem declaradas ativas remotamente.
+As migrations 09–13, funções, triggers, views, índices, buckets e policies foram
+confirmados remotamente. A matriz A/B comprovou isolamento do perfil completo,
+rotinas, sessões, registros, nutrição e Body Scan; o perfil público mínimo e o
+conteúdo social autorizado permaneceram visíveis.
 
-Buckets esperados: `midia-publica` para avatar/social, `progresso-privado` para Body Scan e `Fotos` como legado. Body Scan local grava path permanente e gera signed URL de uma hora; a privacidade remota e a migração dos legados não estão comprovadas.
+O bucket `progresso-privado` foi validado com três fotos reais: o proprietário
+acessou os registros e a outra conta recebeu zero linhas e zero objetos. Não
+existiam Body Scans legados para migrar. Permanecem a expiração prática da URL
+assinada, a tentativa explícita de sobrescrever path alheio e os recursos ainda
+marcados como pendentes na matriz completa em `SUPABASE_SECURITY_VALIDATION.md`.
 
-A matriz completa está em `SUPABASE_SECURITY_VALIDATION.md`. O teste A/B não foi executado. Na Etapa 29 foi identificado que flags de compartilhamento escondiam métricas na UI, mas o snapshot bruto ainda podia ser consultado. A Etapa 32 corrigiu o contrato local com view/RPC segura; aplicar a migration 12 e validar A/B remotamente continuam P0.
+## Etapa 30 — exportação e privacidade
 
-## Etapa 30 — exclusão, exportação e privacidade
-
-**Resultado: BLOCKED.**
+**Resultado atualizado: PASS para exportação; exclusão fora do escopo.**
 
 Implementado e testado localmente:
 
-- Edge Function autentica o JWT e deriva o próprio usuário, sem aceitar `user_id` arbitrário;
-- service role permanece apenas no ambiente da função;
-- arquivos são listados/removidos em páginas nos três buckets antes da exclusão do Auth;
-- falha de Storage interrompe o fluxo; falha posterior não é apresentada como sucesso;
-- confirmação exige digitar `EXCLUIR`, bloqueia duplicidade, limpa estado local e encerra a sessão após sucesso;
 - exportação inclui perfil, preferências, rotinas/itens, registros, sessões, cardio, medidas, metas, diário, fotos, posts, comentários, curtidas, seguidores, bloqueios, denúncias, streak e desafio;
 - JSON é versionado, datado, inclui referências de mídia e remove chaves de tokens/senhas/segredos defensivamente;
 - Política, Termos e `DATA_LIFECYCLE.md` foram alinhados ao produto real.
 
-A exclusão não é considerada funcional porque não houve deploy nem teste destrutivo remoto. Storage, Auth e Postgres não formam transação única; a limitação está documentada. Idade mínima continua como decisão necessária. Política e Termos continuam rascunhos para revisão profissional.
+O fluxo de exclusão de conta construído naquela etapa foi removido posteriormente por decisão do produto e nunca foi publicado. Idade mínima continua como decisão necessária. Política e Termos continuam rascunhos para revisão profissional.
 
 ## Testes finais
 
 - Unitários: **134/134**.
-- E2E: **10/10** no Chromium local.
+- E2E: **9/9** no Chromium local.
 - TypeScript/build: aprovado.
 - Lint: aprovado.
 - `git diff --check`: aprovado.
 - Nenhum valor real `sb_secret_` encontrado nos arquivos auditados.
 
-Cobertura E2E: login, recuperação, proteção de rota, onboarding com refresh, criação de rotina, série/finalização, cardio, exclusão com confirmação, falha segura da exclusão e smoke das áreas principais.
+Cobertura E2E: login, recuperação, proteção de rota, onboarding com refresh, criação de rotina, série/finalização, cardio, ausência da opção de excluir conta e smoke das áreas principais.
 
 Os E2E autenticados usam backend simulado e não são evidência de RLS/Storage remoto.
 
@@ -92,16 +92,16 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 | Item | Status | Evidência |
 |---|---|---|
 | Chave antiga rotacionada | PASS por confirmação | proprietário confirmou a rotação sem compartilhar segredo |
-| Migrations 09–12 | BLOCKED | somente SQL local auditado |
-| RLS com A/B | BLOCKED | duas contas não disponíveis |
-| Perfil privado | BLOCKED | desenho local correto; remoto não testado |
-| Body Scan privado | BLOCKED | bucket/signed URL esperados; remoto e legado não testados |
-| Social limitado ao compartilhado | PASS local / BLOCKED remoto | view/RPC e 3 testes locais; migration 12 e A/B não confirmados |
-| Plano protegido | BLOCKED | trigger local; bypass remoto não testado |
-| Limite Free backend | BLOCKED | trigger local; quinta rotina remota não testada |
-| Uploads | PASS local / BLOCKED remoto | 4 testes + compensação de órfão; policies/buckets não testados |
+| Migrations 09–13 | PASS remoto | estruturas, funções, views, triggers e privilégios confirmados |
+| RLS com A/B | PASS parcial | matriz principal aprovada; recursos secundários pendentes estão documentados |
+| Perfil privado | PASS remoto | perfil completo invisível e perfil público mínimo visível para outra conta |
+| Body Scan privado | PASS remoto | 3 registros/objetos privados invisíveis para outra conta |
+| Social limitado ao compartilhado | PASS remoto | duração autorizada presente; séries e volume desmarcados retornaram `NULL` |
+| Plano protegido | PASS remoto | promoção direta falhou com `42501` |
+| Limite Free backend | PASS remoto | quinta rotina falhou com `23514`; total permaneceu em quatro |
+| Uploads | PASS parcial | buckets/policies e Body Scan validados; expiração e overwrite alheio pendentes |
 | Exportação | PASS local | pacote ampliado e teste de remoção de segredos |
-| Exclusão de conta | BLOCKED | implementação/E2E local; deploy e jornada real ausentes |
+| Exclusão de conta | FORA DO ESCOPO | opção e função removidas por decisão do produto |
 | Fluxo principal | PASS local | unitários, E2E e smoke aprovados |
 | Simulações identificadas | PASS | avisos explícitos na interface |
 | Idade mínima | BLOCKED | decisão de produto/jurídica ausente |
@@ -110,7 +110,8 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 
 ### P0
 
-Migrations/RLS/Storage A/B; migração de fotos legadas; validação remota da máscara das métricas sociais; proteção remota de plano/limite Free; deploy e teste da exclusão; decisão de idade mínima.
+Completar os casos secundários da matriz RLS/Storage; avaliar os cinco objetos
+legados sem referência; definir a política de idade mínima.
 
 ### P1
 
@@ -124,4 +125,4 @@ Homologação automatizada; atomicidade integral da criação de rotina; invent�
 
 **NO-GO — BETA FECHADO**
 
-O núcleo local está estável e a exposição social conhecida foi corrigida no contrato local. Ainda faltam evidências remotas de RLS, Storage, migration 12, limite backend e exclusão real, além da decisão de idade mínima. Segurança e privacidade prevalecem sobre o resultado dos testes locais.
+O núcleo local está estável e a exposição social conhecida foi corrigida no contrato local. RLS, Storage, migration 12, limite Free e proteção do plano foram comprovados remotamente; permanecem a avaliação dos objetos legados sem referência e a decisão de idade mínima. Segurança e privacidade prevalecem sobre o resultado dos testes locais.
