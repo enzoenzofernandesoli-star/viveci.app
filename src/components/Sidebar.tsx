@@ -33,8 +33,8 @@ export function Sidebar() {
       <div className="space-y-4 p-5">
         <Surface className="p-4">
           <Eyebrow>VIVECI Pro</Eyebrow>
-          <MetaText className="mt-2">Recursos avançados serão liberados conforme o produto evoluir.</MetaText>
-          <NavLink to="/planos" className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-[var(--radius-action)] border border-line text-xs font-semibold text-ink hover:border-ink-3 hover:bg-card-hover">
+          <MetaText className="mt-2">Free permite 4 rotinas. Pro libera rotinas ilimitadas.</MetaText>
+          <NavLink to="/planos" className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-[var(--radius-action)] border border-line text-xs font-semibold text-ink hover:border-ink-3 hover:bg-card-hover">
             Ver planos
           </NavLink>
         </Surface>

@@ -72,7 +72,7 @@ export default function Login() {
             <div className="mt-8 border-y border-line py-6">
               <p className="text-sm font-semibold text-ink">Conta criada.</p>
               <p className="mt-2 text-sm leading-6 text-ink-2">Confira seu email para confirmar o cadastro antes de entrar.</p>
-              <button type="button" onClick={() => { setCadastroFeito(false); setModo('entrar') }} className="mt-5 text-sm font-semibold text-brand">
+              <button type="button" onClick={() => { setCadastroFeito(false); setModo('entrar') }} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand">
                 Voltar para entrar
               </button>
             </div>
@@ -135,7 +135,7 @@ export default function Login() {
           {!cadastroFeito && (
             <p className="mt-6 text-center text-sm text-ink-2">
               {modo === 'entrar' ? 'Ainda não tem uma conta?' : 'Já tem uma conta?'}{' '}
-              <button type="button" onClick={() => setModo(modo === 'entrar' ? 'cadastrar' : 'entrar')} className="font-semibold text-brand">
+              <button type="button" onClick={() => setModo(modo === 'entrar' ? 'cadastrar' : 'entrar')} className="inline-flex min-h-11 items-center font-semibold text-brand">
                 {modo === 'entrar' ? 'Criar conta' : 'Entrar'}
               </button>
             </p>

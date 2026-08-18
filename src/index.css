@@ -11,7 +11,7 @@
   --color-silver: #BFC3CA;
   --color-ink: #F4F5F7;
   --color-ink-2: #7E8795;
-  --color-ink-3: #545B68;
+  --color-ink-3: #697384;
   --color-up: #22C55E;
   --color-down: #EF4444;
   --color-gold: #F5A524;
@@ -63,6 +63,9 @@ body {
 
 :where(button, input, select, textarea) { font: inherit; }
 :where(button, a) { -webkit-tap-highlight-color: transparent; }
+:where(button, [role="button"]):not(:disabled) { cursor: pointer; }
+:where(button, input, select, textarea):disabled { cursor: not-allowed; }
+img, video { display: block; max-width: 100%; }
 
 /* Glow azul discreto — reservado pro CTA principal da Home e pro item ativo
    da navegação. Nunca aplicar em cards comuns; é o único elemento "premium"
@@ -119,7 +122,7 @@ button, a, input, select, textarea {
   transition-timing-function: ease-out;
 }
 
-button:active {
+button:not(:disabled):active {
   transform: scale(0.98);
 }
 
@@ -133,7 +136,7 @@ a:active {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  button:active {
+  button:active, a:active {
     transform: none;
   }
 }
@@ -146,6 +149,7 @@ a:active {
   transition-duration: 0.001ms !important;
 }
 
-:root[data-reduzir-movimento="true"] button:active {
+:root[data-reduzir-movimento="true"] button:active,
+:root[data-reduzir-movimento="true"] a:active {
   transform: none;
 }
