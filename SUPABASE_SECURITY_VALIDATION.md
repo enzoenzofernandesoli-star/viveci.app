@@ -18,11 +18,10 @@ comprovada. Nada listado como esperado foi marcado como ativo no projeto remoto.
 
 O repositório auditado não contém um valor `sb_secret_`. Isso não prova revogação.
 
-**AÇÃO MANUAL NECESSÁRIA:** no painel do Supabase, o proprietário deve confirmar
-que a chave anteriormente compartilhada foi revogada/rotacionada. Não enviar o
-valor da chave por chat, documentação, screenshot ou arquivo do projeto.
+Em 18 de agosto de 2026, o proprietário confirmou por mensagem que a chave
+anterior foi rotacionada. Nenhum valor foi solicitado, recebido ou registrado.
 
-Status remoto: **não comprovado**.
+Status: **confirmado pelo proprietário; não verificado programaticamente**.
 
 ## Migrations 09–11
 
@@ -91,6 +90,22 @@ Precisam ser validados remotamente:
 2. B lê somente o perfil público e conteúdo social de A;
 3. A não altera `plano` para Pro e a quinta rotina Free falha pela API;
 4. bloqueios e autoria impedem interações indevidas.
+
+## Etapa 33 — validação remota
+
+**Resultado: BLOCKED.**
+
+Foi criado `sql/VALIDAR_SEGURANCA_REMOTA.sql`, somente leitura, para inventariar
+funções, triggers, views, índices, buckets e policies. O proprietário optou por
+adiar sua execução. Portanto:
+
+- migrations 09–12 não foram confirmadas nem reaplicadas;
+- nenhuma conta descartável A/B foi criada;
+- perfil privado, plano, limite Free, rotina e Social não foram testados no remoto;
+- a matriz de acesso continua sendo expectativa local, não evidência operacional.
+
+Não existe commit, teste mockado ou inspeção de SQL local que substitua essa
+validação.
 
 ## Social e treino associado — correção local da Etapa 32
 
