@@ -64,11 +64,11 @@ function ConteudoHome({ userId, perfil }: { userId: string; perfil: NonNullable<
         <ProgressoRecente eventos={viviciState.resultado.eventosPR} negligenciado={viviciState.resultado.musculoNegligenciado} />
       )}
 
-      <section aria-labelledby="titulo-corpo" className="py-10 lg:py-14">
-        <div className="mb-7 flex items-end justify-between gap-4">
+      <section aria-labelledby="titulo-corpo" className="py-9 lg:py-12">
+        <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <Eyebrow>Seu corpo</Eyebrow>
-            <h2 id="titulo-corpo" className="mt-2 text-2xl font-semibold tracking-[-0.04em]">O histórico deixa marcas</h2>
+            <h2 id="titulo-corpo" className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Mapa de estímulo</h2>
           </div>
           <p className="text-xs text-ink-3">Últimos 7 dias</p>
         </div>

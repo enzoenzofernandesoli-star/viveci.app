@@ -34,7 +34,7 @@ export function BottomNav() {
           aria-label="Iniciar treino rápido"
           className="group flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[9px] font-medium text-ink-3"
         >
-          <span className="flex size-11 items-center justify-center rounded-[var(--radius-action)] bg-brand text-white group-hover:bg-brand-hover">
+          <span className="flex size-10 items-center justify-center rounded-[var(--radius-control)] border border-brand/60 bg-brand/10 text-brand group-hover:bg-brand/15">
             <Plus size={21} strokeWidth={1.8} />
           </span>
           <span>Rápido</span>

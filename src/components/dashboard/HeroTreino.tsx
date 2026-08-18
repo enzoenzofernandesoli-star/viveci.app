@@ -7,6 +7,22 @@ import { Button } from '../ui/Button'
 import { EditorialMedia } from '../ui/EditorialMedia'
 import { Eyebrow } from '../ui/Typography'
 
+const FOTOS_HERO = import.meta.glob('../../assets/viveci/home-hero.{jpg,jpeg,png,webp,avif}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>
+
+const FOTO_HERO = Object.values(FOTOS_HERO)[0] ?? null
+
+function nomeTipografico(nome: string): string {
+  const limpo = nome.trim()
+  if (limpo === '' || limpo !== limpo.toLocaleLowerCase('pt-BR')) return limpo
+  return limpo.replace(/(^|[\s/-])([\p{L}\p{N}])/gu, (_, separador: string, letra: string) =>
+    `${separador}${letra.toLocaleUpperCase('pt-BR')}`,
+  )
+}
+
 function duracaoEstimada(rotina: Rotina | undefined): number | null {
   if (!rotina || rotina.itens.length === 0) return null
   return reconstruirTreinoExpress(
@@ -48,6 +64,7 @@ export function HeroTreino({
   const navigate = useNavigate()
   const grupos = rotina ? [...new Set(rotina.itens.map((item) => item.exercicio.grupo_muscular))] : []
   const duracao = duracaoEstimada(rotina)
+  const nomeExibido = recomendacao ? nomeTipografico(recomendacao.nome) : ''
 
   if (carregando) {
     return <div className="h-[430px] animate-pulse rounded-[var(--radius-media)] bg-card" aria-label="Analisando seu histórico" />
@@ -56,6 +73,7 @@ export function HeroTreino({
   if (!recomendacao) {
     return (
       <EditorialMedia
+        src={FOTO_HERO}
         alt="Espaço preparado para a recomendação de treino"
         fallback={<FundoEditorial />}
         className="min-h-[400px] rounded-[var(--radius-media)] border border-line/60"
@@ -79,14 +97,15 @@ export function HeroTreino({
 
   return (
     <EditorialMedia
+      src={FOTO_HERO}
       alt={`Treino recomendado: ${recomendacao.nome}`}
       fallback={<FundoEditorial />}
-      className="min-h-[470px] rounded-[var(--radius-media)] border border-line/60 sm:min-h-[520px]"
-      overlayClassName="p-6 sm:p-9"
+      className="min-h-[450px] rounded-[var(--radius-media)] border border-line/60 sm:min-h-[520px]"
+      overlayClassName="media-overlay-progressive p-6 sm:p-9"
     >
       <Eyebrow className="text-silver">Hoje</Eyebrow>
       <h1 className="mt-3 max-w-[13ch] text-[42px] font-semibold leading-[0.98] tracking-[-0.06em] text-ink sm:text-[54px] lg:text-[62px]">
-        {recomendacao.nome}
+        {nomeExibido}
       </h1>
       {grupos.length > 0 && (
         <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-silver">

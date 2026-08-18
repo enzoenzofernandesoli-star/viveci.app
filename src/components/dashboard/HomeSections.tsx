@@ -16,10 +16,15 @@ function formatoBR(valor: number): string {
 export function MotivosRecomendacao({ motivos }: { motivos: string[] }) {
   if (motivos.length === 0) return null
   return (
-    <section aria-labelledby="titulo-motivos" className="py-9">
+    <section aria-labelledby="titulo-motivos" className="py-7 sm:py-8">
       <Eyebrow>Por que hoje</Eyebrow>
-      <div id="titulo-motivos" className="mt-4 max-w-2xl space-y-3">
-        {motivos.map((motivo) => <p key={motivo} className="text-[17px] leading-relaxed tracking-[-0.02em] text-ink sm:text-lg">{motivo}</p>)}
+      <div id="titulo-motivos" className="mt-5 max-w-2xl divide-y divide-line/60">
+        {motivos.map((motivo, indice) => (
+          <div key={motivo} className="grid grid-cols-[2.25rem_1fr] gap-3 py-3 first:pt-0 last:pb-0">
+            <span className="num pt-0.5 text-[10px] font-semibold text-brand">{String(indice + 1).padStart(2, '0')}</span>
+            <p className="text-[15px] leading-relaxed tracking-[-0.015em] text-ink sm:text-base">{motivo}</p>
+          </div>
+        ))}
       </div>
     </section>
   )
@@ -31,7 +36,7 @@ export function ProgressoRecente({ eventos, negligenciado }: { eventos: EventoPR
   const exercicio = recente ? EXERCICIOS.find((item) => item.id === recente.exercicioId) : null
 
   return (
-    <section aria-labelledby="titulo-progresso" className="py-9">
+    <section aria-labelledby="titulo-progresso" className="py-8 sm:py-10">
       <div className="flex items-end justify-between gap-4">
         <div>
           <Eyebrow>Progresso recente</Eyebrow>
@@ -81,22 +86,23 @@ export function ResumoDia({ score }: { score: DailyScore }) {
   ] as const
 
   return (
-    <section aria-labelledby="titulo-dia" className="py-9">
+    <section aria-labelledby="titulo-dia" className="py-8 sm:py-10">
       <Eyebrow>Seu dia</Eyebrow>
-      <div className="mt-4 flex items-end gap-4">
-        <p id="titulo-dia" className="num text-[52px] font-semibold leading-none">{score.score}</p>
-        <MetaText className="max-w-52 pb-1">Indicador interno baseado nos dados registrados, não uma nota de saúde.</MetaText>
+      <div className="mt-4 flex items-end gap-5">
+        <p id="titulo-dia" className="num text-[64px] font-semibold leading-[0.9] tracking-[-0.07em]">{score.score}</p>
+        <div className="pb-0.5">
+          <p className="text-sm font-medium text-ink">Seu ritmo hoje</p>
+          <MetaText className="mt-1 max-w-56">Indicador interno dos dados registrados, não uma nota de saúde.</MetaText>
+        </div>
       </div>
-      <div className="mt-7 grid grid-cols-2 gap-x-5 gap-y-5">
+      <div className="mt-7 divide-y divide-line/60 border-y border-line/60">
         {itens.map(([label, valor]) => (
-          <div key={label}>
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="text-ink-2">{label}</span>
-              <span className="num font-semibold text-ink">{valor}%</span>
-            </div>
-            <div className="mt-2 h-px overflow-hidden bg-line">
+          <div key={label} className="grid min-h-12 grid-cols-[6.25rem_1fr_2.5rem] items-center gap-3 text-xs">
+            <span className="text-ink-2">{label}</span>
+            <div className="h-px overflow-hidden bg-line">
               <div className="h-full bg-brand transition-[width] duration-500" style={{ width: `${valor}%` }} />
             </div>
+            <span className="num text-right font-semibold text-ink">{valor}%</span>
           </div>
         ))}
       </div>
@@ -109,7 +115,7 @@ export function ResumoNutricao({ consumido, metas, carregando, erro }: { consumi
   const pctKcal = metas && metas.meta_kcal > 0 ? Math.min(100, (consumido.kcal / metas.meta_kcal) * 100) : 0
 
   return (
-    <section aria-labelledby="titulo-nutricao" className="py-9">
+    <section aria-labelledby="titulo-nutricao" className="py-8 sm:py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Eyebrow>Nutrição</Eyebrow>
@@ -124,8 +130,8 @@ export function ResumoNutricao({ consumido, metas, carregando, erro }: { consumi
         <p className="mt-6 text-sm text-ink-2">Não foi possível carregar o resumo nutricional.</p>
       ) : (
         <>
-          <p className="num mt-6 text-[32px] font-semibold tracking-[-0.04em]">
-            {formatoBR(consumido.kcal)} <span className="text-base font-normal text-ink-2">/ {formatoBR(metas.meta_kcal)} kcal</span>
+          <p className="num mt-6 text-[42px] font-semibold leading-none tracking-[-0.06em]">
+            {formatoBR(consumido.kcal)} <span className="text-sm font-normal tracking-normal text-ink-2">/ {formatoBR(metas.meta_kcal)} kcal</span>
           </p>
           <div className="mt-4 h-1 bg-line"><div className="h-full bg-brand transition-[width] duration-500" style={{ width: `${pctKcal}%` }} /></div>
           <div className="mt-5 flex items-center justify-between text-sm">
@@ -148,7 +154,7 @@ export function ResumoSocial({ posts, carregando, erro, meuId }: { posts: Post[]
   const autoresHoje = new Set(posts.filter((post) => post.criadoEm.slice(0, 10) === hoje && post.autor.id !== meuId).map((post) => post.autor.id))
 
   return (
-    <section aria-labelledby="titulo-social" className="py-9">
+    <section aria-labelledby="titulo-social" className="py-8 sm:py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Eyebrow>Da sua rede</Eyebrow>

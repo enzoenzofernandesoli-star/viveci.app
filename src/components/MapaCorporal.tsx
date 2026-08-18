@@ -210,70 +210,76 @@ export function MapaCorporal({
 
   return (
     <div className={modoEditorial ? '' : 'rounded-2xl border border-line bg-card p-6'}>
-      <div className={`flex items-center ${modoEditorial ? 'justify-end' : 'justify-between'}`}>
-        {!modoEditorial && <h2 className="text-[17px] font-semibold">Mapa corporal</h2>}
-        <div className="flex gap-1 border-b border-line/70">
-          <button
-            type="button"
-            onClick={() => setVista(ViewSide.FRONT)}
-            className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
-              vista === ViewSide.FRONT ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
-            }`}
-          >
-            Frente
-          </button>
-          <button
-            type="button"
-            onClick={() => setVista(ViewSide.BACK)}
-            className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
-              vista === ViewSide.BACK ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
-            }`}
-          >
-            Costas
-          </button>
+      <div className={modoEditorial ? 'grid items-start gap-5 lg:grid-cols-[minmax(260px,0.9fr)_minmax(300px,1.1fr)] lg:gap-12' : ''}>
+        <div>
+          <div className={`flex items-center ${modoEditorial ? 'justify-center' : 'justify-between'}`}>
+            {!modoEditorial && <h2 className="text-[17px] font-semibold">Mapa corporal</h2>}
+            <div className="flex gap-1 border-b border-line/70">
+              <button
+                type="button"
+                onClick={() => setVista(ViewSide.FRONT)}
+                className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
+                  vista === ViewSide.FRONT ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
+                }`}
+              >
+                Frente
+              </button>
+              <button
+                type="button"
+                onClick={() => setVista(ViewSide.BACK)}
+                className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
+                  vista === ViewSide.BACK ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
+                }`}
+              >
+                Costas
+              </button>
+            </div>
+          </div>
+
+          {!modoEditorial && <p className="mt-1 text-xs text-ink-2">Toque num músculo pra ver os detalhes. Volume dos últimos 7 dias.</p>}
+
+          <div ref={containerRef} className={`mx-auto [&_svg]:mx-auto ${modoEditorial ? 'w-56 sm:w-64 [&_svg]:!max-h-[430px]' : 'w-56 [&_svg]:!max-h-none'}`} />
+        </div>
+
+        <div className={modoEditorial ? 'lg:pt-11' : ''}>
+          <div className={`grid grid-cols-2 gap-x-4 ${modoEditorial ? 'mt-0 gap-y-0 border-y border-line/60' : 'mt-4 gap-y-2'}`}>
+            {grupos.map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => selecionarGrupo(g)}
+                className={`flex min-h-10 items-center justify-between px-2 text-sm transition-colors ${
+                  selecionado === g ? 'text-brand' : 'hover:text-ink'
+                }`}
+              >
+                <span className={selecionado === g ? 'text-brand' : 'text-ink-2'}>{g}</span>
+                <span className="num text-ink">{percentuais[g]}%</span>
+              </button>
+            ))}
+          </div>
+
+          {selecionado && (
+            <PainelMusculo
+              grupo={selecionado}
+              percentual={percentuais[selecionado]}
+              estatisticas={estatisticasPorGrupo?.[selecionado]}
+              onFechar={() => setSelecionado(null)}
+              editorial={modoEditorial}
+            />
+          )}
+
+          {desequilibrios.length > 0 && (
+            <div className="mt-5 space-y-2 border-t border-line pt-4">
+              {desequilibrios.map((d) => (
+                <p key={d.grupoMaisTreinado + d.grupoMenosTreinado} className="text-sm text-ink-2">
+                  <span className="text-gold">{d.grupoMaisTreinado}</span> ficou {d.diferenca} pontos à frente de{' '}
+                  {d.grupoMenosTreinado} nos últimos 7 dias.
+                </p>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-
-      {!modoEditorial && <p className="mt-1 text-xs text-ink-2">Toque num músculo pra ver os detalhes. Volume dos últimos 7 dias.</p>}
-
-      <div ref={containerRef} className={`mx-auto [&_svg]:mx-auto [&_svg]:!max-h-none ${modoEditorial ? 'w-64 sm:w-72' : 'w-56'}`} />
-
-      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2">
-        {grupos.map((g) => (
-          <button
-            key={g}
-            type="button"
-            onClick={() => selecionarGrupo(g)}
-            className={`flex min-h-10 items-center justify-between px-2 text-sm transition-colors ${
-              selecionado === g ? 'text-brand' : 'hover:text-ink'
-            }`}
-          >
-            <span className={selecionado === g ? 'text-brand' : 'text-ink-2'}>{g}</span>
-            <span className="num text-ink">{percentuais[g]}%</span>
-          </button>
-        ))}
-      </div>
-
-      {selecionado && (
-        <PainelMusculo
-          grupo={selecionado}
-          percentual={percentuais[selecionado]}
-          estatisticas={estatisticasPorGrupo?.[selecionado]}
-          onFechar={() => setSelecionado(null)}
-          editorial={modoEditorial}
-        />
-      )}
-
-      {desequilibrios.length > 0 && (
-        <div className="mt-5 space-y-2 border-t border-line pt-4">
-          {desequilibrios.map((d) => (
-            <p key={d.grupoMaisTreinado + d.grupoMenosTreinado} className="text-sm text-ink-2">
-              <span className="text-gold">{d.grupoMaisTreinado}</span> ficou {d.diferenca} pontos à frente de{' '}
-              {d.grupoMenosTreinado} nos últimos 7 dias.
-            </p>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
