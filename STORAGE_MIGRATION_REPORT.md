@@ -37,4 +37,5 @@ erro ao remover a mídia.
 1. avaliar manualmente o avatar legado referenciado sem quebrar o perfil;
 2. decidir retenção dos 5 objetos sem referência antes de qualquer remoção;
 3. comprovar expiração prática de uma URL assinada;
-4. testar tentativa explícita de sobrescrita do path de outro usuário.
+4. ~~testar tentativa explícita de sobrescrita do path de outro usuário~~ —
+   PASS: A foi bloqueado por RLS com `42501` ao tentar inserir no path privado de B.

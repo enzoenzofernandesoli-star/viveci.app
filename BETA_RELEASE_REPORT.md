@@ -93,13 +93,13 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 |---|---|---|
 | Chave antiga rotacionada | PASS por confirmação | proprietário confirmou a rotação sem compartilhar segredo |
 | Migrations 09–13 | PASS remoto | estruturas, funções, views, triggers e privilégios confirmados |
-| RLS com A/B | PASS parcial | matriz principal aprovada; recursos secundários pendentes estão documentados |
+| RLS com A/B | PASS remoto | matriz principal e complementar aprovadas |
 | Perfil privado | PASS remoto | perfil completo invisível e perfil público mínimo visível para outra conta |
 | Body Scan privado | PASS remoto | 3 registros/objetos privados invisíveis para outra conta |
 | Social limitado ao compartilhado | PASS remoto | duração autorizada presente; séries e volume desmarcados retornaram `NULL` |
 | Plano protegido | PASS remoto | promoção direta falhou com `42501` |
 | Limite Free backend | PASS remoto | quinta rotina falhou com `23514`; total permaneceu em quatro |
-| Uploads | PASS parcial | buckets/policies e Body Scan validados; expiração e overwrite alheio pendentes |
+| Uploads | PASS parcial | buckets/policies, Body Scan e bloqueio de path alheio validados; expiração pendente |
 | Exportação | PASS local | pacote ampliado e teste de remoção de segredos |
 | Exclusão de conta | FORA DO ESCOPO | opção e função removidas por decisão do produto |
 | Fluxo principal | PASS local | unitários, E2E e smoke aprovados |

@@ -82,13 +82,13 @@ zero linhas.
 | Perfil público mínimo | sim | `id`, nome, avatar e bio | PASS A/B |
 | Rotinas, sessões e itens | sim | não | PASS A/B para rotina/sessão |
 | Registros e sessões concluídas | sim | não | PASS A/B |
-| Cardio, medidas, nutrição, metas e preferências | sim | não | nutrição PASS; demais pendentes |
+| Cardio, medidas, nutrição, metas e preferências | sim | não | PASS A/B |
 | Body Scan e metadados | sim | não | PASS A/B com 3 registros reais |
 | Posts | sim | leitura social limitada | PASS A/B para flags de métricas |
 | Comentários, likes e seguidores | conforme autoria/interação | leitura social | interação normal PASS; abuso pendente |
 | Avatar e foto social | pública | pública | PASS pela interface |
 | Foto corporal nova | URL assinada para o dono | não | RLS PASS; expiração prática pendente |
-| Bloqueios e denúncias | somente autor/denunciante | não | não testada |
+| Bloqueios e denúncias | somente autor/denunciante | não | PASS A/B |
 
 ## Teste A/B
 
@@ -101,6 +101,11 @@ retornou duração presente, séries `NULL` e volume `NULL` para B.
 Conta B Free criou quatro rotinas. A quinta foi bloqueada na interface e pelo RPC
 `criar_rotina` com `23514`; a contagem continuou em quatro. A tentativa de mudar
 `perfis.plano` para Pro falhou com `42501` e o plano permaneceu `free`.
+
+Na matriz complementar, B criou dados temporários de medidas, preferências,
+cardio, bloqueio e denúncia dentro de uma transação. B leu um registro próprio de
+cada categoria; após trocar o JWT simulado para A, todas as cinco consultas aos
+dados de B retornaram zero. A transação terminou em `rollback`.
 
 ## Etapa 33 — validação remota
 
@@ -144,7 +149,9 @@ Uso local encontrado:
 Novos Body Scans guardam bucket/path, geram URL assinada por uma hora e não
 persistem a signed URL. A geração passa pela RLS esperada do proprietário.
 Buckets, flags e policies remotos: **confirmados**. A privacidade do Body Scan foi
-testada A/B; a expiração prática da signed URL permanece pendente.
+testada A/B. A tentativa de A inserir um objeto no path privado de B foi bloqueada
+pela RLS de `storage.objects` com `42501`; a expiração prática da signed URL
+permanece pendente.
 
 ## Fotos legadas
 
@@ -196,7 +203,5 @@ Não foi implementado garbage collector nesta etapa.
 ## Pendências remotas restantes
 
 1. comprovar na prática a expiração de uma URL assinada;
-2. testar tentativa explícita de sobrescrever path de outro usuário;
-3. completar a matriz A/B de medidas, preferências, cardio, bloqueios e denúncias;
-4. decidir a retenção dos cinco objetos legados sem referência inequívoca;
-5. continuar registrando evidências sem tokens, senhas, URLs assinadas ou dados pessoais.
+2. decidir a retenção dos cinco objetos legados sem referência inequívoca;
+3. continuar registrando evidências sem tokens, senhas, URLs assinadas ou dados pessoais.

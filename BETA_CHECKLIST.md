@@ -11,7 +11,9 @@ Release gate atualizado em 18 de agosto de 2026 após as Etapas 32–37.
 - [x] Inventário confirmou zero Body Scans legados; nenhum arquivo corporal precisava ser migrado.
 - [x] Teste A/B comprovou que duração compartilhada chega ao feed e séries/volume desmarcados retornam `NULL`.
 - [x] Conta Free permaneceu com quatro rotinas; quinta falhou na interface e no RPC; promoção direta para Pro falhou com `42501`.
-- [ ] Confirmar expiração prática da URL assinada e completar matriz A/B de medidas, preferências, cardio, bloqueios e denúncias.
+- [x] Matriz A/B complementar aprovada para medidas, preferências, cardio, bloqueios e denúncias.
+- [x] Sobrescrita de path privado alheio bloqueada remotamente por RLS com `42501`.
+- [ ] Confirmar expiração prática da URL assinada.
 - [ ] Definir política de idade mínima antes de incluir pessoas reais no beta.
 
 ## P1 — PODE ENTRAR NO BETA COM ACOMPANHAMENTO
