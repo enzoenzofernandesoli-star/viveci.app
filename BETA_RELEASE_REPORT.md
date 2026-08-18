@@ -1,6 +1,6 @@
 # VIVECI — relatório final do beta fechado
 
-Auditoria final: 18 de agosto de 2026. Estado de código anterior à documentação final: `fa891fd`.
+Auditoria final: 18 de agosto de 2026. Gate executado após o commit `e03e096`.
 
 ## Etapas 23–31
 
@@ -16,6 +16,17 @@ Auditoria final: 18 de agosto de 2026. Estado de código anterior à documentaç
 | 30 | `fa891fd` | controles de dados; BLOCKED até deploy/teste da exclusão |
 | 31 | commit deste relatório | release gate final |
 
+## Etapas 32–37
+
+| Etapa | Commit | Resultado |
+|---|---|---|
+| 32 | `b785923` | correção local da exposição de métricas; remoto pendente |
+| 33 | `4dd4460` | rotação confirmada pelo proprietário; RLS remota BLOCKED |
+| 34 | `2176b2d` | compensação de uploads e plano de migração; remoto BLOCKED |
+| 35 | `1b4c891` | função auditada localmente; deploy/exclusão real BLOCKED |
+| 36 | `e03e096` | operação documentada; idade mínima continua P0 |
+| 37 | commit deste relatório | release gate definitivo |
+
 ## Etapa 29 — Supabase, RLS e Storage
 
 **Resultado: BLOCKED.**
@@ -24,7 +35,7 @@ O workspace tem apenas URL e chave publicável. Não há CLI vinculada, credenci
 
 Buckets esperados: `midia-publica` para avatar/social, `progresso-privado` para Body Scan e `Fotos` como legado. Body Scan local grava path permanente e gera signed URL de uma hora; a privacidade remota e a migração dos legados não estão comprovadas.
 
-A matriz completa está em `SUPABASE_SECURITY_VALIDATION.md`. O teste A/B não foi executado. Também foi identificado um P0: flags de compartilhamento escondem métricas na UI, porém a consulta atual lê o snapshot bruto completo de `posts`; isso exige máscara/permissão no contrato do banco e validação A/B.
+A matriz completa está em `SUPABASE_SECURITY_VALIDATION.md`. O teste A/B não foi executado. Na Etapa 29 foi identificado que flags de compartilhamento escondiam métricas na UI, mas o snapshot bruto ainda podia ser consultado. A Etapa 32 corrigiu o contrato local com view/RPC segura; aplicar a migration 12 e validar A/B remotamente continuam P0.
 
 ## Etapa 30 — exclusão, exportação e privacidade
 
@@ -45,7 +56,7 @@ A exclusão não é considerada funcional porque não houve deploy nem teste des
 
 ## Testes finais
 
-- Unitários: **131/131**.
+- Unitários: **134/134**.
 - E2E: **10/10** no Chromium local.
 - TypeScript/build: aprovado.
 - Lint: aprovado.
@@ -64,8 +75,8 @@ Home, Treino, Corpo, Nutrição, Social, Perfil e Configurações abriram em 375
 
 | Item | Resultado |
 |---|---:|
-| JS inicial | 458,82 kB |
-| JS inicial gzip | 133,71 kB |
+| JS inicial | 458,89 kB |
+| JS inicial gzip | 133,72 kB |
 | CSS | 55,69 kB |
 | Home hero | 110,86 kB |
 | Push | 86,67 kB |
@@ -80,15 +91,15 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 
 | Item | Status | Evidência |
 |---|---|---|
-| Chave antiga rotacionada | BLOCKED | confirmação do painel ausente |
-| Migrations 09–11 | BLOCKED | somente SQL local auditado |
+| Chave antiga rotacionada | PASS por confirmação | proprietário confirmou a rotação sem compartilhar segredo |
+| Migrations 09–12 | BLOCKED | somente SQL local auditado |
 | RLS com A/B | BLOCKED | duas contas não disponíveis |
 | Perfil privado | BLOCKED | desenho local correto; remoto não testado |
 | Body Scan privado | BLOCKED | bucket/signed URL esperados; remoto e legado não testados |
-| Social limitado ao compartilhado | FAIL | snapshot oculto pode ser lido no payload bruto |
+| Social limitado ao compartilhado | PASS local / BLOCKED remoto | view/RPC e 3 testes locais; migration 12 e A/B não confirmados |
 | Plano protegido | BLOCKED | trigger local; bypass remoto não testado |
 | Limite Free backend | BLOCKED | trigger local; quinta rotina remota não testada |
-| Uploads | PASS local | 4 testes de MIME/extensão/tamanho + paths por usuário |
+| Uploads | PASS local / BLOCKED remoto | 4 testes + compensação de órfão; policies/buckets não testados |
 | Exportação | PASS local | pacote ampliado e teste de remoção de segredos |
 | Exclusão de conta | BLOCKED | implementação/E2E local; deploy e jornada real ausentes |
 | Fluxo principal | PASS local | unitários, E2E e smoke aprovados |
@@ -99,7 +110,7 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 
 ### P0
 
-Rotação da chave; migrations/RLS/Storage A/B; migração de fotos legadas; máscara real das métricas sociais; proteção remota de plano/limite Free; deploy e teste da exclusão; decisão de idade mínima.
+Migrations/RLS/Storage A/B; migração de fotos legadas; validação remota da máscara das métricas sociais; proteção remota de plano/limite Free; deploy e teste da exclusão; decisão de idade mínima.
 
 ### P1
 
@@ -107,10 +118,10 @@ Completar responsável/contato/retenção/fornecedores e revisão jurídica; pro
 
 ### P2
 
-Homologação automatizada; atomicidade integral da criação de rotina; tratamento de mídia órfã; retomada/limpeza de sessões abandonadas; pipeline de thumbnails se necessário.
+Homologação automatizada; atomicidade integral da criação de rotina; inventário/limpeza de mídia órfã remota; retomada/limpeza de sessões abandonadas; pipeline de thumbnails se necessário.
 
 ## Decisão
 
 **NO-GO — BETA FECHADO**
 
-O núcleo local está estável, mas os critérios mínimos de GO exigem evidência remota de isolamento, chave revogada, limite backend e exclusão real. Há ainda um vazamento potencial de métricas sociais desmarcadas no payload bruto. Segurança e privacidade prevalecem sobre o resultado dos testes locais.
+O núcleo local está estável e a exposição social conhecida foi corrigida no contrato local. Ainda faltam evidências remotas de RLS, Storage, migration 12, limite backend e exclusão real, além da decisão de idade mínima. Segurança e privacidade prevalecem sobre o resultado dos testes locais.

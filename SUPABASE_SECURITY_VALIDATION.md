@@ -23,7 +23,7 @@ anterior foi rotacionada. Nenhum valor foi solicitado, recebido ou registrado.
 
 Status: **confirmado pelo proprietário; não verificado programaticamente**.
 
-## Migrations 09–11
+## Migrations 09–12
 
 ### 09 — segurança, privacidade e autorização
 
@@ -53,6 +53,13 @@ Observação: criar a rotina e salvar seus itens são duas RPCs distintas. Cada 
 é atômica, mas o fluxo completo não é uma única transação; se a segunda falhar,
 a rotina base já pode existir. Portanto “criação integralmente atômica” ainda não
 está comprovada pelo desenho atual.
+
+### 12 — métricas sociais compartilhadas
+
+Estado local esperado: `posts_publicos` mascara duração, séries e volume não
+autorizados; `posts_proprios` restringe a exportação ao titular; leitura bruta
+sensível de `posts` é revogada; exclusão usa RPC autorizada. O estado remoto e o
+teste A/B ainda não foram comprovados.
 
 ### 11 — performance
 
@@ -166,6 +173,13 @@ a persistência posterior falha; isso não substitui a validação dos buckets.
 Na Etapa 35, a Edge Function `excluir-conta` foi auditada localmente. Publicação,
 conta descartável, exportação e exclusão integral remotas foram adiadas pelo
 proprietário e permanecem **BLOCKED**. Ver `ACCOUNT_DELETION_VALIDATION.md`.
+
+## Release gate da Etapa 37
+
+O proprietário confirmou a rotação da chave antiga sem fornecer o novo valor.
+As demais verificações remotas foram explicitamente adiadas. Portanto, migrations
+09–12, matriz A/B, buckets, Body Scan, limite Free, plano e exclusão integral
+permanecem **BLOCKED**, independentemente dos testes locais aprovados.
 
 ## Uploads e órfãos
 
