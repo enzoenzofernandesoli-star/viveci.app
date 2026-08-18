@@ -158,6 +158,11 @@ A ordem segura permanece:
 
 Não houve cópia, exclusão ou alteração automática de arquivos.
 
+Na Etapa 34, o proprietário optou por adiar o inventário remoto. O relatório
+`STORAGE_MIGRATION_REPORT.md` permanece com contagens “não medido” e zero ações.
+Foram adicionadas compensações locais para reduzir órfãos quando upload conclui e
+a persistência posterior falha; isso não substitui a validação dos buckets.
+
 ## Uploads e órfãos
 
 - frontend valida MIME, extensão coerente e tamanho (5 MB avatar; 10 MB post e

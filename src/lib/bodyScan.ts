@@ -73,14 +73,20 @@ export async function enviarFotoProgresso(userId: string, angulo: Angulo, arquiv
   if (erroUpload) throw erroUpload
 
   const { data: urlData, error: erroUrl } = await supabase.storage.from(bucket).createSignedUrl(caminho, 60 * 60)
-  if (erroUrl) throw erroUrl
+  if (erroUrl) {
+    await supabase.storage.from(bucket).remove([caminho])
+    throw erroUrl
+  }
 
   const { data, error } = await supabase
     .from('fotos_progresso')
     .insert({ user_id: userId, data: hojeISO, angulo, url: '', storage_bucket: bucket, storage_path: caminho })
     .select()
     .single()
-  if (error) throw error
+  if (error) {
+    await supabase.storage.from(bucket).remove([caminho])
+    throw error
+  }
 
   return { ...(data as FotoProgresso), url: urlData.signedUrl }
 }

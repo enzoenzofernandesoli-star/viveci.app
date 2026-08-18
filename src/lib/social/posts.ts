@@ -235,7 +235,10 @@ export async function criarPost(
     mostrar_series: dados.mostrarSeries,
     mostrar_volume: dados.mostrarVolume,
   })
-  if (error) throw error
+  if (error) {
+    if (fotoPath) await supabase.storage.from('midia-publica').remove([fotoPath])
+    throw error
+  }
 }
 
 export async function curtir(postId: string, userId: string) {
@@ -251,7 +254,10 @@ export async function descurtir(postId: string, userId: string) {
 export async function excluirPost(postId: string) {
   const { data: fotoPath, error } = await supabase.rpc('excluir_post', { p_post_id: postId })
   if (error) throw error
-  if (fotoPath) await supabase.storage.from('midia-publica').remove([fotoPath])
+  if (fotoPath) {
+    const { error: erroStorage } = await supabase.storage.from('midia-publica').remove([fotoPath])
+    if (erroStorage) throw erroStorage
+  }
 }
 
 export type Comentario = {

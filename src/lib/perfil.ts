@@ -139,7 +139,12 @@ export async function enviarFotoPerfil(userId: string, arquivo: File): Promise<s
 
   const { data } = supabase.storage.from('midia-publica').getPublicUrl(caminho)
   const url = `${data.publicUrl}?v=${Date.now()}`
-  await atualizarPerfil(userId, { foto_url: url })
+  try {
+    await atualizarPerfil(userId, { foto_url: url })
+  } catch (erro) {
+    await supabase.storage.from('midia-publica').remove([caminho])
+    throw erro
+  }
   const { data: anteriores } = await supabase.storage.from('midia-publica').list(`${userId}/avatar`)
   const obsoletos = (anteriores ?? []).filter((item) => item.name !== caminho.split('/').at(-1)).map((item) => `${userId}/avatar/${item.name}`)
   if (obsoletos.length > 0) await supabase.storage.from('midia-publica').remove(obsoletos)

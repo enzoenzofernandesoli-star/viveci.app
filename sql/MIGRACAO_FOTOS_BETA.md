@@ -14,3 +14,24 @@
 
 Não marque a migração como concluída sem mover e validar os arquivos reais.
 
+## Inventário obrigatório antes da cópia
+
+Registrar cada objeto do bucket `Fotos` sem expor URLs assinadas:
+
+| Classificação | Sinal esperado | Destino |
+|---|---|---|
+| AVATAR | path do usuário e referência em `perfis.foto_url` | `midia-publica/<user_id>/avatar/` |
+| SOCIAL | referência em `posts.foto_url`/`foto_path` | `midia-publica/<user_id>/social/` |
+| BODY | referência em `fotos_progresso` | `progresso-privado/<user_id>/body/` |
+| DESCONHECIDO | sem referência inequívoca | não mover nem excluir |
+
+Antes de qualquer remoção, manter relatório com origem, destino, checksum ou
+tamanho comparado, linha atualizada, teste do proprietário e teste de negação A/B.
+Objetos órfãos e desconhecidos são apenas documentados nesta etapa.
+
+## Rollback
+
+Copiar antes de atualizar a referência. Preservar a origem até validar o destino,
+a leitura do proprietário e a negação para outro usuário. Se qualquer verificação
+falhar, restaurar a referência anterior e manter o objeto original. Nunca executar
+remoção em lote sem backup/inventário exportado.
