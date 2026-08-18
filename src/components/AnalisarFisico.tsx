@@ -206,12 +206,12 @@ export function AnalisarFisico({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-line bg-card p-6">
+          <div className="border-y border-line/60 py-6">
             <div className="flex gap-4">
               {preview && <img src={preview} alt="" className="h-32 w-24 shrink-0 rounded-xl object-cover" />}
               <div className="flex-1">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-2">Overall</span>
-                <p className="num animar-escala text-[44px] font-bold text-brand">{resultado.pontuacao.overall}</p>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-2">Resultado simulado</span>
+                <p className="num animar-escala text-[52px] font-semibold leading-none tracking-[-0.06em] text-brand">{resultado.pontuacao.overall}</p>
               </div>
             </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Dumbbell, LineChart, Pencil, Settings, ChevronRight, ScanFace } from 'lucide-react'
+import { Pencil, Settings, ChevronRight, ScanFace } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { GraficoLinha } from '../components/GraficoLinha'
@@ -20,6 +20,7 @@ import { EXERCICIOS } from '../data/exercicios'
 import { ROTULO_PLANO } from '../lib/planos'
 import { useVivici } from '../lib/vivici'
 import type { DNATreino, PerfilDNA } from '../lib/dnaTreino'
+import { useFotosProgresso } from '../lib/bodyScan'
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -44,11 +45,11 @@ function AbaTreinos({ userId }: { userId: string }) {
   if (treinos.length === 0) return <Empty text="Nenhum treino ainda." />
 
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-line/60 border-y border-line/60">
       {treinos.map((t, i) => (
         <div
           key={t.id}
-          className="animar-entrada rounded-xl border border-line bg-card px-4 py-3"
+          className="animar-entrada py-4"
           style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}
         >
           <div className="flex items-center justify-between">
@@ -90,8 +91,8 @@ function CardPeso({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="text-[17px] font-semibold">Peso</h2>
+    <section className="border-y border-line/60 py-7">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Peso</p>
 
       {carregando ? (
         <p className="mt-3 text-sm text-ink-2">Carregando...</p>
@@ -101,10 +102,8 @@ function CardPeso({ userId }: { userId: string }) {
         <p className="mt-3 text-sm text-ink-2">Nenhum registro de peso ainda.</p>
       ) : (
         <>
-          <p className="mt-1 text-sm text-ink">
-            Atual: <span className="num text-[17px] font-semibold">{formatoBR(pesoAtual!)} kg</span>
-          </p>
-          <div className="mt-4">
+          <p className="num mt-3 text-[42px] font-semibold leading-none tracking-[-0.06em]">{formatoBR(pesoAtual!)} kg</p>
+          <div className="mt-6">
             <GraficoLinha valores={pesos} />
           </div>
         </>
@@ -127,16 +126,16 @@ function CardPeso({ userId }: { userId: string }) {
           Registrar
         </button>
       </div>
-    </div>
+    </section>
   )
 }
 
 function CardConsistencia({ ultimos7Dias, ultimos30Dias }: { ultimos7Dias: number; ultimos30Dias: number }) {
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="text-[17px] font-semibold">Consistência</h2>
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div>
+    <section className="border-b border-line/60 py-7">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Consistência</p>
+      <div className="mt-4 grid grid-cols-2 divide-x divide-line/60">
+        <div className="pl-5">
           <p className="num text-[28px] font-bold">{ultimos7Dias}</p>
           <p className="text-xs text-ink-2">treinos nos últimos 7 dias</p>
         </div>
@@ -145,7 +144,7 @@ function CardConsistencia({ ultimos7Dias, ultimos30Dias }: { ultimos7Dias: numbe
           <p className="text-xs text-ink-2">treinos nos últimos 30 dias</p>
         </div>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -196,8 +195,8 @@ function CardCargas({ userId }: { userId: string }) {
   }, [userId, selecionado])
 
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <h2 className="text-[17px] font-semibold">Cargas</h2>
+    <section className="border-b border-line/60 py-7">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Progressão de cargas</p>
 
       {exercicioIds !== null && exercicioIds.length === 0 ? (
         <p className="mt-3 text-sm text-ink-2">Registre séries nos treinos pra ver sua evolução de carga aqui.</p>
@@ -234,7 +233,7 @@ function CardCargas({ userId }: { userId: string }) {
           ) : null}
         </>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -255,8 +254,8 @@ function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
   }, [])
 
   return (
-    <div className="animar-entrada rounded-2xl border border-line bg-card p-6">
-      <h2 className="text-[17px] font-semibold">Meu DNA de treino</h2>
+    <section className="animar-entrada border-b border-line/60 py-7">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Meu DNA de treino</p>
       <p className="mt-1 text-sm text-brand">{perfilDNA.rotulo}</p>
       <p className="mt-1 text-xs text-ink-2">{perfilDNA.descricao}</p>
       <div className="mt-4 space-y-3">
@@ -275,7 +274,7 @@ function CardDNA({ dna, perfilDNA }: { dna: DNATreino; perfilDNA: PerfilDNA }) {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -293,13 +292,30 @@ function AbaEvolucao({
   rotinas: ReturnType<typeof useRotinas>['rotinas']
 }) {
   const { resultado } = useVivici(userId, rotinas, diasSemana, 0, 0)
+  const { fotos, carregando: carregandoFotos, erro: erroFotos } = useFotosProgresso(userId)
+  const navigate = useNavigate()
+  const fotoAtual = fotos[0]
 
   return (
-    <div className="space-y-5">
-      {resultado && <CardDNA dna={resultado.dna} perfilDNA={resultado.perfilDNA} />}
+    <div>
+      <section className="pb-8">
+        <div className="flex items-end justify-between gap-4">
+          <div><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Evolução visual</p><h2 className="mt-2 text-xl font-semibold tracking-[-0.035em]">Fotos de progresso</h2></div>
+          <button onClick={() => navigate('/perfil/body-scan')} className="min-h-11 text-xs font-semibold text-brand">Abrir Body Scan</button>
+        </div>
+        {carregandoFotos ? <p className="mt-5 text-sm text-ink-2">Carregando fotos...</p> : erroFotos ? <p className="mt-5 text-sm text-ink-2">Não foi possível carregar suas fotos.</p> : fotoAtual ? (
+          <button onClick={() => navigate('/perfil/body-scan')} className="mt-5 block w-full text-left">
+            <img src={fotoAtual.url} alt={`Progresso — ${fotoAtual.angulo}`} className="aspect-[4/5] max-h-[560px] w-full rounded-2xl object-cover" />
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.08em] text-ink">{formatoData(fotoAtual.data)} · {fotoAtual.angulo}</p>
+          </button>
+        ) : (
+          <div className="mt-5 border-y border-line/60 py-7"><p className="text-sm font-semibold">Ainda não há fotos</p><p className="mt-1 text-sm text-ink-2">Registre sua primeira foto para acompanhar sua evolução.</p><button onClick={() => navigate('/perfil/body-scan')} className="mt-4 min-h-11 text-xs font-semibold text-brand">Adicionar foto</button></div>
+        )}
+      </section>
       <CardPeso userId={userId} />
       <CardConsistencia ultimos7Dias={ultimos7Dias} ultimos30Dias={ultimos30Dias} />
       <CardCargas userId={userId} />
+      {resultado && <CardDNA dna={resultado.dna} perfilDNA={resultado.perfilDNA} />}
     </div>
   )
 }
@@ -380,7 +396,7 @@ export default function Perfil() {
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [aba, setAba] = useState<'treinos' | 'evolucao'>('treinos')
+  const [aba, setAba] = useState<'perfil' | 'evolucao'>('perfil')
   const [editando, setEditando] = useState(false)
   const [enviandoFoto, setEnviandoFoto] = useState(false)
 
@@ -424,11 +440,11 @@ export default function Perfil() {
 
   return (
     <Page title="Perfil">
-      <div className="mt-6 flex items-start gap-4">
+      <div className="mt-7 text-center">
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={enviandoFoto}
-          className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-line bg-card-hover"
+          className="relative mx-auto h-24 w-24 overflow-hidden rounded-full border border-line bg-card-hover"
         >
           {perfil.foto_url ? (
             <img src={perfil.foto_url} alt="" className="h-full w-full object-cover" />
@@ -443,15 +459,14 @@ export default function Perfil() {
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={escolherFoto} className="hidden" />
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="truncate text-[19px] font-bold">{perfil.nome}</h2>
-            <button onClick={() => setEditando((v) => !v)} aria-label="Editar perfil" className="shrink-0 text-ink-2 hover:text-ink">
+        <div>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <h2 className="truncate text-2xl font-semibold tracking-[-0.045em]">{perfil.nome}</h2>
+            <button onClick={() => setEditando((v) => !v)} aria-label="Editar perfil" className="flex size-9 shrink-0 items-center justify-center text-ink-2 hover:text-ink">
               <Pencil size={15} strokeWidth={1.75} />
             </button>
           </div>
-          <p className="text-sm text-ink-2">{sessao.user.email}</p>
-          {perfil.bio && <p className="mt-1 text-sm text-ink-2">{perfil.bio}</p>}
+          {perfil.bio && <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-2">{perfil.bio}</p>}
         </div>
       </div>
 
@@ -468,14 +483,10 @@ export default function Perfil() {
         />
       )}
 
-      <div className="mt-6 grid grid-cols-3 gap-3 rounded-2xl border border-line bg-card p-4 text-center">
+      <div className="mt-6 grid grid-cols-2 divide-x divide-line/60 border-y border-line/60 py-4 text-center">
         <div>
           <p className="num text-[22px] font-bold">{datasConcluidas.length}</p>
           <p className="text-xs text-ink-2">Treinos</p>
-        </div>
-        <div>
-          <p className="num text-[22px] font-bold">{rotinas.length}</p>
-          <p className="text-xs text-ink-2">Rotinas</p>
         </div>
         <div>
           <p className="num text-[22px] font-bold text-gold">{streak}</p>
@@ -483,13 +494,13 @@ export default function Perfil() {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2">
-        <div className="flex-1 rounded-xl border border-line bg-card px-4 py-2.5 text-center text-sm text-ink-2">
+      <div className="mt-4 flex items-center justify-between border-b border-line/60 py-3">
+        <div className="text-sm text-ink-2">
           Plano {ROTULO_PLANO[perfil.plano]}
         </div>
         <button
           onClick={() => navigate('/planos')}
-          className="flex-1 rounded-xl bg-brand px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+          className="min-h-11 text-xs font-semibold text-brand"
         >
           Ver planos
         </button>
@@ -497,7 +508,7 @@ export default function Perfil() {
 
       <button
         onClick={() => navigate('/perfil/configuracoes')}
-        className="mt-4 flex w-full items-center gap-3 rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
+        className="mt-2 flex min-h-14 w-full items-center gap-3 border-b border-line/60 text-left transition-colors hover:text-brand"
       >
         <Settings size={18} strokeWidth={1.75} className="shrink-0 text-ink-2" />
         <div className="min-w-0 flex-1">
@@ -509,7 +520,7 @@ export default function Perfil() {
 
       <button
         onClick={() => navigate('/perfil/body-scan')}
-        className="mt-2 flex w-full items-center gap-3 rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
+        className="flex min-h-14 w-full items-center gap-3 border-b border-line/60 text-left transition-colors hover:text-brand"
       >
         <ScanFace size={18} strokeWidth={1.75} className="shrink-0 text-ink-2" />
         <div className="min-w-0 flex-1">
@@ -519,29 +530,27 @@ export default function Perfil() {
         <ChevronRight size={18} strokeWidth={1.75} className="shrink-0 text-ink-3" />
       </button>
 
-      <div className="mt-6 flex gap-2 border-b border-line">
+      <div className="mt-7 flex border-b border-line/60">
         <button
-          onClick={() => setAba('treinos')}
-          className={`flex flex-1 items-center justify-center gap-2 border-b-2 pb-3 text-sm font-semibold transition-colors ${
-            aba === 'treinos' ? 'border-brand text-brand' : 'border-transparent text-ink-2'
+          onClick={() => setAba('perfil')}
+          className={`relative min-h-12 flex-1 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
+            aba === 'perfil' ? 'text-ink after:absolute after:inset-x-8 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'
           }`}
         >
-          <Dumbbell size={18} strokeWidth={1.75} />
-          Treinos
+          Perfil
         </button>
         <button
           onClick={() => setAba('evolucao')}
-          className={`flex flex-1 items-center justify-center gap-2 border-b-2 pb-3 text-sm font-semibold transition-colors ${
-            aba === 'evolucao' ? 'border-brand text-brand' : 'border-transparent text-ink-2'
+          className={`relative min-h-12 flex-1 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
+            aba === 'evolucao' ? 'text-ink after:absolute after:inset-x-8 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'
           }`}
         >
-          <LineChart size={18} strokeWidth={1.75} />
           Evolução
         </button>
       </div>
 
       <div className="mt-5">
-        {aba === 'treinos' ? (
+        {aba === 'perfil' ? (
           <AbaTreinos userId={sessao.user.id} />
         ) : (
           <AbaEvolucao

@@ -107,6 +107,7 @@ export default function BodyScan() {
   }
 
   const hoje = hojeISO()
+  const fotoAtual = fotos[0]
   const fotosHoje = ANGULOS.map((a) => fotos.find((f) => f.data === hoje && f.angulo === a))
 
   const limiteJanela = new Date()
@@ -123,16 +124,23 @@ export default function BodyScan() {
       : 0
 
   return (
-    <div className="animar-entrada pb-4">
-      <div className="mt-6 flex items-center gap-3">
-        <button onClick={() => navigate('/perfil')} aria-label="Voltar" className="text-ink-2 hover:text-ink">
+    <div className="animar-entrada mx-auto max-w-[760px] pb-4">
+      <div className="flex min-h-14 items-center gap-3 border-b border-line/60">
+        <button onClick={() => navigate('/perfil')} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2 hover:text-ink">
           <ChevronLeft size={22} strokeWidth={1.75} />
         </button>
-        <h1 className="text-2xl font-bold tracking-tight">Body Scan</h1>
+        <div><h1 className="text-xl font-semibold tracking-[-0.035em]">Body Scan</h1><p className="mt-0.5 text-xs text-ink-3">Acompanhe sua evolução visual.</p></div>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-line bg-card p-6">
-        <h2 className="text-[17px] font-semibold">Fotos de hoje</h2>
+      {fotoAtual && (
+        <section className="mt-6">
+          <img src={fotoAtual.url} alt={`Foto atual — ${fotoAtual.angulo}`} className="aspect-[4/5] max-h-[620px] w-full rounded-2xl object-cover" />
+          <div className="mt-3 flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-[0.08em]">{formatoData(fotoAtual.data)}</p><p className="text-xs text-ink-3">{fotoAtual.angulo}</p></div>
+        </section>
+      )}
+
+      <section className="mt-7 border-y border-line/60 py-6">
+        <div className="flex items-end justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Novo registro</p><h2 className="mt-2 text-lg font-semibold">Fotos de hoje</h2></div></div>
         <div className="mt-4 flex justify-around">
           {ANGULOS.map((angulo, i) => (
             <SlotAngulo
@@ -144,23 +152,23 @@ export default function BodyScan() {
             />
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="mt-5 rounded-2xl border border-line bg-card p-6">
+      <section className="mt-7 border-b border-line/60 pb-7">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} strokeWidth={1.75} className="text-brand" />
-          <h2 className="text-[17px] font-semibold">Analisar meu físico</h2>
+          <Sparkles size={17} strokeWidth={1.75} className="text-ink-3" />
+          <h2 className="text-base font-semibold">Análise de físico</h2>
         </div>
         <p className="mt-2 text-sm text-ink-2">
-          Receba uma pontuação de potencial, definição, simetria, V-taper e massa muscular a partir de uma foto.
+          Avaliação visual experimental. O resultado é simulado e não representa medição clínica.
         </p>
         <button
           onClick={() => setAnalisandoFisico(true)}
-          className="mt-4 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+          className="mt-3 min-h-11 text-xs font-semibold text-brand"
         >
           Começar análise
         </button>
-      </div>
+      </section>
 
       <div className="mt-5 flex items-center justify-between">
         <h2 className="text-[17px] font-semibold">Histórico</h2>
@@ -187,11 +195,11 @@ export default function BodyScan() {
         ) : fotosNaJanela.length === 0 ? (
           <Empty text="Nenhuma foto nesse período ainda." />
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {fotosNaJanela.map((f) => (
-              <div key={f.id} className="flex items-center gap-3 rounded-xl border border-line bg-card px-4 py-3">
-                <img src={f.url} alt={f.angulo} className="h-14 w-12 rounded-lg object-cover" />
-                <div>
+              <div key={f.id}>
+                <img src={f.url} alt={f.angulo} className="aspect-[4/5] w-full rounded-xl object-cover" />
+                <div className="mt-2">
                   <p className="text-sm text-ink">{f.angulo}</p>
                   <p className="text-xs text-ink-2">{formatoData(f.data)}</p>
                 </div>
@@ -203,13 +211,13 @@ export default function BodyScan() {
 
       <button
         onClick={() => setComparando((v) => !v)}
-        className="mt-5 h-11 w-full rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover"
+        className="mt-6 min-h-11 w-full border-y border-line/60 text-sm font-semibold text-ink-2 transition-colors hover:text-ink"
       >
         {comparando ? 'Fechar comparação' : 'Comparar evolução'}
       </button>
 
       {comparando && (
-        <div className="animar-entrada mt-4 rounded-2xl border border-line bg-card p-6">
+        <div className="animar-entrada mt-5 border-b border-line/60 pb-7">
           <div className="flex gap-2">
             {ANGULOS.map((a) => (
               <button
