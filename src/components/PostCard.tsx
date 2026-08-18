@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Heart, MessageCircle, Dumbbell } from 'lucide-react'
 import type { Post } from '../lib/social/posts'
 import { curtir, descurtir } from '../lib/social/posts'
+import { EditorialMedia } from './ui/EditorialMedia'
 
 function formatoBR(n: number): string {
   return Math.round(n).toLocaleString('pt-BR')
@@ -65,7 +66,13 @@ export function PostCard({
         </div>
       </button>
 
-      {post.fotoUrl && <img src={post.fotoUrl} alt="" className="max-h-[420px] w-full object-cover" />}
+      {post.fotoUrl && (
+        <EditorialMedia
+          src={post.fotoUrl}
+          alt={`Publicação de ${post.autor.nome}`}
+          className="max-h-[420px] w-full"
+        />
+      )}
 
       <div className="p-4">
         {post.legenda && <p className="text-sm text-ink">{post.legenda}</p>}

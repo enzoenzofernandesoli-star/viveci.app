@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
+import { SectionTitle } from './ui/Typography'
 
 /** Casca padrão de página: título + conteúdo. */
 export function Page({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="animar-entrada">
-      <h1 className="text-2xl font-bold tracking-tight lg:text-[28px]">{title}</h1>
+    <div className="animar-entrada mx-auto w-full max-w-[1120px]">
+      <SectionTitle>{title}</SectionTitle>
       {children}
     </div>
   )

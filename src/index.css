@@ -4,7 +4,7 @@
   --color-app: #070A10;
   --color-sidebar: #080B12;
   --color-card: #0D111A;
-  --color-card-hover: #131826;
+  --color-card-hover: #111722;
   --color-line: #202735;
   --color-brand: #0066FF;
   --color-brand-hover: #0052CC;
@@ -18,24 +18,57 @@
   --color-muscle-off: #3A4252;
 
   --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-control: 10px;
+  --radius-action: 12px;
+  --radius-surface: 14px;
+  --radius-media: 18px;
 }
 
-html, body, #root { height: 100%; }
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--color-app);
+  color-scheme: dark;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+body, #root { min-height: 100%; }
 
 body {
+  margin: 0;
   background: var(--color-app);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.num { font-variant-numeric: tabular-nums; }
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.025em;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-brand) 34%, transparent);
+  color: var(--color-ink);
+}
+
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+}
+
+:where(button, input, select, textarea) { font: inherit; }
+:where(button, a) { -webkit-tap-highlight-color: transparent; }
 
 /* Glow azul discreto — reservado pro CTA principal da Home e pro item ativo
    da navegação. Nunca aplicar em cards comuns; é o único elemento "premium"
    de destaque, exagerar aqui quebra o minimalismo do design system. */
 .brilho-brand {
-  box-shadow: 0 0 28px -6px rgba(0, 102, 255, 0.45);
+  box-shadow: 0 0 24px -8px rgba(0, 102, 255, 0.42);
 }
 
 /* ───────────────────────── Microinterações ─────────────────────────
@@ -44,12 +77,12 @@ body {
    (que marca data-reduzir-movimento="true" na <html> via Layout.tsx). */
 
 @keyframes entrada {
-  from { opacity: 0; transform: translateY(14px) scale(0.99); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes escala-entrada {
-  from { opacity: 0; transform: scale(0.94); }
+  from { opacity: 0; transform: scale(0.98); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -59,27 +92,29 @@ body {
 }
 
 .animar-entrada {
-  animation: entrada 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: entrada 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animar-escala {
-  animation: escala-entrada 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: escala-entrada 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animar-pulso {
   animation: pulso-suave 1.6s ease-in-out infinite;
 }
 
-button, a {
-  transition: transform 120ms ease, background-color 150ms ease, border-color 150ms ease, opacity 150ms ease, color 150ms ease;
+button, a, input, select, textarea {
+  transition-property: transform, background-color, border-color, opacity, color;
+  transition-duration: 160ms;
+  transition-timing-function: ease-out;
 }
 
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 a:active {
-  transform: scale(0.96);
+  transform: scale(0.98);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,7 +1,3 @@
 export function Logo({ className = '' }: { className?: string }) {
-  return (
-    <span className={`font-bold tracking-tight ${className}`}>
-      <span className="text-brand">V</span>iveci
-    </span>
-  )
+  return <span className={`font-semibold uppercase tracking-[0.28em] text-ink ${className}`}>VIVECI</span>
 }
