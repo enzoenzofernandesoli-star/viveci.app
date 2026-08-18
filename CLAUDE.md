@@ -210,8 +210,10 @@ qualquer entrega.
   lateral/costas) sobem pro bucket `Fotos` e ficam em `fotos_progresso`;
   timeline filtrável por 7/30/90 dias; comparação lado a lado entre duas
   datas do mesmo ângulo, com contagem real de treinos no período.
-  **Nunca estima proporções corporais** — mostra sempre "não foi possível
-  estimar com confiança", porque isso exigiria IA que não existe aqui.
+  **Analisar meu físico** — fluxo de instruções + foto + pontuação
+  (Overall/Potencial/Definição/Simetria/V-Taper/Massa muscular) inspirado
+  no Symmetry, mas **simulado e declarado**: sem IA de análise corporal
+  conectada, a pontuação é sempre a mesma e vem com aviso visível.
 - **Analisar movimento** (botão na sessão de treino) — grava/envia vídeo do
   exercício. **100% simulado**: sempre devolve a mesma mensagem avisando
   que a análise real ainda não está conectada, nunca finge diagnóstico.
@@ -425,10 +427,10 @@ antagonistas (Peito↔Costas etc).
 
 ### IA de visão (mock declarado) — `src/lib/services/`
 
-Food Scanner, Label Scanner e Análise de movimento dependem de IA de visão
-computacional / OCR real, que este projeto **não tem configurada**. Em vez
-de fingir, cada um segue o padrão UI → Service → dado mock, igual à seção
-33 do prompt original:
+Food Scanner, Label Scanner, Análise de movimento e a pontuação do Body Scan
+dependem de IA de visão computacional / OCR real, que este projeto **não
+tem configurada**. Em vez de fingir, cada um segue o padrão UI → Service →
+dado mock, igual à seção 33 do prompt original:
 
 - `src/lib/services/foodScannerService.ts` — `FoodScannerService.analisarFoto`
   sempre devolve o mesmo prato de exemplo (frango, arroz, feijão, salada)
@@ -439,6 +441,9 @@ de fingir, cada um segue o padrão UI → Service → dado mock, igual à seçã
 - `src/lib/services/movementAnalysisService.ts` — sempre devolve a mesma
   mensagem avisando que é simulação, nunca finge diagnóstico. Usado por
   `src/pages/AnalisarMovimento.tsx`.
+- `src/lib/services/physiqueScoreService.ts` — `PhysiqueScoreService.analisarFisico`
+  sempre devolve a mesma pontuação de exemplo (Overall 74 e demais
+  indicadores fixos). Usado por `src/components/AnalisarFisico.tsx`.
 
 **Regra pra quando plugar uma API de verdade:** trocar só a implementação
 dentro do arquivo do serviço (a interface já está pronta) — nunca a UI que
@@ -457,20 +462,25 @@ identificar o que tem nela" é simulada.
 
 ### Body Scan — `src/pages/BodyScan.tsx`, `src/lib/bodyScan.ts`
 
-Diferente do Food/Label Scanner, aqui **não há mock nenhum** — é 100% real
-e determinístico, só sem análise de IA. Reaproveita a tabela
-`fotos_progresso` que já existia desde `sql/01_estrutura.sql` (nunca usada
-até agora) e o bucket `Fotos` (mesmo bucket do avatar), caminho
-`<user_id>/body/<angulo>-<timestamp>.<ext>`. Três ângulos fixos: Frente,
-Lateral, Costas (`ANGULOS` em `bodyScan.ts`).
-
+A parte de fotos/timeline/comparação **não tem mock** — é 100% real e
+determinística. Reaproveita a tabela `fotos_progresso` que já existia desde
+`sql/01_estrutura.sql` (nunca usada até agora) e o bucket `Fotos` (mesmo
+bucket do avatar), caminho `<user_id>/body/<angulo>-<timestamp>.<ext>`.
+Três ângulos fixos: Frente, Lateral, Costas (`ANGULOS` em `bodyScan.ts`).
 A comparação entre duas datas mostra as fotos lado a lado e a contagem real
-de treinos concluídos no período (via `useHistoricoTreinos`) — **nunca**
-tenta calcular diferença de proporção corporal a partir das fotos; o card
-"Estimativa de proporções" sempre mostra "Não foi possível estimar com
-confiança", porque medir isso de verdade exigiria uma IA que este projeto
-não tem. Não inventar um número aqui nem quando parecer "só uma estimativa
-grosseira" — regra 22 do prompt original.
+de treinos concluídos no período (via `useHistoricoTreinos`).
+
+**Analisar meu físico** (`src/components/AnalisarFisico.tsx`) — fluxo
+inspirado no app Symmetry (carrossel de instruções → foto → pontuação),
+pedido explicitamente pelo dono do produto pra imitar esse visual. A
+pontuação (`src/lib/services/physiqueScoreService.ts`) é **mock
+declarado**, igual Food/Label Scanner: sempre devolve o mesmo conjunto de
+números (Overall 74, Potencial 82 etc.), nunca varia com a foto enviada, e
+a tela mostra aviso dourado de simulação — nunca remover isso. A foto pode
+ser salva de verdade como registro de progresso (mesmo fluxo de
+`enviarFotoProgresso`), mas a pontuação em si **não é persistida em lugar
+nenhum**, porque não tem valor analítico real. Não inventar proporção
+corporal fora desse fluxo declarado — regra 22 do prompt original.
 
 ### Configurações — `src/pages/Configuracoes.tsx`, `src/lib/preferencias.ts`
 

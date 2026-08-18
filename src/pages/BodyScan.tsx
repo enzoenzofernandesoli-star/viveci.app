@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Plus } from 'lucide-react'
+import { ChevronLeft, Plus, Sparkles } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
+import { AnalisarFisico } from '../components/AnalisarFisico'
 import { useSessao } from '../lib/auth'
 import { ANGULOS, useFotosProgresso, enviarFotoProgresso, type Angulo, type FotoProgresso } from '../lib/bodyScan'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
@@ -72,6 +73,7 @@ export default function BodyScan() {
   const [dataA, setDataA] = useState<string | null>(null)
   const [dataB, setDataB] = useState<string | null>(null)
   const [anguloComparacao, setAnguloComparacao] = useState<Angulo>('Frente')
+  const [analisandoFisico, setAnalisandoFisico] = useState(false)
 
   if (!sessao || !userId) {
     return (
@@ -89,6 +91,19 @@ export default function BodyScan() {
     } finally {
       setEnviandoAngulo(null)
     }
+  }
+
+  if (analisandoFisico) {
+    return (
+      <AnalisarFisico
+        onFechar={() => setAnalisandoFisico(false)}
+        onSalvarFoto={async (arquivo) => {
+          await enviarFotoProgresso(userId, 'Frente', arquivo)
+          recarregar()
+          setAnalisandoFisico(false)
+        }}
+      />
+    )
   }
 
   const hoje = hojeISO()
@@ -132,11 +147,19 @@ export default function BodyScan() {
       </div>
 
       <div className="mt-5 rounded-2xl border border-line bg-card p-6">
-        <h2 className="text-[17px] font-semibold">Estimativa de proporções</h2>
+        <div className="flex items-center gap-2">
+          <Sparkles size={18} strokeWidth={1.75} className="text-brand" />
+          <h2 className="text-[17px] font-semibold">Analisar meu físico</h2>
+        </div>
         <p className="mt-2 text-sm text-ink-2">
-          Não foi possível estimar com confiança. O VIVECI ainda não tem uma IA de análise corporal conectada — as
-          fotos ficam guardadas pra você acompanhar visualmente sua evolução.
+          Receba uma pontuação de potencial, definição, simetria, V-taper e massa muscular a partir de uma foto.
         </p>
+        <button
+          onClick={() => setAnalisandoFisico(true)}
+          className="mt-4 h-11 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+        >
+          Começar análise
+        </button>
       </div>
 
       <div className="mt-5 flex items-center justify-between">
