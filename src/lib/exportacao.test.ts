@@ -9,3 +9,12 @@ test('exportação é identificável e versionada', () => {
   assert.deepEqual(pacote.posts, [])
 })
 
+test('exportação remove tokens, senhas e segredos mesmo quando aninhados', () => {
+  const pacote = montarPacoteExportacao('u1', {
+    perfil: { nome: 'Enzo', access_token: 'não pode sair', preferencias: { senha: 'nem esta' } },
+    refresh_token: 'nem este',
+  }, '2026-08-18T00:00:00.000Z')
+
+  assert.deepEqual(pacote.perfil, { nome: 'Enzo', preferencias: {} })
+  assert.equal('refresh_token' in pacote, false)
+})

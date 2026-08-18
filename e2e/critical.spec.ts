@@ -10,6 +10,8 @@ type BackendState = {
   cardio: Record<string, unknown>[]
   registrosCriados: number
   sessoesFinalizadas: number
+  exclusoesConta: number
+  exclusaoContaFalha: boolean
 }
 
 function perfil(onboarding: boolean) {
@@ -45,6 +47,11 @@ async function mockBackend(page: Page, state: BackendState) {
     key: 'sb-tygbdcbsovngaqdpgord-auth-token', value: authSession(),
   })
   await page.route('**/auth/v1/user', (route) => fulfillJson(route, authSession().user))
+  await page.route('**/auth/v1/logout*', (route) => fulfillJson(route, {}))
+  await page.route('**/functions/v1/excluir-conta', (route) => {
+    state.exclusoesConta++
+    return fulfillJson(route, state.exclusaoContaFalha ? { erro: 'Falha simulada.' } : { excluida: true }, state.exclusaoContaFalha ? 500 : 200)
+  })
   await page.route('**/rest/v1/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
@@ -98,7 +105,7 @@ async function mockBackend(page: Page, state: BackendState) {
 }
 
 function baseState(onboarding = true): BackendState {
-  return { onboarding, planos: [], sessoes: [], itens: [], cardio: [], registrosCriados: 0, sessoesFinalizadas: 0 }
+  return { onboarding, planos: [], sessoes: [], itens: [], cardio: [], registrosCriados: 0, sessoesFinalizadas: 0, exclusoesConta: 0, exclusaoContaFalha: false }
 }
 
 test('onboarding preserva o passo atual após atualizar', async ({ page }) => {
@@ -154,4 +161,32 @@ test('registra cardio e mostra no histórico', async ({ page }) => {
   await page.getByRole('button', { name: 'Registrar' }).dblclick()
   await expect(page.getByText(/30 min/)).toBeVisible()
   expect(state.cardio).toHaveLength(1)
+})
+
+test('exclusão de conta exige confirmação e envia uma única solicitação', async ({ page }) => {
+  const state = baseState()
+  await mockBackend(page, state)
+  await page.goto('/perfil/configuracoes')
+  await page.getByRole('button', { name: /Privacidade e segurança/ }).click()
+  await page.getByRole('button', { name: 'Excluir minha conta' }).click()
+  const excluir = page.getByRole('button', { name: 'Excluir definitivamente' })
+  await expect(excluir).toBeDisabled()
+  await page.getByLabel('Digite EXCLUIR para confirmar').fill('EXCLUIR')
+  await excluir.dblclick()
+  await expect(page).toHaveURL(/\/login$/)
+  expect(state.exclusoesConta).toBe(1)
+})
+
+test('falha na exclusão não declara sucesso nem encerra a sessão', async ({ page }) => {
+  const state = baseState()
+  state.exclusaoContaFalha = true
+  await mockBackend(page, state)
+  await page.goto('/perfil/configuracoes')
+  await page.getByRole('button', { name: /Privacidade e segurança/ }).click()
+  await page.getByRole('button', { name: 'Excluir minha conta' }).click()
+  await page.getByLabel('Digite EXCLUIR para confirmar').fill('EXCLUIR')
+  await page.getByRole('button', { name: 'Excluir definitivamente' }).click()
+  await expect(page.getByText(/Nenhum sucesso foi confirmado/)).toBeVisible()
+  await expect(page).toHaveURL(/\/perfil\/configuracoes$/)
+  expect(state.exclusoesConta).toBe(1)
 })

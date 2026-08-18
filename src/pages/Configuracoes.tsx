@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft,
@@ -290,6 +290,8 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
   const [excluindo, setExcluindo] = useState(false)
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [confirmandoConta, setConfirmandoConta] = useState(false)
+  const [confirmacaoConta, setConfirmacaoConta] = useState('')
+  const exclusaoContaIniciada = useRef(false)
 
   async function excluirFotos() {
     setExcluindo(true)
@@ -309,14 +311,33 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
     }
   }
 
+  async function excluirConta() {
+    if (confirmacaoConta !== 'EXCLUIR' || exclusaoContaIniciada.current) return
+    exclusaoContaIniciada.current = true
+    setExcluindo(true)
+    setMensagem(null)
+    try {
+      const { error } = await supabase.functions.invoke('excluir-conta')
+      if (error) throw error
+      sessionStorage.clear()
+      localStorage.removeItem('viveci-onboarding-rascunho')
+      await supabase.auth.signOut({ scope: 'local' })
+      window.location.replace('/login')
+    } catch {
+      exclusaoContaIniciada.current = false
+      setExcluindo(false)
+      setMensagem('Não foi possível excluir sua conta por completo. Nenhum sucesso foi confirmado. Tente novamente ou contate o suporte.')
+    }
+  }
+
   return (
     <div className="pb-4">
       <Cabecalho titulo="Privacidade e segurança" onVoltar={onVoltar} />
       <div className="mt-5 rounded-2xl border border-line bg-card p-6">
         <h3 className="text-[17px] font-semibold">Dados que guardamos</h3>
         <p className="mt-2 text-sm text-ink-2">
-          Perfil, rotinas de treino, séries registradas, cardio, medidas, diário alimentar e foto de perfil. Tudo
-          protegido por autenticação — só você acessa os seus dados.
+          Rotinas, séries, cardio, medidas, nutrição, preferências e Body Scan são privados. Nome, bio, avatar e o
+          conteúdo que você publica no Social podem ser vistos por outros usuários autenticados.
         </p>
       </div>
 
@@ -352,9 +373,44 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
 
       <div className="mt-5 rounded-2xl border border-line bg-card p-6">
         <h3 className="text-[17px] font-semibold">Excluir conta</h3>
-        <p className="mt-1 text-sm text-ink-2">Remove sua conta, dados e arquivos. Esta ação não pode ser desfeita e depende da função segura do backend estar publicada.</p>
-        {confirmandoConta ? <div className="mt-4 flex gap-3"><button onClick={() => setConfirmandoConta(false)} className="h-11 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-2">Cancelar</button><button onClick={async () => { setExcluindo(true); setMensagem(null); const { error } = await supabase.functions.invoke('excluir-conta'); if (error) { setMensagem('A exclusão segura ainda não está disponível. Tente novamente ou contate o suporte.'); setExcluindo(false); return } await supabase.auth.signOut(); window.location.assign('/login') }} disabled={excluindo} className="h-11 flex-1 rounded-xl bg-down text-sm font-semibold text-white disabled:opacity-50">Excluir definitivamente</button></div> : <button onClick={() => setConfirmandoConta(true)} className="mt-4 min-h-11 text-sm font-semibold text-down">Excluir minha conta</button>}
+        <p className="mt-1 text-sm text-ink-2">Remove sua conta, seus dados e seus arquivos. Esta ação não pode ser desfeita.</p>
+        {confirmandoConta ? (
+          <div className="mt-4">
+            <label htmlFor="confirmar-exclusao-conta" className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
+              Digite EXCLUIR para confirmar
+            </label>
+            <input
+              id="confirmar-exclusao-conta"
+              value={confirmacaoConta}
+              onChange={(evento) => setConfirmacaoConta(evento.target.value.toUpperCase())}
+              disabled={excluindo}
+              autoComplete="off"
+              className="mt-2 h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none disabled:opacity-60"
+            />
+            <div className="mt-3 flex gap-3">
+              <button
+                onClick={() => { setConfirmandoConta(false); setConfirmacaoConta('') }}
+                disabled={excluindo}
+                className="h-11 flex-1 rounded-xl border border-line text-sm font-semibold text-ink-2 disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={excluirConta}
+                disabled={excluindo || confirmacaoConta !== 'EXCLUIR'}
+                className="h-11 flex-1 rounded-xl bg-down text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {excluindo ? 'Excluindo...' : 'Excluir definitivamente'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmandoConta(true)} className="mt-4 min-h-11 text-sm font-semibold text-down">
+            Excluir minha conta
+          </button>
+        )}
       </div>
+
     </div>
   )
 }
@@ -367,7 +423,7 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
     setExportando(true)
     setErro(null)
     try {
-      const [perfil, preferencias, planos, registros, sessoes, medidas, metas, diario, cardio, fotos, posts, comentarios, likes, seguidores, seguindo, bloqueios] = await Promise.all([
+      const [perfil, preferencias, planos, registros, sessoes, medidas, metas, diario, cardio, fotos, posts, comentarios, likes, seguidores, seguindo, bloqueios, denuncias, streak, desafio] = await Promise.all([
         supabase.from('perfis').select('*').eq('id', userId).maybeSingle(),
         supabase.from('preferencias_usuario').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('planos').select('*').eq('user_id', userId),
@@ -384,11 +440,19 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
         supabase.from('seguidores').select('*').eq('seguido_id', userId),
         supabase.from('seguidores').select('*').eq('seguidor_id', userId),
         supabase.from('usuarios_bloqueados').select('*').eq('bloqueador_id', userId),
+        supabase.from('denuncias_social').select('*').eq('denunciante_id', userId),
+        supabase.from('streaks').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('desafio_progresso').select('*').eq('user_id', userId),
       ])
+      const consultas = [perfil, preferencias, planos, registros, sessoes, medidas, metas, diario, cardio, fotos, posts, comentarios, likes, seguidores, seguindo, bloqueios, denuncias, streak, desafio]
+      const primeiraFalha = consultas.find((consulta) => consulta.error)?.error
+      if (primeiraFalha) throw primeiraFalha
       const idsPlanos = (planos.data ?? []).map((plano) => plano.id)
       const sessoesRotina = idsPlanos.length > 0 ? await supabase.from('plano_sessoes').select('*').in('plano_id', idsPlanos) : { data: [] }
       const idsSessoesRotina = (sessoesRotina.data ?? []).map((sessao) => sessao.id)
       const itens = idsSessoesRotina.length > 0 ? await supabase.from('plano_itens').select('*').in('sessao_id', idsSessoesRotina) : { data: [] }
+      if ('error' in sessoesRotina && sessoesRotina.error) throw sessoesRotina.error
+      if ('error' in itens && itens.error) throw itens.error
       const pacote = montarPacoteExportacao(userId, {
         perfil: perfil.data,
         preferencias: preferencias.data,
@@ -408,6 +472,15 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
         seguidores: seguidores.data,
         seguindo: seguindo.data,
         bloqueios: bloqueios.data,
+        denuncias: denuncias.data,
+        streak: streak.data,
+        desafio: desafio.data,
+        midias: {
+          observacao: 'O JSON contém referências de mídia. Os arquivos binários não são incorporados.',
+          fotos_progresso: fotos.data,
+          posts: (posts.data ?? []).map((post) => ({ id: post.id, foto_url: post.foto_url, foto_path: post.foto_path })),
+          avatar_url: perfil.data?.foto_url ?? null,
+        },
       }, new Date().toISOString())
       const blob = new Blob([JSON.stringify(pacote, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -429,8 +502,8 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
       <div className="mt-5 rounded-2xl border border-line bg-card p-6">
         <h3 className="text-[17px] font-semibold">Exportar tudo</h3>
         <p className="mt-1 text-sm text-ink-2">
-          Baixa um arquivo com seu perfil, rotinas, séries registradas, treinos concluídos, medidas, diário alimentar
-          e cardio — tudo que o VIVECI guarda sobre você.
+          Baixa um JSON com perfil, preferências, treinos, nutrição, medidas e atividade social. Fotos são representadas
+          por referências e não são incorporadas ao arquivo.
         </p>
         <button
           onClick={exportarDados}
