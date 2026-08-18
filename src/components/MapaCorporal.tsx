@@ -106,14 +106,16 @@ function PainelMusculo({
   percentual,
   estatisticas,
   onFechar,
+  editorial,
 }: {
   grupo: GrupoMuscular
   percentual: number
   estatisticas: EstatisticasGrupo | undefined
   onFechar: () => void
+  editorial: boolean
 }) {
   return (
-    <div className="animar-escala mt-4 rounded-xl border border-line bg-card-hover p-4">
+    <div className={`animar-escala mt-5 ${editorial ? 'border-t border-line/70 pt-5' : 'rounded-xl border border-line bg-card-hover p-4'}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-ink">{grupo}</h3>
         <button onClick={onFechar} aria-label="Fechar" className="text-xs font-semibold text-ink-2 hover:text-ink">
@@ -153,10 +155,12 @@ export function MapaCorporal({
   percentuais,
   desequilibrios,
   estatisticasPorGrupo,
+  modoEditorial = false,
 }: {
   percentuais: PercentualPorGrupo
   desequilibrios: Desequilibrio[]
   estatisticasPorGrupo?: Record<GrupoMuscular, EstatisticasGrupo>
+  modoEditorial?: boolean
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<BodyChart | null>(null)
@@ -205,15 +209,15 @@ export function MapaCorporal({
   const grupos = vista === ViewSide.FRONT ? GRUPOS_FRENTE : GRUPOS_COSTAS
 
   return (
-    <div className="rounded-2xl border border-line bg-card p-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-[17px] font-semibold">Mapa corporal</h2>
-        <div className="flex gap-2">
+    <div className={modoEditorial ? '' : 'rounded-2xl border border-line bg-card p-6'}>
+      <div className={`flex items-center ${modoEditorial ? 'justify-end' : 'justify-between'}`}>
+        {!modoEditorial && <h2 className="text-[17px] font-semibold">Mapa corporal</h2>}
+        <div className="flex gap-1 border-b border-line/70">
           <button
             type="button"
             onClick={() => setVista(ViewSide.FRONT)}
-            className={`h-9 rounded-full px-4 text-xs font-semibold transition-colors ${
-              vista === ViewSide.FRONT ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
+            className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
+              vista === ViewSide.FRONT ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
             }`}
           >
             Frente
@@ -221,8 +225,8 @@ export function MapaCorporal({
           <button
             type="button"
             onClick={() => setVista(ViewSide.BACK)}
-            className={`h-9 rounded-full px-4 text-xs font-semibold transition-colors ${
-              vista === ViewSide.BACK ? 'bg-brand/15 text-brand' : 'border border-line text-ink-2'
+            className={`relative min-h-11 px-4 text-xs font-semibold transition-colors ${
+              vista === ViewSide.BACK ? 'text-brand after:absolute after:inset-x-2 after:-bottom-px after:h-px after:bg-brand' : 'text-ink-2'
             }`}
           >
             Costas
@@ -230,9 +234,9 @@ export function MapaCorporal({
         </div>
       </div>
 
-      <p className="mt-1 text-xs text-ink-2">Toque num músculo pra ver os detalhes. Volume dos últimos 7 dias.</p>
+      {!modoEditorial && <p className="mt-1 text-xs text-ink-2">Toque num músculo pra ver os detalhes. Volume dos últimos 7 dias.</p>}
 
-      <div ref={containerRef} className="mx-auto w-56 [&_svg]:mx-auto [&_svg]:!max-h-none" />
+      <div ref={containerRef} className={`mx-auto [&_svg]:mx-auto [&_svg]:!max-h-none ${modoEditorial ? 'w-64 sm:w-72' : 'w-56'}`} />
 
       <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2">
         {grupos.map((g) => (
@@ -240,8 +244,8 @@ export function MapaCorporal({
             key={g}
             type="button"
             onClick={() => selecionarGrupo(g)}
-            className={`flex items-center justify-between rounded-lg px-2 py-1 text-sm transition-colors ${
-              selecionado === g ? 'bg-brand/15' : 'hover:bg-card-hover'
+            className={`flex min-h-10 items-center justify-between px-2 text-sm transition-colors ${
+              selecionado === g ? 'text-brand' : 'hover:text-ink'
             }`}
           >
             <span className={selecionado === g ? 'text-brand' : 'text-ink-2'}>{g}</span>
@@ -256,6 +260,7 @@ export function MapaCorporal({
           percentual={percentuais[selecionado]}
           estatisticas={estatisticasPorGrupo?.[selecionado]}
           onFechar={() => setSelecionado(null)}
+          editorial={modoEditorial}
         />
       )}
 
