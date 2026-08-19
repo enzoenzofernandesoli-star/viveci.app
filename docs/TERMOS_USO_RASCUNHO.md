@@ -12,10 +12,8 @@ Contato: **[EMAIL DE CONTATO]**
 
 Jurisdição: **[DECISÃO NECESSÁRIA]**
 
-A idade mínima definida pelo produto é de 10 anos, sem limite máximo. Para
-usuários menores de 18 anos, o processo de autorização e participação do
-responsável ainda precisa ser definido e revisado antes de sua entrada no beta,
-especialmente por haver fotos corporais, nutrição e conteúdo social.
+O VIVECI é destinado exclusivamente a pessoas com 18 anos ou mais. O produto
+não permite cadastro ou uso por menores de idade nesta versão beta.
 
 ## 2. Finalidade do VIVECI
 

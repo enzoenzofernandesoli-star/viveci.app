@@ -2,16 +2,15 @@
 
 ## DECISÃO — IDADE MÍNIMA
 
-**Status: IDADE DEFINIDA; PROCESSO PARA MENORES PENDENTE.**
+**Status: DEFINIDA — BETA EXCLUSIVO PARA MAIORES DE 18 ANOS.**
 
 O VIVECI trata peso, alimentação, histórico corporal, fotografias e conteúdo
 Social. Por isso, idade mínima, público permitido e eventual consentimento não
 exigem cuidado adicional. O responsável pelo produto definiu idade mínima de
-10 anos, sem limite máximo. O age gate deve aplicar essa regra no app e no banco.
+18 anos. O age gate deve aplicar essa regra no app e no banco.
 
-Antes de convidar menores de 18 anos, ainda é necessário definir e revisar o
-processo de autorização do responsável e o tratamento específico desses dados.
-Essa parte continua P0; adultos não dependem desse processo.
+Menores não participam desta versão beta. Um fluxo específico de autorização e
+proteção só será necessário se essa decisão mudar no futuro.
 
 ## Placeholders ainda abertos
 

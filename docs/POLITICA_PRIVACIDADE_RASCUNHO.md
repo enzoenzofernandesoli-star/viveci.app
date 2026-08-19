@@ -72,11 +72,8 @@ Prazos de retenção, tratamento de backups, logs, denúncias e descarte após e
 
 ## 10. Menores de idade
 
-O produto definiu idade mínima de 10 anos, sem limite máximo. O processo de
-autorização do responsável, informação adequada e tratamento específico dos
-dados de menores ainda precisa ser definido e revisado antes de permitir sua
-participação no beta. Isso é crítico por envolver fotos corporais, peso,
-nutrição e Social.
+O VIVECI é destinado exclusivamente a pessoas com 18 anos ou mais nesta versão
+beta. O cadastro de menores é bloqueado no aplicativo e no banco de dados.
 
 ## 11. Direitos e alterações
 

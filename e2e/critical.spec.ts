@@ -115,7 +115,7 @@ test('onboarding preserva o passo atual após atualizar', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Qual sua idade?' })).toBeVisible()
 })
 
-test('onboarding aceita idade mínima de 10 anos e recusa idade inferior', async ({ page }) => {
+test('onboarding aceita idade mínima de 18 anos e recusa idade inferior', async ({ page }) => {
   const state = baseState(false)
   await mockBackend(page, state)
   await page.goto('/onboarding')
@@ -126,11 +126,11 @@ test('onboarding aceita idade mínima de 10 anos e recusa idade inferior', async
 
   const idade = page.getByPlaceholder('Anos')
   const continuar = page.getByRole('button', { name: 'Continuar' })
-  await idade.fill('9')
-  await expect(page.getByText('É necessário ter pelo menos 10 anos.')).toBeVisible()
+  await idade.fill('17')
+  await expect(page.getByText('É necessário ter pelo menos 18 anos.')).toBeVisible()
   await expect(continuar).toBeDisabled()
 
-  await idade.fill('10')
+  await idade.fill('18')
   await expect(continuar).toBeEnabled()
   await continuar.click()
   await expect(page.getByRole('heading', { name: 'Altura e peso' })).toBeVisible()

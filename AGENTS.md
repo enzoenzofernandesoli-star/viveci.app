@@ -170,7 +170,7 @@ qualquer entrega.
 
 - **Auth** — email/senha via Supabase (`src/lib/auth.ts`).
 - **Onboarding** — 6 passos: nome, sexo, idade, altura/peso, objetivo, dias/semana.
-  Idade mínima de 10 anos, sem limite máximo; regra pura em
+  Idade mínima de 18 anos, sem limite máximo; regra pura em
   `src/lib/elegibilidade.ts` e proteção correspondente no banco.
 - **Rotinas de treino (manual)** — usuário cria, nomeia, adiciona/remove
   exercícios pelo catálogo, edita e exclui. Sem geração automática.
@@ -590,8 +590,9 @@ Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 → `05_cardio` → `06_perfil_bio` → `07_preferencias` → `08_social` →
 `09_seguranca_beta` → `10_integridade_rotinas` → `11_indices_performance` →
 `12_privacidade_metricas_social` → `13_privilegios_minimos` →
-`14_idade_minima`. As migrations 01–14 foram confirmadas no remoto em
-18/08/2026.
+`14_idade_minima` → `15_idade_minima_18`. As migrations 01–14 foram confirmadas
+no remoto em 18/08/2026; a 15 precisa ser aplicada após a decisão de restringir
+o beta a adultos.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia. Avatar usa

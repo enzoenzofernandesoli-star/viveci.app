@@ -19,7 +19,7 @@ anterior foi rotacionada. Nenhum valor foi solicitado, recebido ou registrado.
 
 Status: **confirmado pelo proprietário; não verificado programaticamente**.
 
-## Migrations 09–14
+## Migrations 09–15
 
 ### 09 — segurança, privacidade e autorização
 
@@ -81,6 +81,11 @@ anos, preservando `NULL` durante o cadastro incompleto e sem impor idade máxima
 Aplicação remota confirmada. Em teste transacional autenticado, atualizar o
 perfil para idade 9 falhou com `23514` na constraint `perfis_idade_minima`; o
 `rollback` preservou o perfil original.
+
+### 15 — beta 18+
+
+Nova decisão de produto: substitui o limite de 10 anos por 18 anos, sem limite
+máximo. Estado local pronto; aplicação e teste remoto ainda pendentes.
 
 ## Matriz de acesso esperada
 
