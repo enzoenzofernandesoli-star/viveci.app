@@ -170,6 +170,8 @@ qualquer entrega.
 
 - **Auth** — email/senha via Supabase (`src/lib/auth.ts`).
 - **Onboarding** — 6 passos: nome, sexo, idade, altura/peso, objetivo, dias/semana.
+  Idade mínima de 10 anos, sem limite máximo; regra pura em
+  `src/lib/elegibilidade.ts` e proteção correspondente no banco.
 - **Rotinas de treino (manual)** — usuário cria, nomeia, adiciona/remove
   exercícios pelo catálogo, edita e exclui. Sem geração automática.
 - **Sessão de treino** — cronômetro total no topo, carrossel de bolinhas pra
@@ -585,14 +587,11 @@ ainda** — não implementar até o dono do produto detalhar como deve funcionar
 
 Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 `01_estrutura` → `02_exercicios` → `03_alimentos_desafio` → `04_storage_policies`
-→ `05_cardio` → `06_perfil_bio` → `07_preferencias` → `08_social`. Os 7
-primeiros já foram rodados no banco de produção; **`08_social`
-(`posts`/`post_likes`/`post_comments`/`seguidores` + policy nova de leitura
-pública em `perfis`) ainda não foi rodado** — até lá, o Social carrega mas
-mostra erro de feed (`PGRST205`), igual aconteceu com `07_preferencias`
-antes de rodar. Se `preferencias_usuario` voltar a dar `PGRST205` depois de
-rodada, é cache de schema do PostgREST desatualizado — "Reload schema" no
-painel do Supabase resolve, não falta tabela.
+→ `05_cardio` → `06_perfil_bio` → `07_preferencias` → `08_social` →
+`09_seguranca_beta` → `10_integridade_rotinas` → `11_indices_performance` →
+`12_privacidade_metricas_social` → `13_privilegios_minimos` →
+`14_idade_minima`. As migrations 01–13 foram confirmadas no remoto em
+18/08/2026; a 14 precisa ser aplicada depois desta decisão de produto.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia. Avatar usa

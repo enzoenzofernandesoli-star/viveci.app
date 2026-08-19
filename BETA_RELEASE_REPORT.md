@@ -56,8 +56,9 @@ O fluxo de exclusão de conta construído naquela etapa foi removido posteriorme
 
 ## Testes finais
 
-- Unitários: **134/134**.
-- E2E: **9/9** no Chromium local.
+- Unitários: **138/138**.
+- E2E: **9/9** da suíte anterior no Chromium local. O novo caso de idade precisa
+  ser repetido porque o runner travou sem emitir resultado no Windows.
 - TypeScript/build: aprovado.
 - Lint: aprovado.
 - `git diff --check`: aprovado.
@@ -104,14 +105,15 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 | Exclusão de conta | FORA DO ESCOPO | opção e função removidas por decisão do produto |
 | Fluxo principal | PASS local | unitários, E2E e smoke aprovados |
 | Simulações identificadas | PASS | avisos explícitos na interface |
-| Idade mínima | BLOCKED | decisão de produto/jurídica ausente |
+| Idade mínima | PASS local / PENDENTE remoto | mínimo de 10 anos definido; migration 14 ainda precisa ser aplicada |
 
 ## Pendências
 
 ### P0
 
 Completar os casos secundários da matriz RLS/Storage; avaliar os cinco objetos
-legados sem referência; definir a política de idade mínima.
+legados sem referência; aplicar a migration 14; definir e revisar o processo de
+autorização antes de incluir menores de 18 anos.
 
 ### P1
 
@@ -125,4 +127,8 @@ Homologação automatizada; atomicidade integral da criação de rotina; invent�
 
 **NO-GO — BETA FECHADO**
 
-O núcleo local está estável e a exposição social conhecida foi corrigida no contrato local. RLS, Storage, migration 12, limite Free e proteção do plano foram comprovados remotamente; permanecem a avaliação dos objetos legados sem referência e a decisão de idade mínima. Segurança e privacidade prevalecem sobre o resultado dos testes locais.
+O núcleo local está estável e a exposição social conhecida foi corrigida no
+contrato local. RLS, Storage, migration 12, limite Free e proteção do plano foram
+comprovados remotamente. Permanecem a migration 14, a avaliação dos objetos
+legados sem referência e o processo para participação de menores. Segurança e
+privacidade prevalecem sobre o resultado dos testes locais.

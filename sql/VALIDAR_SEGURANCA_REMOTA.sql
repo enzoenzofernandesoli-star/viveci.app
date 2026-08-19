@@ -12,6 +12,11 @@ union all select 'funcao:preparar_snapshot_treino_post', to_regprocedure('public
 union all select 'funcao:criar_rotina', to_regprocedure('public.criar_rotina(text)') is not null
 union all select 'funcao:salvar_itens_rotina', to_regprocedure('public.salvar_itens_rotina(uuid,jsonb)') is not null
 union all select 'funcao:excluir_post', to_regprocedure('public.excluir_post(uuid)') is not null
+union all select 'constraint:idade_minima', exists (
+  select 1 from pg_constraint
+  where conrelid = 'public.perfis'::regclass
+    and conname = 'perfis_idade_minima'
+)
 union all select 'trigger:proteger_plano', exists (
   select 1 from pg_trigger where tgname = 'proteger_entitlement_perfil' and not tgisinternal
 )

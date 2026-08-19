@@ -19,7 +19,7 @@ anterior foi rotacionada. Nenhum valor foi solicitado, recebido ou registrado.
 
 Status: **confirmado pelo proprietário; não verificado programaticamente**.
 
-## Migrations 09–13
+## Migrations 09–14
 
 ### 09 — segurança, privacidade e autorização
 
@@ -73,6 +73,12 @@ autenticado necessário continua sujeito às policies RLS.
 Status remoto: estruturas das migrations 09–11 confirmadas; migration 12 aplicada
 e validada; migration 13 aplicada e consulta de privilégios excessivos retornou
 zero linhas.
+
+### 14 — idade mínima
+
+Estado local: adiciona constraint em `perfis` para recusar idade inferior a 10
+anos, preservando `NULL` durante o cadastro incompleto e sem impor idade máxima.
+Aplicação remota ainda pendente.
 
 ## Matriz de acesso esperada
 

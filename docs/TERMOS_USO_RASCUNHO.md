@@ -12,7 +12,10 @@ Contato: **[EMAIL DE CONTATO]**
 
 Jurisdição: **[DECISÃO NECESSÁRIA]**
 
-A idade mínima e eventual consentimento parental ainda não foram definidos. **DECISÃO NECESSÁRIA ANTES DO BETA**, especialmente por haver fotos corporais, nutrição e conteúdo social.
+A idade mínima definida pelo produto é de 10 anos, sem limite máximo. Para
+usuários menores de 18 anos, o processo de autorização e participação do
+responsável ainda precisa ser definido e revisado antes de sua entrada no beta,
+especialmente por haver fotos corporais, nutrição e conteúdo social.
 
 ## 2. Finalidade do VIVECI
 

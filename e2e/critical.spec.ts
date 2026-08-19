@@ -115,6 +115,27 @@ test('onboarding preserva o passo atual após atualizar', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Qual sua idade?' })).toBeVisible()
 })
 
+test('onboarding aceita idade mínima de 10 anos e recusa idade inferior', async ({ page }) => {
+  const state = baseState(false)
+  await mockBackend(page, state)
+  await page.goto('/onboarding')
+  await page.getByPlaceholder('Seu nome').fill('Pessoa Beta')
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByRole('button', { name: 'Masculino' }).click()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+
+  const idade = page.getByPlaceholder('Anos')
+  const continuar = page.getByRole('button', { name: 'Continuar' })
+  await idade.fill('9')
+  await expect(page.getByText('É necessário ter pelo menos 10 anos.')).toBeVisible()
+  await expect(continuar).toBeDisabled()
+
+  await idade.fill('10')
+  await expect(continuar).toBeEnabled()
+  await continuar.click()
+  await expect(page.getByRole('heading', { name: 'Altura e peso' })).toBeVisible()
+})
+
 test('cria rotina com exercício e salva uma única vez', async ({ page }) => {
   const state = baseState()
   await mockBackend(page, state)

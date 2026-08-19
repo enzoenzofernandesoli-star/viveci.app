@@ -36,7 +36,9 @@ O isolamento remoto e a migração de fotos legadas precisam ser validados antes
 
 ## 4. Finalidades
 
-Os dados são usados para autenticar a conta, registrar treino e alimentação, calcular evolução, personalizar recomendações determinísticas, operar o Social, permitir exportação/exclusão e manter segurança e integridade do serviço.
+Os dados são usados para autenticar a conta, registrar treino e alimentação,
+calcular evolução, personalizar recomendações determinísticas, operar o Social,
+permitir exportação e manter segurança e integridade do serviço.
 
 As bases legais aplicáveis devem ser definidas por revisão jurídica conforme o responsável, o público e os países atendidos. Este rascunho não escolhe bases legais sem essa decisão.
 
@@ -70,7 +72,11 @@ Prazos de retenção, tratamento de backups, logs, denúncias e descarte após e
 
 ## 10. Menores de idade
 
-**DECISÃO NECESSÁRIA ANTES DO BETA.** O produto ainda não definiu idade mínima, consentimento parental ou processo específico para menores. Isso é crítico por envolver fotos corporais, peso, nutrição e Social. Nenhuma idade é inventada neste rascunho.
+O produto definiu idade mínima de 10 anos, sem limite máximo. O processo de
+autorização do responsável, informação adequada e tratamento específico dos
+dados de menores ainda precisa ser definido e revisado antes de permitir sua
+participação no beta. Isso é crítico por envolver fotos corporais, peso,
+nutrição e Social.
 
 ## 11. Direitos e alterações
 

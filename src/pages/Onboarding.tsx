@@ -4,6 +4,7 @@ import { Logo } from '../components/Logo'
 import { useSessao } from '../lib/auth'
 import { usePerfil, atualizarPerfil, ROTULO_OBJETIVO, type Sexo, type Objetivo } from '../lib/perfil'
 import { mensagemErro } from '../lib/mensagemErro'
+import { IDADE_MINIMA, idadePermitida } from '../lib/elegibilidade'
 
 const TOTAL_PASSOS = 6
 
@@ -35,7 +36,7 @@ function passoValido(passo: number, r: Respostas): boolean {
       return r.sexo !== null
     case 2: {
       const n = Number(r.idade)
-      return n >= 14 && n <= 90
+      return idadePermitida(n)
     }
     case 3: {
       const altura = Number(r.altura_cm)
@@ -229,6 +230,9 @@ export default function Onboarding() {
               <>
                 <Titulo>Qual sua idade?</Titulo>
                 <Campo label="Idade" tipo="number" value={r.idade} onChange={(v) => setR({ ...r, idade: v })} placeholder="Anos" />
+                {r.idade && !idadePermitida(Number(r.idade)) && (
+                  <p className="text-sm text-down">É necessário ter pelo menos {IDADE_MINIMA} anos.</p>
+                )}
               </>
             )}
 
