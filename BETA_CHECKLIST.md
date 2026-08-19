@@ -46,7 +46,7 @@ Release gate atualizado em 18 de agosto de 2026 após as Etapas 32–37.
 - [x] Política de Privacidade, Termos e ciclo de dados alinhados tecnicamente ao produto, ainda como rascunhos.
 - [x] Recursos simulados continuam identificados como demonstração/experimental.
 - [x] Payload social é mascarado na view/RPC local e filtrado novamente no cliente; 3 testes cobrem combinações das flags.
-- [x] Documentos `BETA_PRODUCT_DECISIONS.md` e `BETA_OPERATIONS.md` registram idade pendente, placeholders e resposta mínima a incidente.
+- [x] Documentos `BETA_PRODUCT_DECISIONS.md` e `BETA_OPERATIONS.md` registram a decisão 18+, placeholders e resposta mínima a incidente.
 
 ## Limite da evidência
 

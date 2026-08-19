@@ -113,8 +113,10 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 
 ### P0
 
-Completar os casos secundários da matriz RLS/Storage; avaliar os cinco objetos
-legados sem referência.
+Confirmar na prática que uma URL assinada de `progresso-privado` deixa de
+funcionar depois do prazo configurado. A matriz complementar de RLS/Storage já
+foi aprovada. Os cinco objetos legados sem referência permanecem preservados e
+foram classificados para avaliação pós-beta.
 
 ### P1
 
@@ -130,6 +132,6 @@ Homologação automatizada; atomicidade integral da criação de rotina; invent�
 
 O núcleo local está estável e a exposição social conhecida foi corrigida no
 contrato local. RLS, Storage, migration 12, limite Free e proteção do plano foram
-comprovados remotamente. Permanecem a avaliação dos objetos legados sem
-referência. Segurança e
-privacidade prevalecem sobre o resultado dos testes locais.
+comprovados remotamente. O único P0 técnico restante é comprovar a expiração
+prática da URL assinada de mídia corporal privada. Segurança e privacidade
+prevalecem sobre o resultado dos testes locais.
