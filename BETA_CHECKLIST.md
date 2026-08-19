@@ -36,8 +36,8 @@ Release gate atualizado em 18 de agosto de 2026 após as Etapas 32–37.
 ## Concluído localmente
 
 - [x] 138/138 testes unitários.
-- [x] 9/9 E2E anteriores no Chromium local, incluindo ausência da opção de excluir conta e smoke das áreas principais.
-- [ ] Novo E2E da idade foi adicionado, mas o runner travou sem emitir resultado no Windows; repetir antes da entrega.
+- [x] 10/10 E2E no Chromium local contra o build de produção, incluindo idade mínima de 18 anos, ausência da opção de excluir conta e smoke das áreas principais.
+- [x] Runner validado no Windows com o servidor de preview controlado externamente; isso evita o travamento de encerramento observado com o servidor de desenvolvimento interno do Playwright.
 - [x] TypeScript/build, lint e `git diff --check` aprovados.
 - [x] Smoke test em 375, 390, 430 e 1280 px: Home, Treino, Corpo, Nutrição, Social, Perfil e Configurações.
 - [x] Upload local valida MIME, extensão e tamanho.

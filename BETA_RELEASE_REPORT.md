@@ -57,8 +57,10 @@ O fluxo de exclusão de conta construído naquela etapa foi removido posteriorme
 ## Testes finais
 
 - Unitários: **138/138**.
-- E2E: **9/9** da suíte anterior no Chromium local. O novo caso de idade precisa
-  ser repetido porque o runner travou sem emitir resultado no Windows.
+- E2E: **10/10** no Chromium local contra o build de produção, incluindo o novo
+  caso de idade 18+. No Windows, a execução limpa usa o servidor de preview
+  controlado externamente para evitar o travamento de encerramento do servidor
+  de desenvolvimento interno do Playwright.
 - TypeScript/build: aprovado.
 - Lint: aprovado.
 - `git diff --check`: aprovado.
