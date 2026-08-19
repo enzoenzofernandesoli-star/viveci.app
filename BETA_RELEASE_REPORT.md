@@ -1,6 +1,8 @@
 # VIVECI — relatório final do beta fechado
 
 Auditoria final: 18 de agosto de 2026. Gate executado após o commit `e03e096`.
+Atualização de 19 de agosto de 2026: expiração prática da URL assinada
+confirmada (Etapa 38), único P0 técnico restante.
 
 ## Etapas 23–31
 
@@ -25,7 +27,8 @@ Auditoria final: 18 de agosto de 2026. Gate executado após o commit `e03e096`.
 | 34 | `2176b2d` | compensação de uploads e plano de migração; remoto BLOCKED |
 | 35 | `1b4c891` | fluxo posteriormente removido por decisão do produto |
 | 36 | `e03e096` | operação documentada; idade mínima continua P0 |
-| 37 | commit deste relatório | release gate definitivo |
+| 37 | `aff3a1f` | release gate definitivo |
+| 38 | commit desta atualização | expiração da URL assinada confirmada; gate liberado com P1 em acompanhamento |
 
 ## Etapa 29 — Supabase, RLS e Storage
 
@@ -38,9 +41,12 @@ conteúdo social autorizado permaneceram visíveis.
 
 O bucket `progresso-privado` foi validado com três fotos reais: o proprietário
 acessou os registros e a outra conta recebeu zero linhas e zero objetos. Não
-existiam Body Scans legados para migrar. Permanecem a expiração prática da URL
-assinada, a tentativa explícita de sobrescrever path alheio e os recursos ainda
-marcados como pendentes na matriz completa em `SUPABASE_SECURITY_VALIDATION.md`.
+existiam Body Scans legados para migrar. A tentativa explícita de sobrescrever
+path alheio foi bloqueada com `42501`. Em 19/08/2026 (Etapa 38), a expiração
+prática de uma URL assinada de 60s foi confirmada contra o bucket remoto:
+`200` na primeira requisição, `400 InvalidJWT` (`"exp"` expirada) após ~119s.
+Os recursos restantes marcados como pendentes na matriz completa de
+`SUPABASE_SECURITY_VALIDATION.md` são operacionais (P1), não de segurança.
 
 ## Etapa 30 — exportação e privacidade
 
@@ -102,7 +108,7 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 | Social limitado ao compartilhado | PASS remoto | duração autorizada presente; séries e volume desmarcados retornaram `NULL` |
 | Plano protegido | PASS remoto | promoção direta falhou com `42501` |
 | Limite Free backend | PASS remoto | quinta rotina falhou com `23514`; total permaneceu em quatro |
-| Uploads | PASS parcial | buckets/policies, Body Scan e bloqueio de path alheio validados; expiração pendente |
+| Uploads | PASS remoto | buckets/policies, Body Scan, bloqueio de path alheio e expiração de URL assinada validados |
 | Exportação | PASS local | pacote ampliado e teste de remoção de segredos |
 | Exclusão de conta | FORA DO ESCOPO | opção e função removidas por decisão do produto |
 | Fluxo principal | PASS local | unitários, E2E e smoke aprovados |
@@ -113,10 +119,10 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 
 ### P0
 
-Confirmar na prática que uma URL assinada de `progresso-privado` deixa de
-funcionar depois do prazo configurado. A matriz complementar de RLS/Storage já
-foi aprovada. Os cinco objetos legados sem referência permanecem preservados e
-foram classificados para avaliação pós-beta.
+Nenhuma. A expiração prática de uma URL assinada de `progresso-privado` foi
+confirmada em 19/08/2026 (Etapa 38) — ver `SUPABASE_SECURITY_VALIDATION.md`.
+Os cinco objetos legados sem referência permanecem preservados e foram
+classificados para avaliação pós-beta (P2).
 
 ### P1
 
@@ -128,10 +134,15 @@ Homologação automatizada; atomicidade integral da criação de rotina; invent�
 
 ## Decisão
 
-**NO-GO — BETA FECHADO**
+**GO TÉCNICO — BETA FECHADO, COM PENDÊNCIAS OPERACIONAIS P1 EM ACOMPANHAMENTO**
 
 O núcleo local está estável e a exposição social conhecida foi corrigida no
-contrato local. RLS, Storage, migration 12, limite Free e proteção do plano foram
-comprovados remotamente. O único P0 técnico restante é comprovar a expiração
-prática da URL assinada de mídia corporal privada. Segurança e privacidade
-prevalecem sobre o resultado dos testes locais.
+contrato local. RLS, Storage, migration 12, limite Free, proteção do plano e a
+expiração prática da URL assinada de mídia corporal privada foram comprovados
+remotamente (Etapa 38, 19/08/2026). Não resta nenhum P0 técnico ou de
+segurança. O beta fechado pode prosseguir, mas permanece condicionado ao
+fechamento dos itens P1 (responsável/contato do beta, retenção/backups/
+fornecedores, revisão jurídica de Termos e Privacidade, processo de denúncias,
+observabilidade mínima e testes em aparelhos reais) — nenhum deles bloqueia
+tecnicamente o lançamento, mas todos precisam de dono e prazo antes de abrir
+para os primeiros participantes.

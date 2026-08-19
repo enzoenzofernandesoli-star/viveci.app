@@ -1,6 +1,7 @@
 # VIVECI — checklist final do beta fechado
 
-Release gate atualizado em 18 de agosto de 2026 após as Etapas 32–37.
+Release gate atualizado em 19 de agosto de 2026 após a confirmação prática
+da expiração da URL assinada (último P0 técnico).
 
 ## P0 — BLOQUEIA BETA
 
@@ -13,8 +14,18 @@ Release gate atualizado em 18 de agosto de 2026 após as Etapas 32–37.
 - [x] Conta Free permaneceu com quatro rotinas; quinta falhou na interface e no RPC; promoção direta para Pro falhou com `42501`.
 - [x] Matriz A/B complementar aprovada para medidas, preferências, cardio, bloqueios e denúncias.
 - [x] Sobrescrita de path privado alheio bloqueada remotamente por RLS com `42501`.
-- [ ] Confirmar expiração prática da URL assinada.
+- [x] Confirmar expiração prática da URL assinada.
 - [x] Beta 18+ aplicado no app e no Supabase; idade 17 rejeitada remotamente com `23514`.
+
+### Evidência — expiração da URL assinada (19/08/2026)
+
+Teste dedicado contra o bucket privado remoto `progresso-privado`, sem
+reutilizar arquivo real de usuário: objeto de teste próprio enviado à pasta
+`body` do usuário autenticado, URL assinada gerada com validade de 60
+segundos. Primeira requisição imediatamente após a emissão: `200 OK`.
+Segunda requisição após ~119 segundos: `400 InvalidJWT` (`"exp" claim
+timestamp check failed`). Objeto de teste removido do bucket ao final. Nenhum
+token, URL assinada ou credencial foi registrado neste documento.
 
 ## P1 — PODE ENTRAR NO BETA COM ACOMPANHAMENTO
 

@@ -1,10 +1,10 @@
 # VIVECI — validação de segurança do Supabase
 
-Data: 18 de agosto de 2026.
+Data: 19 de agosto de 2026.
 
 ## Resultado atualizado da Etapa 29
 
-**PASS parcial com pendências específicas**
+**PASS técnico completo — pendências remanescentes são operacionais (P1), não de segurança**
 
 O repositório foi auditado localmente e a configuração remota foi validada pelo
 proprietário no painel oficial, com duas contas descartáveis. Nenhuma credencial,
@@ -102,7 +102,7 @@ preservou o perfil original.
 | Posts | sim | leitura social limitada | PASS A/B para flags de métricas |
 | Comentários, likes e seguidores | conforme autoria/interação | leitura social | interação normal PASS; abuso pendente |
 | Avatar e foto social | pública | pública | PASS pela interface |
-| Foto corporal nova | URL assinada para o dono | não | RLS PASS; expiração prática pendente |
+| Foto corporal nova | URL assinada para o dono | não | RLS PASS; expiração prática confirmada |
 | Bloqueios e denúncias | somente autor/denunciante | não | PASS A/B |
 
 ## Teste A/B
@@ -165,8 +165,11 @@ Novos Body Scans guardam bucket/path, geram URL assinada por uma hora e não
 persistem a signed URL. A geração passa pela RLS esperada do proprietário.
 Buckets, flags e policies remotos: **confirmados**. A privacidade do Body Scan foi
 testada A/B. A tentativa de A inserir um objeto no path privado de B foi bloqueada
-pela RLS de `storage.objects` com `42501`; a expiração prática da signed URL
-permanece pendente.
+pela RLS de `storage.objects` com `42501`. Em 19/08/2026, a expiração prática da
+signed URL foi confirmada: URL de teste (60s, objeto próprio dedicado, sem
+reutilizar arquivo real de usuário) respondeu `200` imediatamente após a emissão
+e `400 InvalidJWT` ("exp" claim expirada) após ~119 segundos; o objeto de teste
+foi removido ao final. Nenhum token/URL assinada foi registrado.
 
 ## Fotos legadas
 
@@ -217,6 +220,8 @@ Não foi implementado garbage collector nesta etapa.
 
 ## Pendências remotas restantes
 
-1. comprovar na prática a expiração de uma URL assinada;
-2. decidir a retenção dos cinco objetos legados sem referência inequívoca;
-3. continuar registrando evidências sem tokens, senhas, URLs assinadas ou dados pessoais.
+Nenhuma pendência técnica de segurança remota permanece aberta. Restam apenas
+itens operacionais:
+
+1. decidir a retenção dos cinco objetos legados sem referência inequívoca (P2);
+2. continuar registrando evidências sem tokens, senhas, URLs assinadas ou dados pessoais.
