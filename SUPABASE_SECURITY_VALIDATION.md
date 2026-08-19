@@ -78,7 +78,9 @@ zero linhas.
 
 Estado local: adiciona constraint em `perfis` para recusar idade inferior a 10
 anos, preservando `NULL` durante o cadastro incompleto e sem impor idade máxima.
-Aplicação remota ainda pendente.
+Aplicação remota confirmada. Em teste transacional autenticado, atualizar o
+perfil para idade 9 falhou com `23514` na constraint `perfis_idade_minima`; o
+`rollback` preservou o perfil original.
 
 ## Matriz de acesso esperada
 

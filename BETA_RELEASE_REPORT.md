@@ -105,15 +105,15 @@ Não houve nova otimização no release gate. Rotas pesadas continuam sob demand
 | Exclusão de conta | FORA DO ESCOPO | opção e função removidas por decisão do produto |
 | Fluxo principal | PASS local | unitários, E2E e smoke aprovados |
 | Simulações identificadas | PASS | avisos explícitos na interface |
-| Idade mínima | PASS local / PENDENTE remoto | mínimo de 10 anos definido; migration 14 ainda precisa ser aplicada |
+| Idade mínima | PASS remoto | mínimo de 10 anos; idade 9 rejeitada pela constraint com `23514` |
 
 ## Pendências
 
 ### P0
 
 Completar os casos secundários da matriz RLS/Storage; avaliar os cinco objetos
-legados sem referência; aplicar a migration 14; definir e revisar o processo de
-autorização antes de incluir menores de 18 anos.
+legados sem referência; definir e revisar o processo de autorização antes de
+incluir menores de 18 anos.
 
 ### P1
 
@@ -129,6 +129,6 @@ Homologação automatizada; atomicidade integral da criação de rotina; invent�
 
 O núcleo local está estável e a exposição social conhecida foi corrigida no
 contrato local. RLS, Storage, migration 12, limite Free e proteção do plano foram
-comprovados remotamente. Permanecem a migration 14, a avaliação dos objetos
-legados sem referência e o processo para participação de menores. Segurança e
+comprovados remotamente. Permanecem a avaliação dos objetos legados sem
+referência e o processo para participação de menores. Segurança e
 privacidade prevalecem sobre o resultado dos testes locais.

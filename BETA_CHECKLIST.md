@@ -14,7 +14,7 @@ Release gate atualizado em 18 de agosto de 2026 após as Etapas 32–37.
 - [x] Matriz A/B complementar aprovada para medidas, preferências, cardio, bloqueios e denúncias.
 - [x] Sobrescrita de path privado alheio bloqueada remotamente por RLS com `42501`.
 - [ ] Confirmar expiração prática da URL assinada.
-- [x] Idade mínima definida em 10 anos, sem limite máximo, e aplicada localmente.
+- [x] Idade mínima definida em 10 anos, sem limite máximo, aplicada no app e comprovada remotamente (`23514` para idade 9).
 - [ ] Definir e revisar o processo de autorização do responsável antes de incluir menores de 18 anos no beta.
 
 ## P1 — PODE ENTRAR NO BETA COM ACOMPANHAMENTO

@@ -590,8 +590,8 @@ Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 → `05_cardio` → `06_perfil_bio` → `07_preferencias` → `08_social` →
 `09_seguranca_beta` → `10_integridade_rotinas` → `11_indices_performance` →
 `12_privacidade_metricas_social` → `13_privilegios_minimos` →
-`14_idade_minima`. As migrations 01–13 foram confirmadas no remoto em
-18/08/2026; a 14 precisa ser aplicada depois desta decisão de produto.
+`14_idade_minima`. As migrations 01–14 foram confirmadas no remoto em
+18/08/2026.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia. Avatar usa
