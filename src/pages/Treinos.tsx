@@ -199,6 +199,7 @@ function AbaForca({
   erro,
   limiteAtingido,
   excluindo,
+  erroExclusao,
   onApagar,
   onCardio,
 }: {
@@ -208,12 +209,14 @@ function AbaForca({
   erro: string | null
   limiteAtingido: boolean
   excluindo: string | null
+  erroExclusao: string | null
   onApagar: (id: string) => void
   onCardio: () => void
 }) {
   const navigate = useNavigate()
   const historico = useHistoricoTreinos(userId, 3)
   const [menuAberto, setMenuAberto] = useState<string | null>(null)
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState<string | null>(null)
   const [expressAberto, setExpressAberto] = useState(false)
   const [rotinaExpress, setRotinaExpress] = useState<string>('')
   const [duracaoExpress, setDuracaoExpress] = useState<number | null>(null)
@@ -246,6 +249,10 @@ function AbaForca({
         </div>
       ) : null}
 
+      {erroExclusao && (
+        <p className="mt-4 border-y border-line/60 py-3 text-sm text-down">{erroExclusao}</p>
+      )}
+
       {carregando ? (
         <Empty text="Carregando suas rotinas..." />
       ) : erro ? (
@@ -270,16 +277,37 @@ function AbaForca({
                   <p className="mt-2 truncate text-sm text-ink-2">{r.itens.length === 0 ? 'Nenhum exercício ainda' : resumo.grupos}</p>
                   {r.itens.length > 0 && <p className="num mt-1.5 text-xs text-ink-3">{r.itens.length} exercícios · ~{resumo.minutos} min</p>}
                 </div>
-                <button onClick={() => setMenuAberto((atual) => atual === r.id ? null : r.id)} className="flex size-11 shrink-0 items-center justify-center text-ink-3 hover:text-ink" aria-label={`Mais ações para ${r.nome}`}>
+                <button onClick={() => { setConfirmandoExclusao(null); setMenuAberto((atual) => atual === r.id ? null : r.id) }} className="flex size-11 shrink-0 items-center justify-center text-ink-3 hover:text-ink" aria-label={`Mais ações para ${r.nome}`}>
                   <MoreHorizontal size={20} />
                 </button>
               </div>
 
               {menuAberto === r.id && (
-                <div className="absolute right-0 top-14 z-10 w-44 rounded-xl border border-line bg-card p-1.5">
-                  <button onClick={() => navigate(`/treino/${r.id}/editar`)} className="min-h-11 w-full rounded-lg px-3 text-left text-xs font-semibold text-ink-2 hover:bg-card-hover hover:text-ink">Editar rotina</button>
-                  <button onClick={() => { setMenuAberto(null); onApagar(r.id) }} disabled={excluindo === r.id} className="min-h-11 w-full rounded-lg px-3 text-left text-xs font-semibold text-down hover:bg-card-hover disabled:opacity-50">Excluir rotina</button>
-                </div>
+                confirmandoExclusao === r.id ? (
+                  <div className="absolute right-0 top-14 z-10 w-56 rounded-xl border border-line bg-card p-3">
+                    <p className="px-1 text-xs text-ink-2">Excluir esta rotina? Esta ação não pode ser desfeita.</p>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={() => { setConfirmandoExclusao(null); setMenuAberto(null) }}
+                        className="min-h-11 flex-1 rounded-lg text-xs font-semibold text-ink-2 hover:bg-card-hover"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={() => { setConfirmandoExclusao(null); setMenuAberto(null); onApagar(r.id) }}
+                        disabled={excluindo === r.id}
+                        className="min-h-11 flex-1 rounded-lg text-xs font-semibold text-down hover:bg-card-hover disabled:opacity-50"
+                      >
+                        {excluindo === r.id ? 'Excluindo...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute right-0 top-14 z-10 w-44 rounded-xl border border-line bg-card p-1.5">
+                    <button onClick={() => navigate(`/treino/${r.id}/editar`)} className="min-h-11 w-full rounded-lg px-3 text-left text-xs font-semibold text-ink-2 hover:bg-card-hover hover:text-ink">Editar rotina</button>
+                    <button onClick={() => setConfirmandoExclusao(r.id)} className="min-h-11 w-full rounded-lg px-3 text-left text-xs font-semibold text-down hover:bg-card-hover">Excluir rotina</button>
+                  </div>
+                )
               )}
 
               <button
@@ -362,17 +390,20 @@ export default function Treinos() {
   const { perfil } = usePerfil(sessao?.user.id)
   const { rotinas, carregando, erro, recarregar } = useRotinas(sessao?.user.id)
   const [excluindo, setExcluindo] = useState<string | null>(null)
+  const [erroExclusao, setErroExclusao] = useState<string | null>(null)
   const [tela, setTela] = useState<'principal' | 'cardio'>('principal')
 
   const plano = perfil?.plano ?? 'free'
   const limiteAtingido = limiteRotinasAtingido(plano, rotinas.length)
 
   async function apagar(id: string) {
-    if (!window.confirm('Excluir esta rotina? Esta ação não pode ser desfeita.')) return
+    setErroExclusao(null)
     setExcluindo(id)
     try {
       await excluirRotina(id)
       recarregar()
+    } catch (err) {
+      setErroExclusao(mensagemErro(err, 'Não deu pra excluir a rotina. Tente novamente.'))
     } finally {
       setExcluindo(null)
     }
@@ -393,6 +424,7 @@ export default function Treinos() {
           erro={erro}
           limiteAtingido={limiteAtingido}
           excluindo={excluindo}
+          erroExclusao={erroExclusao}
           onApagar={apagar}
           onCardio={() => setTela('cardio')}
         />
