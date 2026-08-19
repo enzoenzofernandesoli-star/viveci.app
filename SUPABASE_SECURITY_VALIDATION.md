@@ -85,7 +85,9 @@ perfil para idade 9 falhou com `23514` na constraint `perfis_idade_minima`; o
 ### 15 — beta 18+
 
 Nova decisão de produto: substitui o limite de 10 anos por 18 anos, sem limite
-máximo. Estado local pronto; aplicação e teste remoto ainda pendentes.
+máximo. Aplicação remota confirmada. Em teste transacional autenticado, idade 17
+foi rejeitada com `23514` pela constraint `perfis_idade_minima`; o `rollback`
+preservou o perfil original.
 
 ## Matriz de acesso esperada
 

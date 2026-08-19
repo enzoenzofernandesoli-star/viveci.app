@@ -14,8 +14,7 @@ Release gate atualizado em 18 de agosto de 2026 após as Etapas 32–37.
 - [x] Matriz A/B complementar aprovada para medidas, preferências, cardio, bloqueios e denúncias.
 - [x] Sobrescrita de path privado alheio bloqueada remotamente por RLS com `42501`.
 - [ ] Confirmar expiração prática da URL assinada.
-- [x] Beta definido como exclusivo para maiores de 18 anos e regra aplicada localmente.
-- [ ] Aplicar e validar remotamente a migration 15, que substitui o limite anterior de 10 anos.
+- [x] Beta 18+ aplicado no app e no Supabase; idade 17 rejeitada remotamente com `23514`.
 
 ## P1 — PODE ENTRAR NO BETA COM ACOMPANHAMENTO
 
