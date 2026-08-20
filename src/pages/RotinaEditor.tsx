@@ -6,7 +6,7 @@ import { Empty } from '../components/Empty'
 import { SeletorExercicio } from '../components/SeletorExercicio'
 import { useSessao } from '../lib/auth'
 import { usePerfil } from '../lib/perfil'
-import { useRotina, useRotinas, criarRotina, renomearRotina, salvarItensRotina } from '../lib/rotinas'
+import { useRotina, useRotinas, criarRotina, renomearRotina, salvarItensRotina, excluirRotina } from '../lib/rotinas'
 import { limiteRotinasAtingido } from '../lib/planos'
 import { EXERCICIOS, type Exercicio } from '../data/exercicios'
 import { mensagemErro } from '../lib/mensagemErro'
@@ -80,11 +80,19 @@ export default function RotinaEditor() {
           setSalvando(false)
           return
         }
-        const { sessaoId } = await criarRotina(sessao.user.id, nome.trim())
-        await salvarItensRotina(
-          sessaoId,
-          itens.map((i) => i.exercicioId),
-        )
+        const { rotinaId, sessaoId } = await criarRotina(sessao.user.id, nome.trim())
+        try {
+          await salvarItensRotina(
+            sessaoId,
+            itens.map((i) => i.exercicioId),
+          )
+        } catch (erroItens) {
+          // criar_rotina e salvar_itens_rotina são RPCs separadas — se a segunda falhar,
+          // desfaz a primeira na mão pra não deixar uma rotina vazia órfã contando no
+          // limite de 4 do Free (compensação local, não é transação real no banco).
+          await excluirRotina(rotinaId).catch(() => {})
+          throw erroItens
+        }
       }
       navigate('/treino', { replace: true })
     } catch (err) {
