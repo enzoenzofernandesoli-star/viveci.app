@@ -1,0 +1,32 @@
+-- VIVECI — BLOCO 16: endurecimento apontado pelos advisors do Supabase
+-- Aplicar depois de 15_idade_minima_18.sql.
+--
+-- Achado real corrigido: novo_usuario() (trigger que cria a linha em `perfis`
+-- no cadastro) não tinha search_path fixo (function_search_path_mutable).
+alter function public.novo_usuario() set search_path = public;
+
+-- ─────────────────────────────────────────────────────────────
+-- NÃO FAZER — testado e revertido em 20/08/2026.
+-- ─────────────────────────────────────────────────────────────
+-- O advisor de segurança também marca como WARN que novo_usuario(),
+-- impedir_follow_bloqueado(), preparar_snapshot_treino_post(),
+-- proteger_entitlement_perfil() e validar_limite_rotinas() — todas
+-- SECURITY DEFINER, todas usadas só como trigger, nunca chamadas como RPC
+-- pelo app — ficam expostas em /rest/v1/rpc/<nome> pra anon/authenticated.
+-- A tentação óbvia é `revoke execute on function ... from public;`.
+--
+-- NÃO FAÇA ISSO. Testado ao vivo contra o projeto remoto: revogar EXECUTE de
+-- PUBLIC nessas funções quebra o próprio disparo do trigger, não só a
+-- chamada direta via RPC — cadastro de usuário novo parou de criar a linha
+-- em `perfis` (perfilCriado: false, sem erro nenhum, silenciosamente).
+-- O mesmo revoke foi aplicado nas outras 4 e reveretido pelo mesmo motivo
+-- antes de qualquer teste funcional, por precaução (linha de raciocínio: se
+-- quebrou uma trigger BEFORE INSERT no cadastro, provavelmente quebra as
+-- outras 4 do mesmo jeito).
+--
+-- PostgREST expõe toda função do schema public como RPC por padrão — a
+-- forma correta de fechar isso, se algum dia for necessário, é mover essas
+-- funções pra um schema que não faz parte da API exposta (`db-schema` do
+-- PostgREST), não revogar EXECUTE. Não reintroduzir o revoke sem testar
+-- cadastro, seguir, criar rotina, criar post com treino e editar perfil
+-- logo em seguida — os 5 fluxos que dependem de cada uma dessas triggers.

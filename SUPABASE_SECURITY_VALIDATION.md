@@ -1,6 +1,7 @@
 # VIVECI — validação de segurança do Supabase
 
-Data: 19 de agosto de 2026.
+Data: 19 de agosto de 2026. Atualizado em 20/08/2026 com a auditoria de
+advisors do Supabase (migration 16).
 
 ## Resultado atualizado da Etapa 29
 
@@ -218,10 +219,44 @@ registradas de forma específica, sem manter bloqueios já resolvidos.
 
 Não foi implementado garbage collector nesta etapa.
 
+## Auditoria de advisors do Supabase (20/08/2026, migration 16)
+
+`get_advisors(type=security)` foi rodado direto contra o projeto remoto.
+Achados e o que foi feito com cada um:
+
+- **`function_search_path_mutable` em `novo_usuario()`** — corrigido:
+  `alter function ... set search_path = public`. Sem efeito colateral,
+  confirmado com um cadastro real de teste após a mudança.
+- **`security_definer_view` (ERROR) em `perfis_publicos`, `posts_publicos`,
+  `posts_proprios`** — revisado e aceito por design, não corrigido. Essas
+  views existem justamente pra expor, com filtro próprio (bloqueio, flags de
+  compartilhamento, colunas mínimas), um recorte controlado de tabelas cuja
+  RLS de base restringe ao dono. Rodar como `security_invoker` quebraria a
+  visualização de perfil/post de outro usuário — a RLS de `perfis`/`posts`
+  só permite o dono ver a própria linha, então a view *precisa* rodar com
+  privilégio elevado pra atravessar isso de forma controlada. Sem ação.
+- **`anon_security_definer_function_executable` /
+  `authenticated_security_definer_function_executable` nas 5 funções de
+  trigger** (`novo_usuario`, `impedir_follow_bloqueado`,
+  `preparar_snapshot_treino_post`, `proteger_entitlement_perfil`,
+  `validar_limite_rotinas`) — **tentado e revertido**. `revoke execute ...
+  from public` nessas funções quebra o próprio disparo do trigger (não só a
+  chamada direta via RPC): testado ao vivo, cadastro de usuário parou de
+  criar a linha em `perfis`, sem erro nenhum. Revertido pra `grant execute
+  ... to public` (estado original) e confirmado com `criar_rotina` real
+  funcionando de novo. Detalhes e o porquê de não tentar de novo sem testar
+  os 5 fluxos dependentes estão em `sql/16_endurecimento_advisories.sql`.
+- **`excluir_post`/`existe_bloqueio_com` executáveis por `authenticated`** —
+  esperado, são RPCs de verdade chamadas pelo app. Sem ação.
+- **`auth_leaked_password_protection` desabilitado** — configuração do
+  painel do Supabase (Auth → Policies), não SQL. Recomendado habilitar,
+  mas depende do proprietário acessar o painel; não foi alterado aqui.
+
 ## Pendências remotas restantes
 
 Nenhuma pendência técnica de segurança remota permanece aberta. Restam apenas
 itens operacionais:
 
 1. decidir a retenção dos cinco objetos legados sem referência inequívoca (P2);
-2. continuar registrando evidências sem tokens, senhas, URLs assinadas ou dados pessoais.
+2. habilitar "Leaked Password Protection" no painel do Supabase (Auth → Policies) — ação do proprietário, fora do alcance de SQL;
+3. continuar registrando evidências sem tokens, senhas, URLs assinadas ou dados pessoais.
