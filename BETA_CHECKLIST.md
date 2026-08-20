@@ -34,13 +34,13 @@ token, URL assinada ou credencial foi registrado neste documento.
 - [ ] Definir responsável e processo operacional para denúncias sociais.
 - [ ] Configurar error tracking, logs e alertas mínimos.
 - [ ] Testar confirmação e recuperação de email, câmera, teclado virtual e instalação PWA em aparelhos reais.
-- [ ] Acompanhar sessões abandonadas (`finalizada_em = NULL`), que não são retomadas.
+- [x] Acompanhar sessões abandonadas (`finalizada_em = NULL`) — baseline levantada em 20/08/2026: 22 sessões abandonadas no banco, de 15/08 a 19/08 (majoritariamente dados de teste da fase de validação). Retomada/limpeza automática continua P2.
 
 ## P2 — PÓS-BETA
 
 - [ ] Criar Supabase isolado para automatizar E2E de Auth, RLS, Storage e duas contas.
-- [ ] Unificar criação de rotina e itens em uma única transação ou criar compensação explícita.
-- [x] Adicionar compensação local quando upload conclui e a persistência seguinte falha. Cinco objetos legados sem referência continuam preservados para avaliação.
+- [x] Unificar criação de rotina e itens em uma única transação ou criar compensação explícita. Compensação local adicionada em 20/08/2026 (`RotinaEditor.tsx`): se `salvar_itens_rotina` falhar logo após `criar_rotina`, a rotina recém-criada é excluída antes de propagar o erro, evitando rotina vazia órfã contando no limite Free. Unificar em uma única transação no banco continua como melhoria futura opcional.
+- [x] Adicionar compensação local quando upload conclui e a persistência seguinte falha. Cinco objetos legados sem referência: classificação confirmada sem ambiguidade em 20/08/2026 (ver `STORAGE_MIGRATION_REPORT.md`); permanecem preservados até decisão de retenção do proprietário.
 - [ ] Avaliar retomada/limpeza programada de sessões abandonadas.
 - [ ] Adicionar thumbnails/processamento de mídia somente quando o uso real justificar.
 
