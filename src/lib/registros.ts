@@ -48,8 +48,27 @@ export async function registrarSerie(dados: {
   if (error) throw error
 }
 
+const HORAS_ABANDONO = 6
+
+/**
+ * Remove sessões que ficaram com `finalizada_em = NULL` por horas demais (app fechado no
+ * meio do treino etc). Não afeta os registros de série já gravados — eles não têm FK pra
+ * `sessoes_concluidas`, só ficam órfãos de nome de sessão. Silenciosa: é limpeza de
+ * bastidor, não pode travar o início de um treino novo.
+ */
+async function limparSessoesAbandonadas(userId: string) {
+  const cortes = new Date(Date.now() - HORAS_ABANDONO * 60 * 60 * 1000).toISOString()
+  await supabase
+    .from('sessoes_concluidas')
+    .delete()
+    .eq('user_id', userId)
+    .is('finalizada_em', null)
+    .lt('iniciada_em', cortes)
+}
+
 /** sessaoId nulo = treino rápido, sem rotina salva por trás. */
 export async function iniciarSessao(userId: string, sessaoId: string | null): Promise<string> {
+  limparSessoesAbandonadas(userId).catch(() => {})
   const { data, error } = await supabase
     .from('sessoes_concluidas')
     .insert({ user_id: userId, sessao_id: sessaoId, iniciada_em: new Date().toISOString() })

@@ -41,7 +41,7 @@ token, URL assinada ou credencial foi registrado neste documento.
 - [ ] Criar Supabase isolado para automatizar E2E de Auth, RLS, Storage e duas contas.
 - [x] Unificar criação de rotina e itens em uma única transação ou criar compensação explícita. Compensação local adicionada em 20/08/2026 (`RotinaEditor.tsx`): se `salvar_itens_rotina` falhar logo após `criar_rotina`, a rotina recém-criada é excluída antes de propagar o erro, evitando rotina vazia órfã contando no limite Free. Unificar em uma única transação no banco continua como melhoria futura opcional.
 - [x] Adicionar compensação local quando upload conclui e a persistência seguinte falha. Cinco objetos legados sem referência: classificação confirmada sem ambiguidade em 20/08/2026 (ver `STORAGE_MIGRATION_REPORT.md`); permanecem preservados até decisão de retenção do proprietário.
-- [ ] Avaliar retomada/limpeza programada de sessões abandonadas.
+- [x] Avaliar retomada/limpeza programada de sessões abandonadas. Implementado em 21/08/2026: toda vez que um treino novo começa (`iniciarSessao` em `src/lib/registros.ts`), sessões do próprio usuário com `finalizada_em = NULL` há mais de 6 horas são removidas silenciosamente. Sem impacto nos registros de série já gravados (não têm FK pra `sessoes_concluidas`) nem em histórico/streak (já filtravam `finalizada_em` não nulo). Retomada de sessão não foi implementada — não há pedido do produto pra isso.
 - [ ] Adicionar thumbnails/processamento de mídia somente quando o uso real justificar.
 
 ## Concluído localmente
