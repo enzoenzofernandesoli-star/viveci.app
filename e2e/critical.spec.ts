@@ -189,6 +189,23 @@ test('privacidade não oferece exclusão de conta', async ({ page }) => {
   await expect(page).toHaveURL(/\/perfil\/configuracoes$/)
 })
 
+test('fotos editoriais de treino aparecem somente na Home', async ({ page }) => {
+  const state = baseState()
+  await mockBackend(page, state)
+
+  const fotos = ['push-', 'pull-', 'legs-', 'fullbody-', 'cardio-']
+
+  await page.goto('/')
+  for (const nome of fotos) {
+    await expect(page.locator(`img[src*="${nome}"]`)).toHaveCount(1)
+  }
+
+  await page.goto('/treino')
+  for (const nome of fotos) {
+    await expect(page.locator(`img[src*="${nome}"]`)).toHaveCount(0)
+  }
+})
+
 test('smoke das áreas principais não quebra em mobile ou desktop', async ({ page }) => {
   test.setTimeout(120_000)
   const state = baseState()

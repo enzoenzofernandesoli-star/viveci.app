@@ -15,6 +15,16 @@ const FOTOS_HERO = import.meta.glob('../../assets/viveci/home-hero.{jpg,jpeg,png
 
 const FOTO_HERO = Object.values(FOTOS_HERO)[0] ?? null
 
+const FOTOS_TREINOS = import.meta.glob('../../assets/viveci/workouts/*.{jpg,jpeg,png,webp,avif}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>
+
+const FOTOS_CARROSSEL = Object.entries(FOTOS_TREINOS)
+  .sort(([caminhoA], [caminhoB]) => caminhoA.localeCompare(caminhoB))
+  .map(([, url]) => url)
+
 function nomeTipografico(nome: string): string {
   const limpo = nome.trim()
   if (limpo === '' || limpo !== limpo.toLocaleLowerCase('pt-BR')) return limpo
@@ -74,6 +84,7 @@ export function HeroTreino({
     return (
       <WorkoutCover
         src={FOTO_HERO}
+        slides={FOTOS_CARROSSEL}
         alt=""
         fallback={<FundoEditorial />}
         className="border-y border-line/60 lg:rounded-[var(--radius-media)] lg:border"
@@ -97,6 +108,7 @@ export function HeroTreino({
   return (
     <WorkoutCover
       src={FOTO_HERO}
+      slides={FOTOS_CARROSSEL}
       alt=""
       fallback={<FundoEditorial />}
       className="border-y border-line/60 lg:rounded-[var(--radius-media)] lg:border"

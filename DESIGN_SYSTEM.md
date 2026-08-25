@@ -42,10 +42,11 @@ conquista e sequência.
 
 ## Fotografia
 
-- Home: `src/assets/viveci/home-hero.webp`, oficial e prioritária.
+- Home: carrossel discreto das fotografias oficiais de treino, com troca a
+  cada 5 segundos e respeito a `prefers-reduced-motion`.
 - Login desktop: reutiliza a Home Hero com crop próprio.
-- Treinos: aceita somente capas oficiais em `src/assets/viveci/workouts/`;
-  usa mídia 3:2 com `object-cover` e, quando ausente, fallback geométrico.
+- Treinos: não usa fotografia decorativa; rotinas e cardio são composições
+  tipográficas orientadas à ação.
 - Sessão usa GIF didático do exercício, nunca fotografia decorativa.
 - Social e Body Scan usam mídia enviada pelo usuário.
 - Corpo e Nutrição não recebem fotografia decorativa.
