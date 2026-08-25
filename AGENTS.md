@@ -97,6 +97,11 @@ com tracking 0.06em em `ink-2`. No logotipo/wordmark "VIVECI", usar letter
 spacing largo (`tracking-widest` ou maior) — é a única exceção ao texto
 compacto do resto do app.
 
+**Logo oficial:** fonte preservada em
+`src/assets/viveci/brand/logo-oficial.jpg`. Os ícones instaláveis derivados
+ficam em `public/icons/` (180, 192 e 512px, incluindo maskable). Não substituir
+por símbolo genérico nem redesenhar sem pedido explícito do dono do produto.
+
 **Card:** `bg-card`, borda 1px `line`, radius 16px, padding 24px, **sem sombra**.
 **Botão primário:** `bg-brand`, texto branco 600, radius 12px, altura 48px.
 **Chip ativo:** fundo azul translúcido + texto `brand`. Inativo: borda `line` + `ink-2`.
