@@ -1,4 +1,3 @@
-import { GRUPOS_MUSCULARES, type PercentualPorGrupo } from './mapaCorporal'
 import type { RankCorporal } from './rankCorporal'
 
 function desenharBrasao(ctx: CanvasRenderingContext2D, rank: RankCorporal, cx: number, cy: number, escala: number) {
@@ -65,82 +64,34 @@ async function carregarSvg(svgOriginal: SVGSVGElement): Promise<HTMLImageElement
 }
 
 export async function exportarResumoCorporal({
-  nome,
   rank,
-  percentuais,
   mapaSvg,
 }: {
-  nome: string
   rank: RankCorporal
-  percentuais: PercentualPorGrupo
   mapaSvg: SVGSVGElement
 }) {
   const canvas = document.createElement('canvas')
   canvas.width = 1080
-  canvas.height = 1350
+  canvas.height = 1920
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Seu navegador não conseguiu criar a imagem.')
 
-  ctx.shadowColor = 'rgba(0,0,0,.9)'
-  ctx.shadowBlur = 14
+  // O canvas começa transparente de propósito: a imagem pode ser colocada
+  // sobre qualquer foto em um editor de Stories.
+  ctx.textAlign = 'center'
   ctx.fillStyle = '#F4F5F7'
-  ctx.font = '600 24px Sora, sans-serif'
-  ctx.letterSpacing = '9px'
-  ctx.fillText('VIVECI', 92, 110)
+  ctx.font = '600 22px Sora, sans-serif'
+  ctx.letterSpacing = '10px'
+  ctx.fillText('VIVECI', 540, 104)
   ctx.letterSpacing = '0px'
-  ctx.fillStyle = '#7E8795'
-  ctx.font = '500 18px Sora, sans-serif'
-  ctx.fillText('MAPA DE ESTÍMULO · ÚLTIMOS 7 DIAS', 92, 158)
 
-  desenharBrasao(ctx, rank, 183, 306, 1.35)
+  desenharBrasao(ctx, rank, 540, 290, 1.65)
   ctx.fillStyle = rank.cor
-  ctx.font = '700 58px Sora, sans-serif'
-  ctx.fillText(rank.nome.toUpperCase(), 292, 292)
-  ctx.fillStyle = '#F4F5F7'
-  ctx.font = '600 24px Sora, sans-serif'
-  ctx.fillText(nome || 'Atleta VIVECI', 294, 334)
-  ctx.fillStyle = '#7E8795'
-  ctx.font = '500 19px Sora, sans-serif'
-  ctx.fillText(`Média semanal ${rank.mediaSemanal}%`, 294, 370)
+  ctx.font = '700 52px Sora, sans-serif'
+  ctx.fillText(rank.nome.toUpperCase(), 540, 425)
 
-  ctx.fillStyle = 'rgba(32,39,53,.9)'
-  ctx.fillRect(92, 426, 896, 8)
-  ctx.fillStyle = rank.cor
-  ctx.fillRect(92, 426, 896 * (rank.progressoNoRank / 100), 8)
-  ctx.fillStyle = '#BFC3CA'
-  ctx.font = '500 17px Sora, sans-serif'
-  ctx.fillText(rank.proximoRank ? `${rank.pontosParaProximo} pontos para ${rank.proximoRank}` : 'Rank máximo alcançado', 92, 470)
-
-  ctx.shadowColor = 'transparent'
-  ctx.shadowBlur = 0
   const imagemCorpo = await carregarSvg(mapaSvg)
-  ctx.drawImage(imagemCorpo, 535, 500, 410, 720)
-
-  const destaque = [...GRUPOS_MUSCULARES]
-    .sort((a, b) => percentuais[b] - percentuais[a])
-    .slice(0, 5)
-  ctx.fillStyle = '#7E8795'
-  ctx.shadowColor = 'rgba(0,0,0,.9)'
-  ctx.shadowBlur = 10
-  ctx.font = '600 16px Sora, sans-serif'
-  ctx.fillText('GRUPOS MAIS ESTIMULADOS', 92, 566)
-  destaque.forEach((grupo, indice) => {
-    const y = 626 + indice * 102
-    ctx.fillStyle = '#F4F5F7'
-    ctx.font = '600 21px Sora, sans-serif'
-    ctx.fillText(grupo, 92, y)
-    ctx.fillStyle = '#BFC3CA'
-    ctx.font = '500 17px Sora, sans-serif'
-    ctx.fillText(`${percentuais[grupo]}%`, 414, y)
-    ctx.fillStyle = 'rgba(32,39,53,.9)'
-    ctx.fillRect(92, y + 22, 360, 6)
-    ctx.fillStyle = '#0066FF'
-    ctx.fillRect(92, y + 22, 360 * (percentuais[grupo] / 100), 6)
-  })
-
-  ctx.fillStyle = '#7E8795'
-  ctx.font = '500 16px Sora, sans-serif'
-  ctx.fillText('TREINE · EVOLUA · CONQUISTE', 92, 1252)
+  ctx.drawImage(imagemCorpo, 230, 500, 620, 1097)
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((resultado) => resultado ? resolve(resultado) : reject(new Error('Não foi possível gerar o PNG.')), 'image/png')

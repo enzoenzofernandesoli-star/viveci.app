@@ -377,8 +377,10 @@ Ouro 45, Platina 60, Diamante 72, Ascendente 82, Imortal 90 e Radiante 97.
 Os nomes seguem a hierarquia competitiva pedida pelo dono do produto, mas os
 brasões são desenhos originais do VIVECI (`src/components/RankCorporal.tsx`),
 sem copiar símbolos de outro jogo. A exportação em
-`src/lib/exportarResumoCorporal.ts` gera PNG 1080×1350 com transparência real
-pra ser sobreposto a uma foto escolhida fora do app.
+`src/lib/exportarResumoCorporal.ts` gera PNG vertical 1080×1920, próprio para
+Stories e com transparência real. O arquivo mostra somente a marca VIVECI
+pequena, o brasão/nome do rank e o corpo iluminado, para ser sobreposto a uma
+foto escolhida fora do app — não adicionar estatísticas ao PNG.
 
 ### Diário alimentar — `src/lib/diario.ts`, `src/lib/alimentos.ts`
 

@@ -46,9 +46,7 @@ export default function Corpo() {
     setErroExportacao(null)
     try {
       await exportarResumoCorporal({
-        nome: perfilState.perfil?.nome ?? 'Atleta VIVECI',
         rank,
-        percentuais: resultado.percentuaisSemana,
         mapaSvg,
       })
     } catch (erro) {
