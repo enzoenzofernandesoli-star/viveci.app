@@ -1,4 +1,4 @@
-const CACHE = 'viveci-v2'
+const CACHE = 'viveci-v3'
 
 self.addEventListener('install', () => {
   self.skipWaiting()
