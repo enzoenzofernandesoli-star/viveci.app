@@ -5,47 +5,21 @@ export function WorkoutCover({
   alt,
   children,
   fallback,
-  slides,
   className = '',
 }: {
   src?: string | null
   alt: string
   children: ReactNode
   fallback: ReactNode
-  slides?: string[]
   className?: string
 }) {
   const [falhou, setFalhou] = useState(false)
-  const [slideAtivo, setSlideAtivo] = useState(0)
 
   useEffect(() => setFalhou(false), [src])
 
-  useEffect(() => {
-    setSlideAtivo(0)
-    if (!slides || slides.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const intervalo = window.setInterval(() => setSlideAtivo((atual) => (atual + 1) % slides.length), 5000)
-    return () => window.clearInterval(intervalo)
-  }, [slides])
-
-  const temSlides = Boolean(slides?.length)
-
   return (
     <section className={`relative isolate min-h-[560px] overflow-hidden bg-card lg:min-h-[540px] ${className}`}>
-      {temSlides ? (
-        <div className="absolute inset-0 lg:right-[38%] lg:w-[62%]" aria-hidden="true">
-          {slides!.map((foto, indice) => (
-            <img
-              key={foto}
-              src={foto}
-              alt=""
-              fetchPriority={indice === 0 ? 'high' : 'auto'}
-              loading={indice === 0 ? 'eager' : 'lazy'}
-              decoding="async"
-              className={`absolute inset-0 h-full w-full object-cover object-[42%_center] transition-opacity duration-700 lg:object-[38%_center] ${indice === slideAtivo ? 'opacity-100' : 'opacity-0'}`}
-            />
-          ))}
-        </div>
-      ) : src && !falhou ? (
+      {src && !falhou ? (
         <img
           src={src}
           alt={alt}

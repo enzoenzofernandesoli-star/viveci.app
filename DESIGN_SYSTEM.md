@@ -42,8 +42,7 @@ conquista e sequência.
 
 ## Fotografia
 
-- Home: carrossel discreto das fotografias oficiais de treino, com troca a
-  cada 5 segundos e respeito a `prefers-reduced-motion`.
+- Home: fotografia editorial fixa `home-hero`, sem carrossel ou troca automática.
 - Login desktop: reutiliza a Home Hero com crop próprio.
 - Treinos: não usa fotografia decorativa; rotinas e cardio são composições
   tipográficas orientadas à ação.

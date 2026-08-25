@@ -189,21 +189,16 @@ test('privacidade não oferece exclusão de conta', async ({ page }) => {
   await expect(page).toHaveURL(/\/perfil\/configuracoes$/)
 })
 
-test('fotos editoriais de treino aparecem somente na Home', async ({ page }) => {
+test('Home mantém apenas a fotografia editorial fixa', async ({ page }) => {
   const state = baseState()
   await mockBackend(page, state)
 
-  const fotos = ['push-', 'pull-', 'legs-', 'fullbody-', 'cardio-']
-
   await page.goto('/')
-  for (const nome of fotos) {
-    await expect(page.locator(`img[src*="${nome}"]`)).toHaveCount(1)
-  }
+  await expect(page.locator('img[src*="home-hero-"]')).toHaveCount(1)
+  await expect(page.locator('img[src*="push-"], img[src*="pull-"], img[src*="legs-"], img[src*="fullbody-"], img[src*="cardio-"]')).toHaveCount(0)
 
   await page.goto('/treino')
-  for (const nome of fotos) {
-    await expect(page.locator(`img[src*="${nome}"]`)).toHaveCount(0)
-  }
+  await expect(page.locator('img[src*="push-"], img[src*="pull-"], img[src*="legs-"], img[src*="fullbody-"], img[src*="cardio-"]')).toHaveCount(0)
 })
 
 test('exporta rank e mapa corporal como PNG', async ({ page }) => {
