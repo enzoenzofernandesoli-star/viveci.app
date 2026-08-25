@@ -193,7 +193,9 @@ qualquer entrega.
 - **Mapa corporal** — corpo anatômico real via `body-muscles`, frente/costas,
   cores por intensidade real dos últimos 7 dias, alerta de desequilíbrio.
   Clicar num músculo (SVG ou legenda) abre painel com treinos/séries/volume/
-  último estímulo dos últimos 30 dias.
+  último estímulo dos últimos 30 dias. A tela Corpo também calcula um rank
+  semanal pela média dos 10 grupos, mostra um brasão VIVECI e exporta rank +
+  estatísticas + mapa como PNG de fundo transparente.
 - **Dashboard** — dados reais: recomendação "O que eu treino hoje?" (com
   motivo), Daily Score, nutrição do dia, alerta de PR recente, alerta de
   músculo negligenciado, mapa corporal.
@@ -363,6 +365,15 @@ Regiões sem grupo (cabeça, mão...) não são clicáveis (`cursor: default`,
 sem `onclick`). A lib expõe cada `path` com `role="button"` e
 `aria-label` com o nome em inglês — isso é só acessibilidade da lib, o
 clique físico no elemento é o que dispara nossa seleção, não o texto.
+
+**Rank corporal semanal** (`src/lib/rankCorporal.ts`) — média aritmética dos
+percentuais dos 10 grupos do mapa. Faixas: Ferro 0, Bronze 15, Prata 30,
+Ouro 45, Platina 60, Diamante 72, Ascendente 82, Imortal 90 e Radiante 97.
+Os nomes seguem a hierarquia competitiva pedida pelo dono do produto, mas os
+brasões são desenhos originais do VIVECI (`src/components/RankCorporal.tsx`),
+sem copiar símbolos de outro jogo. A exportação em
+`src/lib/exportarResumoCorporal.ts` gera PNG 1080×1350 com transparência real
+pra ser sobreposto a uma foto escolhida fora do app.
 
 ### Diário alimentar — `src/lib/diario.ts`, `src/lib/alimentos.ts`
 

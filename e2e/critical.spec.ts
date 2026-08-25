@@ -206,6 +206,20 @@ test('fotos editoriais de treino aparecem somente na Home', async ({ page }) => 
   }
 })
 
+test('exporta rank e mapa corporal como PNG', async ({ page }) => {
+  const state = baseState()
+  await mockBackend(page, state)
+  await page.goto('/corpo')
+
+  await expect(page.getByRole('heading', { name: 'Ferro' })).toBeVisible()
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Salvar imagem' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^viveci-corpo-\d{4}-\d{2}-\d{2}\.png$/)
+  await expect(page.getByRole('alert')).toHaveCount(0)
+})
+
 test('smoke das áreas principais não quebra em mobile ou desktop', async ({ page }) => {
   test.setTimeout(120_000)
   const state = baseState()
