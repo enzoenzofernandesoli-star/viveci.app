@@ -38,7 +38,10 @@ export async function cadastrar(email: string, senha: string, nome: string) {
   const { error } = await supabase.auth.signUp({
     email,
     password: senha,
-    options: { data: { nome } },
+    options: {
+      data: { nome },
+      emailRedirectTo: window.location.origin,
+    },
   })
   if (error) throw error
 }

@@ -173,7 +173,10 @@ Praticamente tudo abaixo está implementado, testado e passou por teste manual
 no navegador. Rode `npm test` (deve passar 100%) e `npm run build` antes de
 qualquer entrega.
 
-- **Auth** — email/senha via Supabase (`src/lib/auth.ts`).
+- **Auth** — email/senha via Supabase (`src/lib/auth.ts`). Cadastro envia a
+  origem atual em `emailRedirectTo`; o template visual de confirmação fica em
+  `supabase/email-templates/confirmacao-cadastro.html` e precisa ser aplicado
+  no painel conforme `docs/EMAIL_CONFIRMACAO_SUPABASE.md`.
 - **Onboarding** — 6 passos: nome, sexo, idade, altura/peso, objetivo, dias/semana.
   Idade mínima de 18 anos, sem limite máximo; regra pura em
   `src/lib/elegibilidade.ts` e proteção correspondente no banco.
