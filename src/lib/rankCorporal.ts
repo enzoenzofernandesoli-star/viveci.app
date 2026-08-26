@@ -2,14 +2,14 @@ import { GRUPOS_MUSCULARES, type PercentualPorGrupo } from './mapaCorporal.ts'
 
 export const RANKS_CORPORAIS = [
   { nome: 'Ferro', minimo: 0, cor: '#697384' },
-  { nome: 'Bronze', minimo: 15, cor: '#A66A3F' },
-  { nome: 'Prata', minimo: 30, cor: '#BFC3CA' },
-  { nome: 'Ouro', minimo: 45, cor: '#F5A524' },
-  { nome: 'Platina', minimo: 60, cor: '#2DD4BF' },
-  { nome: 'Diamante', minimo: 72, cor: '#60A5FA' },
-  { nome: 'Ascendente', minimo: 82, cor: '#22C55E' },
-  { nome: 'Imortal', minimo: 90, cor: '#D946EF' },
-  { nome: 'Radiante', minimo: 97, cor: '#F4F5F7' },
+  { nome: 'Bronze', minimo: 25, cor: '#A66A3F' },
+  { nome: 'Prata', minimo: 45, cor: '#BFC3CA' },
+  { nome: 'Ouro', minimo: 60, cor: '#F5A524' },
+  { nome: 'Platina', minimo: 72, cor: '#2DD4BF' },
+  { nome: 'Diamante', minimo: 82, cor: '#60A5FA' },
+  { nome: 'Ascendente', minimo: 90, cor: '#22C55E' },
+  { nome: 'Imortal', minimo: 96, cor: '#D946EF' },
+  { nome: 'Radiante', minimo: 99, cor: '#F4F5F7' },
 ] as const
 
 export type RankCorporal = {

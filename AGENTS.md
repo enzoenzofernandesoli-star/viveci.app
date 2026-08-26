@@ -379,8 +379,8 @@ sem `onclick`). A lib expõe cada `path` com `role="button"` e
 clique físico no elemento é o que dispara nossa seleção, não o texto.
 
 **Rank corporal semanal** (`src/lib/rankCorporal.ts`) — média aritmética dos
-percentuais dos 10 grupos do mapa. Faixas: Ferro 0, Bronze 15, Prata 30,
-Ouro 45, Platina 60, Diamante 72, Ascendente 82, Imortal 90 e Radiante 97.
+percentuais dos 10 grupos do mapa. Faixas: Ferro 0, Bronze 25, Prata 45,
+Ouro 60, Platina 72, Diamante 82, Ascendente 90, Imortal 96 e Radiante 99.
 Os nomes seguem a hierarquia competitiva pedida pelo dono do produto, mas os
 brasões são desenhos originais do VIVECI (`src/components/RankCorporal.tsx`),
 sem copiar símbolos de outro jogo. Tocar no rank abre todos os níveis,

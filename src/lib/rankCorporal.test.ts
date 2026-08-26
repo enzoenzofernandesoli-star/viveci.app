@@ -17,14 +17,21 @@ test('sem estímulos começa no Ferro', () => {
   const rank = calcularRankCorporal(percentuais(0))
   assert.equal(rank.nome, 'Ferro')
   assert.equal(rank.proximoRank, 'Bronze')
-  assert.equal(rank.pontosParaProximo, 15)
+  assert.equal(rank.pontosParaProximo, 25)
 })
 
-test('média 60 alcança Platina', () => {
+test('média 60 alcança Ouro', () => {
   const rank = calcularRankCorporal(percentuais(60))
-  assert.equal(rank.nome, 'Platina')
-  assert.equal(rank.proximoRank, 'Diamante')
+  assert.equal(rank.nome, 'Ouro')
+  assert.equal(rank.proximoRank, 'Platina')
   assert.equal(rank.progressoNoRank, 0)
+})
+
+test('ranks superiores exigem média semanal quase completa', () => {
+  assert.equal(calcularRankCorporal(percentuais(89)).nome, 'Diamante')
+  assert.equal(calcularRankCorporal(percentuais(90)).nome, 'Ascendente')
+  assert.equal(calcularRankCorporal(percentuais(96)).nome, 'Imortal')
+  assert.equal(calcularRankCorporal(percentuais(99)).nome, 'Radiante')
 })
 
 test('média 100 mantém Radiante como rank máximo', () => {
