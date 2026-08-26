@@ -227,7 +227,11 @@ qualquer entrega.
   (o que mostrar no diário), Aparência (animações — tema é só escuro por
   enquanto), Privacidade (excluir fotos; excluir dados/conta é só
   instrução de contato, não é automatizado), Meus dados (exportação real
-  em JSON), Aplicativo (versão, limpar cache) e Sobre.
+  em JSON, alteração autenticada de e-mail/senha, recuperação por e-mail e
+  saída da conta), Aplicativo (versão, limpar cache) e Sobre.
+- **Correção remota obrigatória:** depois da migration de host, executar
+  `sql/19_corrigir_perfis_publicos.sql` para permitir que a view social calcule
+  a sequência dos perfis consultados por usuários autenticados.
 - **Planos** — só `free` e `pro`. Único bloqueio ativo hoje: free trava em 4
   rotinas de treino. Pro ainda não tem nenhum recurso exclusivo de verdade —
   isso é intencional, só entra quando o dono do produto decidir o quê.

@@ -215,6 +215,7 @@ grant execute on function public.sou_host() to authenticated;
 grant execute on function public.minha_conta_esta_banida() to authenticated;
 grant execute on function public.banir_usuario(uuid, text) to authenticated;
 grant execute on function public.excluir_post(uuid) to authenticated;
+grant execute on function public.calcular_sequencia_publica(uuid) to authenticated;
 
 drop policy if exists "host exclui midia social" on storage.objects;
 create policy "host exclui midia social"

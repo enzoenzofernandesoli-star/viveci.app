@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft,
@@ -11,15 +11,18 @@ import {
   Database,
   Smartphone,
   Info,
+  LogOut,
 } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
-import { useSessao } from '../lib/auth'
+import { alterarEmailComSenhaAtual, alterarSenhaComSenhaAtual, sair, solicitarRecuperacaoSenha, useSessao } from '../lib/auth'
 import { usePerfil, atualizarPerfil, ROTULO_OBJETIVO, ROTULO_NIVEL, type Objetivo, type Nivel } from '../lib/perfil'
 import { usePreferencias, salvarPreferencias, type Preferencias } from '../lib/preferencias'
 import { supabase } from '../lib/supabase'
 import type { Equipamento } from '../data/exercicios'
 import { montarPacoteExportacao } from '../lib/exportacao'
+import { mensagemErro } from '../lib/mensagemErro'
+import { TAMANHO_MINIMO_SENHA, validarNovaSenha, validarNovoEmail } from '../lib/senha'
 
 const EQUIPAMENTOS: Equipamento[] = ['Barra', 'Halter', 'Cabo', 'Máquina', 'Peso corporal', 'Elástico']
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -84,7 +87,7 @@ const CATEGORIAS: { secao: Secao; icone: typeof User; titulo: string; descricao:
   { secao: 'nutricao', icone: Apple, titulo: 'Nutrição', descricao: 'O que aparece no seu diário alimentar' },
   { secao: 'aparencia', icone: Palette, titulo: 'Aparência', descricao: 'Animações e movimento' },
   { secao: 'privacidade', icone: ShieldCheck, titulo: 'Privacidade e segurança', descricao: 'Entenda seus dados e gerencie sua foto' },
-  { secao: 'dados', icone: Database, titulo: 'Meus dados', descricao: 'Exporte tudo que o VIVECI guarda de você' },
+  { secao: 'dados', icone: Database, titulo: 'Meus dados', descricao: 'Conta, senha, e-mail e exportação' },
   { secao: 'aplicativo', icone: Smartphone, titulo: 'Aplicativo', descricao: 'Versão e cache' },
   { secao: 'sobre', icone: Info, titulo: 'Sobre', descricao: 'Sobre o VIVECI' },
 ]
@@ -96,6 +99,105 @@ function Cabecalho({ titulo, onVoltar }: { titulo: string; onVoltar: () => void 
         <ChevronLeft size={22} strokeWidth={1.75} />
       </button>
       <h2 className="text-[19px] font-bold">{titulo}</h2>
+    </div>
+  )
+}
+
+function GerenciarAcesso({ email }: { email: string }) {
+  const [senhaAtual, setSenhaAtual] = useState('')
+  const [novaSenha, setNovaSenha] = useState('')
+  const [confirmacao, setConfirmacao] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const [enviandoLink, setEnviandoLink] = useState(false)
+  const [mensagem, setMensagem] = useState<string | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
+  const [novoEmail, setNovoEmail] = useState('')
+  const [senhaEmail, setSenhaEmail] = useState('')
+  const [alterandoEmail, setAlterandoEmail] = useState(false)
+
+  async function alterar(e: FormEvent) {
+    e.preventDefault()
+    const erroValidacao = validarNovaSenha(novaSenha, confirmacao)
+    if (erroValidacao) return setErro(erroValidacao)
+    setSalvando(true)
+    setErro(null)
+    setMensagem(null)
+    try {
+      await alterarSenhaComSenhaAtual(email, senhaAtual, novaSenha)
+      setSenhaAtual('')
+      setNovaSenha('')
+      setConfirmacao('')
+      setMensagem('Senha alterada com sucesso.')
+    } catch (err) {
+      setErro(mensagemErro(err, 'Não foi possível alterar sua senha agora.'))
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  async function recuperar() {
+    setEnviandoLink(true)
+    setErro(null)
+    setMensagem(null)
+    try {
+      await solicitarRecuperacaoSenha(email)
+      setMensagem('Enviamos um link de redefinição para o e-mail da sua conta.')
+    } catch (err) {
+      setErro(mensagemErro(err, 'Não foi possível enviar o link agora.'))
+    } finally {
+      setEnviandoLink(false)
+    }
+  }
+
+  async function alterarEmail(e: FormEvent) {
+    e.preventDefault()
+    const erroValidacao = validarNovoEmail(email, novoEmail)
+    if (erroValidacao) return setErro(erroValidacao)
+    setAlterandoEmail(true)
+    setErro(null)
+    setMensagem(null)
+    try {
+      await alterarEmailComSenhaAtual(email, senhaEmail, novoEmail.trim().toLowerCase())
+      setNovoEmail('')
+      setSenhaEmail('')
+      setMensagem('Solicitação enviada. Confirme a alteração pelo e-mail recebido.')
+    } catch (err) {
+      setErro(mensagemErro(err, 'Não foi possível alterar seu e-mail agora.'))
+    } finally {
+      setAlterandoEmail(false)
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <form onSubmit={alterarEmail} className="rounded-2xl border border-line bg-card p-6">
+        <h3 className="text-[17px] font-semibold">Alterar e-mail</h3>
+        <p className="mt-1 text-sm text-ink-2">E-mail atual: {email}</p>
+        <div className="mt-5 space-y-4">
+          <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Novo e-mail<input type="email" required autoComplete="email" value={novoEmail} onChange={(e) => setNovoEmail(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-line bg-app px-4 text-sm text-ink focus:border-brand focus:outline-none" /></label>
+          <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Senha atual<input type="password" required autoComplete="current-password" value={senhaEmail} onChange={(e) => setSenhaEmail(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-line bg-app px-4 text-sm text-ink focus:border-brand focus:outline-none" /></label>
+        </div>
+        <button disabled={alterandoEmail || salvando || enviandoLink} className="mt-5 h-12 w-full rounded-xl border border-line text-sm font-semibold text-brand transition-colors hover:bg-card-hover disabled:opacity-60">{alterandoEmail ? 'Enviando...' : 'Alterar e-mail'}</button>
+      </form>
+
+      <form onSubmit={alterar} className="rounded-2xl border border-line bg-card p-6">
+        <h3 className="text-[17px] font-semibold">Alterar com a senha atual</h3>
+        <p className="mt-1 text-sm text-ink-2">Confirme sua identidade antes de definir uma nova senha.</p>
+        <div className="mt-5 space-y-4">
+          <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Senha atual<input type="password" required autoComplete="current-password" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-line bg-app px-4 text-sm text-ink focus:border-brand focus:outline-none" /></label>
+          <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Nova senha<input type="password" required minLength={TAMANHO_MINIMO_SENHA} autoComplete="new-password" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-line bg-app px-4 text-sm text-ink focus:border-brand focus:outline-none" /></label>
+          <label className="block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Confirmar nova senha<input type="password" required minLength={TAMANHO_MINIMO_SENHA} autoComplete="new-password" value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-line bg-app px-4 text-sm text-ink focus:border-brand focus:outline-none" /></label>
+        </div>
+        <button disabled={salvando || enviandoLink} className="mt-5 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:opacity-60">{salvando ? 'Alterando...' : 'Alterar senha'}</button>
+      </form>
+
+      <div className="rounded-2xl border border-line bg-card p-6">
+        <h3 className="text-[17px] font-semibold">Esqueci minha senha</h3>
+        <p className="mt-1 text-sm text-ink-2">Receba no e-mail da sua conta um link seguro para criar uma nova senha.</p>
+        <button type="button" onClick={recuperar} disabled={salvando || enviandoLink} className="mt-4 h-12 w-full rounded-xl border border-line text-sm font-semibold text-brand transition-colors hover:bg-card-hover disabled:opacity-60">{enviandoLink ? 'Enviando...' : 'Enviar link por e-mail'}</button>
+      </div>
+      {erro && <p className="mt-4 text-sm text-down" role="alert">{erro}</p>}
+      {mensagem && <p className="mt-4 text-sm text-ink-2" role="status">{mensagem}</p>}
     </div>
   )
 }
@@ -353,7 +455,7 @@ function SecaoPrivacidade({ userId, onVoltar }: { userId: string; onVoltar: () =
   )
 }
 
-function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void }) {
+function SecaoDados({ userId, email, onVoltar, onSair }: { userId: string; email: string; onVoltar: () => void; onSair: () => void }) {
   const [exportando, setExportando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -437,6 +539,9 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
   return (
     <div className="pb-4">
       <Cabecalho titulo="Meus dados" onVoltar={onVoltar} />
+      <div className="mt-5">
+        <GerenciarAcesso email={email} />
+      </div>
       <div className="mt-5 rounded-2xl border border-line bg-card p-6">
         <h3 className="text-[17px] font-semibold">Exportar tudo</h3>
         <p className="mt-1 text-sm text-ink-2">
@@ -452,6 +557,10 @@ function SecaoDados({ userId, onVoltar }: { userId: string; onVoltar: () => void
         </button>
         {erro && <p className="mt-3 text-sm text-down">{erro}</p>}
       </div>
+      <button onClick={onSair} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line text-sm font-semibold text-ink-2 transition-colors hover:bg-card-hover">
+        <LogOut size={18} strokeWidth={1.75} />
+        Sair da conta
+      </button>
     </div>
   )
 }
@@ -532,7 +641,7 @@ export default function Configuracoes() {
   if (secao === 'nutricao') return <SecaoNutricao userId={userId} onVoltar={() => setSecao('menu')} />
   if (secao === 'aparencia') return <SecaoAparencia userId={userId} onVoltar={() => setSecao('menu')} />
   if (secao === 'privacidade') return <SecaoPrivacidade userId={userId} onVoltar={() => setSecao('menu')} />
-  if (secao === 'dados') return <SecaoDados userId={userId} onVoltar={() => setSecao('menu')} />
+  if (secao === 'dados') return <SecaoDados userId={userId} email={sessao.user.email ?? ''} onVoltar={() => setSecao('menu')} onSair={async () => { await sair(); navigate('/login', { replace: true }) }} />
   if (secao === 'aplicativo') return <SecaoAplicativo onVoltar={() => setSecao('menu')} />
   if (secao === 'sobre') return <SecaoSobre onVoltar={() => setSecao('menu')} />
 

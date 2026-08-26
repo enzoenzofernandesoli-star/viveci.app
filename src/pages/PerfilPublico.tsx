@@ -23,7 +23,7 @@ export default function PerfilPublico() {
   const [banindo, setBanindo] = useState(false)
   const { ehHost } = useEhHost(meuId)
 
-  const { perfil, carregando: carregandoPerfil } = usePerfilPublico(id)
+  const { perfil, carregando: carregandoPerfil, erro: erroPerfil, recarregar: recarregarPerfil } = usePerfilPublico(id)
   const { posts, carregando: carregandoPosts, recarregar: recarregarPosts, temMais, carregarMais } = usePostsDoUsuario(id, meuId)
   const { seguindo, seguidores, seguindoTotal, carregando: carregandoRelacao, recarregar } = useRelacaoSocial(id, meuId)
 
@@ -61,6 +61,11 @@ export default function PerfilPublico() {
 
       {carregandoPerfil ? (
         <Empty text="Carregando..." />
+      ) : erroPerfil ? (
+        <div className="py-16 text-center">
+          <p className="text-sm text-ink-2">Não foi possível carregar este perfil.</p>
+          <button onClick={recarregarPerfil} className="mt-4 min-h-11 text-sm font-semibold text-brand">Tentar novamente</button>
+        </div>
       ) : !perfil ? (
         <Empty text="Usuário não encontrado." />
       ) : (

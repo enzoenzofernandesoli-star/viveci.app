@@ -109,18 +109,25 @@ export function usePerfil(userId: string | undefined) {
 export function usePerfilPublico(userId: string | undefined) {
   const [perfil, setPerfil] = useState<PerfilPublico | null>(null)
   const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState<string | null>(null)
+  const [versao, setVersao] = useState(0)
 
   useEffect(() => {
     if (!userId) { setPerfil(null); setCarregando(false); return }
     let cancelado = false
     setCarregando(true)
-    supabase.from('perfis_publicos').select('*').eq('id', userId).maybeSingle().then(({ data }) => {
-      if (!cancelado) { setPerfil(data as PerfilPublico | null); setCarregando(false) }
+    setErro(null)
+    supabase.from('perfis_publicos').select('*').eq('id', userId).maybeSingle().then(({ data, error }) => {
+      if (!cancelado) {
+        setPerfil(error ? null : data as PerfilPublico | null)
+        setErro(error?.message ?? null)
+        setCarregando(false)
+      }
     })
     return () => { cancelado = true }
-  }, [userId])
+  }, [userId, versao])
 
-  return { perfil, carregando }
+  return { perfil, carregando, erro, recarregar: () => setVersao((v) => v + 1) }
 }
 
 export async function atualizarPerfil(userId: string, dados: Partial<PerfilDB>) {

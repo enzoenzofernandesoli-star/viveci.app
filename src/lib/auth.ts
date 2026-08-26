@@ -59,3 +59,25 @@ export async function redefinirSenha(senha: string) {
   const { error } = await supabase.auth.updateUser({ password: senha })
   if (error) throw error
 }
+
+export async function alterarSenhaComSenhaAtual(email: string, senhaAtual: string, novaSenha: string) {
+  const { error: erroAutenticacao } = await supabase.auth.signInWithPassword({
+    email,
+    password: senhaAtual,
+  })
+  if (erroAutenticacao) throw erroAutenticacao
+
+  const { error } = await supabase.auth.updateUser({ password: novaSenha })
+  if (error) throw error
+}
+
+export async function alterarEmailComSenhaAtual(emailAtual: string, senhaAtual: string, novoEmail: string) {
+  const { error: erroAutenticacao } = await supabase.auth.signInWithPassword({
+    email: emailAtual,
+    password: senhaAtual,
+  })
+  if (erroAutenticacao) throw erroAutenticacao
+
+  const { error } = await supabase.auth.updateUser({ email: novoEmail })
+  if (error) throw error
+}
