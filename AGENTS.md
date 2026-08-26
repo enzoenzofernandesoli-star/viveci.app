@@ -615,6 +615,15 @@ resposta do servidor, desfaz se der erro) — sem tempo real, sem
 notificação pro autor. Curtida duplicada é impedida pela chave primária
 composta `(post_id, user_id)` de `post_likes`, não por lógica no frontend.
 
+**Host e moderação** (`sql/18_host_moderacao.sql`) — o papel `host` é
+persistido por UUID em `papeis_aplicativo`; o e-mail só é usado uma vez pela
+migration para localizar a conta inicial. Autorizações são conferidas nas
+RPCs `sou_host`, `excluir_post` e `banir_usuario`, nunca pelo frontend. O host
+pode excluir posts de terceiros e banir contas; ambas as ações são registradas
+em `auditoria_moderacao`. Banimento atualiza o Supabase Auth, encerra sessões e
+remove perfil/posts dos contratos públicos. O host não pode banir a própria
+conta.
+
 ### Planos — `src/lib/planos.ts`
 
 Só `free` e `pro`. Hoje o único recurso realmente bloqueado é o limite de 4
@@ -636,9 +645,9 @@ Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 → `05_cardio` → `06_perfil_bio` → `07_preferencias` → `08_social` →
 `09_seguranca_beta` → `10_integridade_rotinas` → `11_indices_performance` →
 `12_privacidade_metricas_social` → `13_privilegios_minimos` →
-`14_idade_minima` → `15_idade_minima_18` → `17_social_treino_compartilhado`.
-As migrations 01–15 foram confirmadas no remoto em 18/08/2026; a 17 precisa
-ser aplicada antes de liberar mapa/detalhes/cópia de treino no Social.
+`14_idade_minima` → `15_idade_minima_18` → `17_social_treino_compartilhado` →
+`18_host_moderacao`. As migrations 01–15 foram confirmadas no remoto em
+18/08/2026; 17 e 18 precisam ser aplicadas para seus respectivos recursos.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia. Avatar usa

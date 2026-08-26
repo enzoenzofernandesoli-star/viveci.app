@@ -3,6 +3,7 @@ import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
 import type { Post } from '../lib/social/posts'
 import { curtir, descurtir, excluirPost } from '../lib/social/posts'
 import { bloquearUsuario, denunciarPost } from '../lib/social/moderacao'
+import { banirUsuario } from '../lib/social/host'
 import { CarrosselPost } from './CarrosselPost'
 import { DetalhesTreinoPost } from './DetalhesTreinoPost'
 import { percentuaisDoTreinoCompartilhado } from '../lib/social/treinoCompartilhado'
@@ -31,12 +32,14 @@ export function PostCard({
   onAbrirComentarios,
   onAbrirAutor,
   onRemovido,
+  ehHost = false,
 }: {
   post: Post
   meuId: string
   onAbrirComentarios: (postId: string) => void
   onAbrirAutor: (autorId: string) => void
   onRemovido?: () => void
+  ehHost?: boolean
 }) {
   const [curtido, setCurtido] = useState(post.curtiPorMim)
   const [contagem, setContagem] = useState(post.contagemCurtidas)
@@ -76,7 +79,8 @@ export function PostCard({
       </button><button onClick={() => setMenuAberto((v) => !v)} aria-label="Ações da publicação" className="flex size-11 items-center justify-center text-ink-3"><MoreHorizontal size={19} /></button></div>
 
       {menuAberto && <div className="mt-2 flex gap-4 border-y border-line/60 py-2 text-xs font-semibold">
-        {post.autor.id === meuId ? <button onClick={async () => { if (!window.confirm('Excluir esta publicação? Esta ação não pode ser desfeita.')) return; await excluirPost(post.id); onRemovido?.() }} className="min-h-11 text-down">Excluir publicação</button> : <><button onClick={async () => { await denunciarPost(meuId, post.id); setMensagem('Denúncia registrada.'); setMenuAberto(false) }} className="min-h-11 text-ink-2">Denunciar</button><button onClick={async () => { await bloquearUsuario(meuId, post.autor.id); setMensagem('Usuário bloqueado.'); setMenuAberto(false); onRemovido?.() }} className="min-h-11 text-ink-2">Bloquear</button></>}
+        {(post.autor.id === meuId || ehHost) && <button onClick={async () => { if (!window.confirm('Excluir esta publicação? Esta ação não pode ser desfeita.')) return; await excluirPost(post.id); onRemovido?.() }} className="min-h-11 text-down">Excluir publicação</button>}
+        {post.autor.id !== meuId && <><button onClick={async () => { await denunciarPost(meuId, post.id); setMensagem('Denúncia registrada.'); setMenuAberto(false) }} className="min-h-11 text-ink-2">Denunciar</button>{ehHost ? <button onClick={async () => { if (!window.confirm(`Banir ${post.autor.nome}? A pessoa perderá o acesso ao VIVECI.`)) return; await banirUsuario(post.autor.id); setMenuAberto(false); onRemovido?.() }} className="min-h-11 text-down">Banir usuário</button> : <button onClick={async () => { await bloquearUsuario(meuId, post.autor.id); setMensagem('Usuário bloqueado.'); setMenuAberto(false); onRemovido?.() }} className="min-h-11 text-ink-2">Bloquear</button>}</>}
       </div>}
       {mensagem && <p className="mt-2 text-xs text-ink-2">{mensagem}</p>}
 

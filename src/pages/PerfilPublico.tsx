@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { Ban, ChevronLeft } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
 import { PostCard } from '../components/PostCard'
@@ -11,6 +11,7 @@ import { usePostsDoUsuario } from '../lib/social/posts'
 import { useRelacaoSocial, seguir, deixarDeSeguir } from '../lib/social/seguidores'
 import { SequenciaBadge } from '../components/SequenciaBadge'
 import { Portal } from '../components/Modal'
+import { banirUsuario, useEhHost } from '../lib/social/host'
 
 export default function PerfilPublico() {
   const { id } = useParams<{ id: string }>()
@@ -19,6 +20,8 @@ export default function PerfilPublico() {
   const meuId = sessao?.user.id
   const [comentandoPostId, setComentandoPostId] = useState<string | null>(null)
   const [enviandoFollow, setEnviandoFollow] = useState(false)
+  const [banindo, setBanindo] = useState(false)
+  const { ehHost } = useEhHost(meuId)
 
   const { perfil, carregando: carregandoPerfil } = usePerfilPublico(id)
   const { posts, carregando: carregandoPosts, recarregar: recarregarPosts, temMais, carregarMais } = usePostsDoUsuario(id, meuId)
@@ -108,6 +111,16 @@ export default function PerfilPublico() {
             </button>
           )}
 
+          {ehHost && id !== meuId && <button
+            disabled={banindo}
+            onClick={async () => {
+              if (!window.confirm(`Banir ${perfil.nome}? A pessoa perderá o acesso ao VIVECI.`)) return
+              setBanindo(true)
+              try { await banirUsuario(id); navigate('/social') } finally { setBanindo(false) }
+            }}
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-down/40 text-sm font-semibold text-down disabled:opacity-60"
+          ><Ban size={17} />{banindo ? 'Banindo...' : 'Banir do VIVECI'}</button>}
+
           <div className="mt-8">
             <p className="border-b border-line/60 pb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Publicações</p>
             {carregandoPosts && posts.length === 0 ? (
@@ -123,6 +136,7 @@ export default function PerfilPublico() {
                   onAbrirComentarios={setComentandoPostId}
                   onAbrirAutor={() => {}}
                   onRemovido={recarregarPosts}
+                  ehHost={ehHost}
                 />
               ))
             )}

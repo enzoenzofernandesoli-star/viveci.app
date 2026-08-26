@@ -8,12 +8,14 @@ import { CriarPost } from '../components/CriarPost'
 import { CardDesafioInicial } from '../components/CardDesafioInicial'
 import { useSessao } from '../lib/auth'
 import { useFeedAmigos, useFeedDescobrir } from '../lib/social/posts'
+import { useEhHost } from '../lib/social/host'
 
 export default function Social() {
   const { sessao } = useSessao()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const userId = sessao?.user.id
+  const { ehHost } = useEhHost(userId)
   const [aba, setAba] = useState<'amigos' | 'descobrir'>('amigos')
   const [comentandoPostId, setComentandoPostId] = useState<string | null>(null)
   const [criandoPost, setCriandoPost] = useState(searchParams.get('criar') === '1')
@@ -106,6 +108,7 @@ export default function Social() {
               onAbrirComentarios={setComentandoPostId}
               onAbrirAutor={(id) => navigate(id === userId ? '/perfil' : `/social/usuario/${id}`)}
               onRemovido={feed.recarregar}
+              ehHost={ehHost}
             />
           ))
         )}
