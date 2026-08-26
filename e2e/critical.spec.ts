@@ -201,6 +201,19 @@ test('Home mantém apenas a fotografia editorial fixa', async ({ page }) => {
   await expect(page.locator('img[src*="push-"], img[src*="pull-"], img[src*="legs-"], img[src*="fullbody-"], img[src*="cardio-"]')).toHaveCount(0)
 })
 
+test('Perfil mostra treinos e conexões sociais', async ({ page }) => {
+  const state = baseState()
+  await mockBackend(page, state)
+  await page.goto('/perfil')
+
+  await expect(page.getByText('Treinos', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText('Seguindo', { exact: true })).toBeVisible()
+  await expect(page.getByText('Seguidores', { exact: true })).toBeVisible()
+  await page.getByText('Seguidores', { exact: true }).click()
+  await expect(page).toHaveURL(/\/social\/usuario\/[^/]+\/conexoes\?aba=seguidores$/)
+  await expect(page.getByRole('heading', { name: 'Conexões' })).toBeVisible()
+})
+
 test('mantém scroll vertical e bloqueia zoom da interface', async ({ page }) => {
   const state = baseState()
   await mockBackend(page, state)

@@ -214,7 +214,9 @@ qualquer entrega.
 - **Novo PR** — ao bater recorde numa série (1RM estimado por Epley maior
   que o anterior), banner dourado aparece na sessão de treino.
 - **Perfil** — avatar (upload pro bucket `Fotos`), nome e biografia editáveis,
-  3 números reais (treinos concluídos / rotinas criadas / sequência de dias),
+  3 números reais (treinos concluídos / seguindo / seguidores), listas
+  clicáveis das conexões sociais e braço de sequência no topo (azul, Ferro,
+  Bronze, Prata e Dourado conforme os dias consecutivos),
   link pra **Configurações**, e 2 abas: **Treinos** (histórico de sessões
   concluídas) e **Evolução** (DNA de treino, peso com gráfico, consistência
   7/30 dias, cargas por exercício com gráfico).

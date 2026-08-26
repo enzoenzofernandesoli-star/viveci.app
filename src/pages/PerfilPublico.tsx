@@ -9,6 +9,7 @@ import { useSessao } from '../lib/auth'
 import { usePerfilPublico } from '../lib/perfil'
 import { usePostsDoUsuario } from '../lib/social/posts'
 import { useRelacaoSocial, seguir, deixarDeSeguir } from '../lib/social/seguidores'
+import { SequenciaBadge } from '../components/SequenciaBadge'
 
 export default function PerfilPublico() {
   const { id } = useParams<{ id: string }>()
@@ -60,6 +61,9 @@ export default function PerfilPublico() {
         <Empty text="Usuário não encontrado." />
       ) : (
         <>
+          <div className="fixed right-5 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:static lg:mt-4 lg:ml-auto lg:w-fit">
+            <SequenciaBadge dias={perfil.sequencia_atual ?? 0} />
+          </div>
           <div className="mt-8 text-center">
             <div className="mx-auto h-24 w-24 overflow-hidden rounded-full border border-line bg-card-hover">
               {perfil.foto_url ? (
@@ -76,17 +80,17 @@ export default function PerfilPublico() {
 
           <div className="mt-6 grid grid-cols-3 divide-x divide-line/60 border-y border-line/60 py-4 text-center">
             <div>
-              <p className="num text-xl font-semibold">{posts.length}</p>
-              <p className="text-xs text-ink-2">Publicações</p>
+              <p className="num text-xl font-semibold">{perfil.total_treinos ?? 0}</p>
+              <p className="text-xs text-ink-2">Treinos</p>
             </div>
-            <div>
-              <p className="num text-xl font-semibold">{carregandoRelacao ? '—' : seguidores}</p>
-              <p className="text-xs text-ink-2">Seguidores</p>
-            </div>
-            <div>
+            <button onClick={() => navigate(`/social/usuario/${id}/conexoes?aba=seguindo`)} className="min-h-12">
               <p className="num text-xl font-semibold">{carregandoRelacao ? '—' : seguindoTotal}</p>
               <p className="text-xs text-ink-2">Seguindo</p>
-            </div>
+            </button>
+            <button onClick={() => navigate(`/social/usuario/${id}/conexoes?aba=seguidores`)} className="min-h-12">
+              <p className="num text-xl font-semibold">{carregandoRelacao ? '—' : seguidores}</p>
+              <p className="text-xs text-ink-2">Seguidores</p>
+            </button>
           </div>
 
           {id !== meuId && (

@@ -62,7 +62,10 @@ export type PerfilDB = {
   criado_em: string
 }
 
-export type PerfilPublico = Pick<PerfilDB, 'id' | 'nome' | 'foto_url' | 'bio'>
+export type PerfilPublico = Pick<PerfilDB, 'id' | 'nome' | 'foto_url' | 'bio'> & {
+  total_treinos: number
+  sequencia_atual: number
+}
 
 // ─────────────────────────────────────────────────────────────
 // PONTO DE TROCA PARA O SUPABASE — tabela `perfis`
@@ -111,7 +114,7 @@ export function usePerfilPublico(userId: string | undefined) {
     if (!userId) { setPerfil(null); setCarregando(false); return }
     let cancelado = false
     setCarregando(true)
-    supabase.from('perfis_publicos').select('id, nome, foto_url, bio').eq('id', userId).maybeSingle().then(({ data }) => {
+    supabase.from('perfis_publicos').select('*').eq('id', userId).maybeSingle().then(({ data }) => {
       if (!cancelado) { setPerfil(data as PerfilPublico | null); setCarregando(false) }
     })
     return () => { cancelado = true }

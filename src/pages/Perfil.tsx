@@ -22,6 +22,8 @@ import { useVivici } from '../lib/vivici'
 import type { DNATreino, PerfilDNA } from '../lib/dnaTreino'
 import { useFotosProgresso } from '../lib/bodyScan'
 import { LIMITE_BIO } from '../lib/social/limites'
+import { useRelacaoSocial } from '../lib/social/seguidores'
+import { SequenciaBadge } from '../components/SequenciaBadge'
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -406,6 +408,7 @@ export default function Perfil() {
   const [enviandoFoto, setEnviandoFoto] = useState(false)
 
   const [datasConcluidas, setDatasConcluidas] = useState<string[]>([])
+  const { seguidores, seguindoTotal, carregando: carregandoRelacao } = useRelacaoSocial(sessao?.user.id, sessao?.user.id)
 
   useEffect(() => {
     if (!sessao) return
@@ -445,6 +448,9 @@ export default function Perfil() {
 
   return (
     <Page title="Perfil">
+      <div className="fixed right-5 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:static lg:mb-[-2.5rem] lg:ml-auto lg:w-fit">
+        <SequenciaBadge dias={streak} />
+      </div>
       <div className="mt-7 text-center">
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -488,15 +494,19 @@ export default function Perfil() {
         />
       )}
 
-      <div className="mt-6 grid grid-cols-2 divide-x divide-line/60 border-y border-line/60 py-4 text-center">
+      <div className="mt-6 grid grid-cols-3 divide-x divide-line/60 border-y border-line/60 py-4 text-center">
         <div>
           <p className="num text-[22px] font-bold">{datasConcluidas.length}</p>
           <p className="text-xs text-ink-2">Treinos</p>
         </div>
-        <div>
-          <p className="num text-[22px] font-bold text-gold">{streak}</p>
-          <p className="text-xs text-ink-2">Sequência</p>
-        </div>
+        <button onClick={() => navigate(`/social/usuario/${sessao.user.id}/conexoes?aba=seguindo`)} className="min-h-12">
+          <p className="num text-[22px] font-bold">{carregandoRelacao ? '—' : seguindoTotal}</p>
+          <p className="text-xs text-ink-2">Seguindo</p>
+        </button>
+        <button onClick={() => navigate(`/social/usuario/${sessao.user.id}/conexoes?aba=seguidores`)} className="min-h-12">
+          <p className="num text-[22px] font-bold">{carregandoRelacao ? '—' : seguidores}</p>
+          <p className="text-xs text-ink-2">Seguidores</p>
+        </button>
       </div>
 
       <div className="mt-4 flex items-center justify-between border-b border-line/60 py-3">
