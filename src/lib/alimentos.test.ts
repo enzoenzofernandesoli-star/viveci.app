@@ -60,9 +60,10 @@ test('quantidade inválida não gera peso negativo', () => {
   assert.equal(converterPorcaoEmGramas(porcao, -2), 0)
 })
 
-test('catálogo ampliado possui 200 alimentos sem IDs repetidos', () => {
-  assert.equal(ALIMENTOS.length, 200)
-  assert.equal(new Set(ALIMENTOS.map((alimento) => alimento.id)).size, 200)
+test('catálogo ampliado possui 300 alimentos sem IDs repetidos', () => {
+  assert.equal(ALIMENTOS.length, 300)
+  assert.equal(new Set(ALIMENTOS.map((alimento) => alimento.id)).size, 300)
+  assert.equal(new Set(ALIMENTOS.map((alimento) => alimento.nome)).size, 300)
 })
 
 test('catálogo contém variações de ovos e pães', () => {
@@ -73,4 +74,16 @@ test('catálogo contém variações de ovos e pães', () => {
   assert.ok(nomes.includes('Pão australiano'))
   assert.ok(nomes.includes('Pão de centeio'))
   assert.ok(nomes.includes('Pão de forma sem glúten'))
+  assert.ok(nomes.includes('Moqueca de peixe'))
+  assert.ok(nomes.includes('Sanduíche natural de frango'))
+  assert.ok(nomes.includes('Baião de dois'))
+  assert.ok(nomes.includes('Iogurte de morango'))
+})
+
+test('todos os novos alimentos possuem medida prática além de gramas', () => {
+  for (const alimento of ALIMENTOS.filter((item) => item.id >= 201)) {
+    const porcoes = obterPorcoesAlimento(alimento)
+    assert.ok(porcoes.length >= 2, `${alimento.nome} deveria ter uma medida prática`)
+    assert.equal(porcoes.at(-1)?.id, 'gramas')
+  }
 })
