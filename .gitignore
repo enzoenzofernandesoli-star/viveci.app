@@ -6,6 +6,7 @@ dist
 /test-results
 /playwright-report
 /.android-tools
+/.android-user
 /.gradle-local
 /.gradle-apk-build
 /VIVECI-teste.apk

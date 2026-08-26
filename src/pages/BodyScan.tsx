@@ -7,6 +7,7 @@ import { AnalisarFisico } from '../components/AnalisarFisico'
 import { useSessao } from '../lib/auth'
 import { ANGULOS, useFotosProgresso, enviarFotoProgresso, type Angulo, type FotoProgresso } from '../lib/bodyScan'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
+import { capturarFotoNativa } from '../lib/cameraNativa'
 
 function formatoData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -30,11 +31,23 @@ function SlotAngulo({
   enviando: boolean
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [erroCamera, setErroCamera] = useState<string | null>(null)
+
+  async function abrirCamera() {
+    setErroCamera(null)
+    try {
+      const foto = await capturarFotoNativa()
+      if (foto === undefined) inputRef.current?.click()
+      else if (foto) onEnviar(angulo, foto)
+    } catch (falha) {
+      setErroCamera(falha instanceof Error ? falha.message : 'Não foi possível abrir a câmera.')
+    }
+  }
 
   return (
     <div className="flex flex-col items-center gap-2">
       <button
-        onClick={() => inputRef.current?.click()}
+        onClick={abrirCamera}
         disabled={enviando}
         className="flex h-28 w-24 items-center justify-center overflow-hidden rounded-xl border border-line bg-card-hover disabled:opacity-60"
       >
@@ -45,11 +58,11 @@ function SlotAngulo({
         )}
       </button>
       <span className="text-xs text-ink-2">{angulo}</span>
+      {erroCamera && <span className="max-w-24 text-center text-[10px] text-down">{erroCamera}</span>}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={(e) => {
           const arquivo = e.target.files?.[0]

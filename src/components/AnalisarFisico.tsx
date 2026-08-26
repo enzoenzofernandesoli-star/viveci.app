@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { PersonStanding, Shirt, Sun, Camera, Upload } from 'lucide-react'
 import { Page } from './Page'
 import { physiqueScoreService, type ResultadoAnaliseFisico, type PontuacaoFisico } from '../lib/services/physiqueScoreService'
+import { capturarFotoNativa } from '../lib/cameraNativa'
 
 type Etapa = 'instrucoes' | 'foto' | 'analisando' | 'resultado'
 
@@ -58,12 +59,27 @@ export function AnalisarFisico({
   const [erro, setErro] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
 
+  function aplicarFoto(f: File | undefined) {
+    if (!f) return
+    if (preview) URL.revokeObjectURL(preview)
+    setArquivo(f)
+    setPreview(URL.createObjectURL(f))
+  }
+
   function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     e.target.value = ''
-    if (!f) return
-    setArquivo(f)
-    setPreview(URL.createObjectURL(f))
+    aplicarFoto(f)
+  }
+
+  async function abrirCamera() {
+    try {
+      const foto = await capturarFotoNativa()
+      if (foto === undefined) inputRef.current?.click()
+      else if (foto) aplicarFoto(foto)
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : 'Não foi possível abrir a câmera.')
+    }
   }
 
   async function analisar() {
@@ -127,7 +143,7 @@ export function AnalisarFisico({
     return (
       <Page title="Analisar meu físico">
         <div className="animar-entrada mt-6">
-          <input ref={inputRef} type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="hidden" />
+          <input ref={inputRef} type="file" accept="image/*" onChange={escolherFoto} className="hidden" />
 
           {preview ? (
             <div className="rounded-2xl border border-line bg-card p-4">
@@ -154,7 +170,7 @@ export function AnalisarFisico({
             <div className="rounded-2xl border border-line bg-card p-6 text-center">
               <p className="text-sm text-ink-2">Tire uma foto ou escolha da galeria, seguindo as instruções.</p>
               <button
-                onClick={() => inputRef.current?.click()}
+                onClick={abrirCamera}
                 className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
               >
                 <Camera size={18} strokeWidth={1.75} />

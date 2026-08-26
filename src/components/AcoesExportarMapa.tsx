@@ -7,6 +7,7 @@ import { POSICOES_RESUMO, type PosicaoResumoCorporal } from '../lib/posicaoResum
 import { TAMANHO_MAX_PROGRESSO, validarImagem } from '../lib/uploadSeguro'
 import { MapaCorporal } from './MapaCorporal'
 import { Modal } from './Modal'
+import { capturarFotoNativa } from '../lib/cameraNativa'
 
 type AcaoPendente = { tipo: 'salvar' } | { tipo: 'foto'; arquivo: File }
 
@@ -44,9 +45,7 @@ export function AcoesExportarMapa({
     }
   }
 
-  function receberFoto(evento: React.ChangeEvent<HTMLInputElement>) {
-    const arquivo = evento.target.files?.[0]
-    evento.target.value = ''
+  function aplicarFoto(arquivo: File | undefined) {
     if (!arquivo) return
     try {
       validarImagem(arquivo, TAMANHO_MAX_PROGRESSO)
@@ -54,6 +53,22 @@ export function AcoesExportarMapa({
       setAcao({ tipo: 'foto', arquivo })
     } catch (falha) {
       onErro?.(falha instanceof Error ? falha.message : 'Não foi possível usar essa foto.')
+    }
+  }
+
+  function receberFoto(evento: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0]
+    evento.target.value = ''
+    aplicarFoto(arquivo)
+  }
+
+  async function abrirCamera() {
+    try {
+      const foto = await capturarFotoNativa()
+      if (foto === undefined) cameraRef.current?.click()
+      else if (foto) aplicarFoto(foto)
+    } catch (falha) {
+      onErro?.(falha instanceof Error ? falha.message : 'Não foi possível abrir a câmera.')
     }
   }
 
@@ -81,7 +96,7 @@ export function AcoesExportarMapa({
         <button type="button" onClick={() => setAcao({ tipo: 'salvar' })} disabled={exportando} className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-action)] bg-brand px-4 text-xs font-semibold text-white hover:bg-brand-hover disabled:opacity-50">
           <Download size={17} strokeWidth={1.75} /> {exportando ? 'Gerando...' : 'Salvar mapa de estímulo'}
         </button>
-        <button type="button" onClick={() => cameraRef.current?.click()} disabled={exportando} className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-action)] border border-line px-4 text-xs font-semibold text-ink hover:bg-card-hover disabled:opacity-50">
+        <button type="button" onClick={abrirCamera} disabled={exportando} className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-action)] border border-line px-4 text-xs font-semibold text-ink hover:bg-card-hover disabled:opacity-50">
           <Camera size={17} strokeWidth={1.75} /> Tirar foto com o mapa
         </button>
       </div>

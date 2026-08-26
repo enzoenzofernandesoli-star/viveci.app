@@ -5,6 +5,7 @@ import { labelScannerService, type ResultadoScanRotulo } from '../lib/services/l
 import { calcularConsumoPorPorcao, explicarRotulo } from '../lib/analiseRotulo'
 import type { Refeicao } from '../lib/refeicoes'
 import type { ItemDiario } from '../lib/diario'
+import { capturarFotoNativa } from '../lib/cameraNativa'
 
 function formatoBR(n: number): string {
   return Math.round(n).toLocaleString('pt-BR')
@@ -26,9 +27,7 @@ export function EscanearRotulo({
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
-  async function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const arquivo = e.target.files?.[0]
-    e.target.value = ''
+  async function analisarArquivo(arquivo: File | undefined) {
     if (!arquivo) return
     setErro(null)
     setAnalisando(true)
@@ -40,6 +39,22 @@ export function EscanearRotulo({
       setErro(err instanceof Error ? err.message : 'Não deu pra ler o rótulo agora.')
     } finally {
       setAnalisando(false)
+    }
+  }
+
+  function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0]
+    e.target.value = ''
+    void analisarArquivo(arquivo)
+  }
+
+  async function abrirCamera() {
+    try {
+      const foto = await capturarFotoNativa()
+      if (foto === undefined) inputRef.current?.click()
+      else if (foto) await analisarArquivo(foto)
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : 'Não foi possível abrir a câmera.')
     }
   }
 
@@ -69,7 +84,7 @@ export function EscanearRotulo({
   return (
     <Page title={`Escanear rótulo — ${refeicao}`}>
       <div className="mt-6">
-        <input ref={inputRef} type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="hidden" />
+        <input ref={inputRef} type="file" accept="image/*" onChange={escolherFoto} className="hidden" />
 
         {!resultado && !analisando && (
           <div className="rounded-2xl border border-line bg-card p-6 text-center">
@@ -77,7 +92,7 @@ export function EscanearRotulo({
               Aponte a câmera pra tabela nutricional do rótulo, ou escolha uma foto já tirada.
             </p>
             <button
-              onClick={() => inputRef.current?.click()}
+              onClick={abrirCamera}
               className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
             >
               <Camera size={18} strokeWidth={1.75} />

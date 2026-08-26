@@ -7,6 +7,7 @@ import { criarPost } from '../lib/social/posts'
 import { LIMITE_LEGENDA } from '../lib/social/limites'
 import { mensagemErro } from '../lib/mensagemErro'
 import { TAMANHO_MAX_POST, validarImagem } from '../lib/uploadSeguro'
+import { capturarFotoNativa } from '../lib/cameraNativa'
 
 function formatoData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
@@ -24,7 +25,6 @@ export function CriarPost({
   sessaoInicialId?: string | null
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const cameraRef = useRef<HTMLInputElement>(null)
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [legenda, setLegenda] = useState('')
@@ -49,9 +49,7 @@ export function CriarPost({
     if (preview) URL.revokeObjectURL(preview)
   }, [preview])
 
-  function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0]
-    e.target.value = ''
+  function aplicarFoto(f: File | undefined) {
     if (!f) return
     try {
       validarImagem(f, TAMANHO_MAX_POST)
@@ -61,6 +59,22 @@ export function CriarPost({
       setPreview(URL.createObjectURL(f))
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : 'Não foi possível usar essa foto.')
+    }
+  }
+
+  function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    aplicarFoto(f)
+  }
+
+  async function abrirCamera() {
+    try {
+      const foto = await capturarFotoNativa()
+      if (foto === undefined) inputRef.current?.click()
+      else if (foto) aplicarFoto(foto)
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : 'Não foi possível abrir a câmera.')
     }
   }
 
@@ -131,7 +145,6 @@ export function CriarPost({
     <Page title="Nova publicação">
       <div className="mt-6 space-y-7">
         <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherFoto} className="hidden" />
-        <input ref={cameraRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={escolherFoto} className="hidden" />
 
         {preview ? (
           <div className="relative overflow-hidden rounded-2xl">
@@ -152,7 +165,7 @@ export function CriarPost({
           <div>
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">1 · Adicionar foto</p>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => cameraRef.current?.click()} className="flex h-32 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-ink-2">
+            <button onClick={abrirCamera} className="flex h-32 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-ink-2">
               <Camera size={24} strokeWidth={1.75} /><span className="text-sm">Tirar foto</span>
             </button>
             <button onClick={() => inputRef.current?.click()} className="flex h-32 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-ink-2">
