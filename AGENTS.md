@@ -228,7 +228,8 @@ qualquer entrega.
 - **Planos** — só `free` e `pro`. Único bloqueio ativo hoje: free trava em 4
   rotinas de treino. Pro ainda não tem nenhum recurso exclusivo de verdade —
   isso é intencional, só entra quando o dono do produto decidir o quê.
-- **PWA** — manifest, ícones, service worker (offline básico).
+- **PWA** — manifest, ícones, service worker (offline básico); a interface
+  bloqueia zoom por pinça/duplo toque e mantém apenas o scroll vertical.
 - **Food Scanner** (câmera na Nutrição) — identifica alimentos numa foto do
   prato, estima kcal/macros/fibra por item, permite ajustar quantidade
   (Pouco/Médio/Muito) e adiciona ao diário de verdade. **Análise é

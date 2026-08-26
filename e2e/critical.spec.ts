@@ -201,6 +201,17 @@ test('Home mantém apenas a fotografia editorial fixa', async ({ page }) => {
   await expect(page.locator('img[src*="push-"], img[src*="pull-"], img[src*="legs-"], img[src*="fullbody-"], img[src*="cardio-"]')).toHaveCount(0)
 })
 
+test('mantém scroll vertical e bloqueia zoom da interface', async ({ page }) => {
+  const state = baseState()
+  await mockBackend(page, state)
+  await page.goto('/')
+
+  const viewport = await page.locator('meta[name="viewport"]').getAttribute('content')
+  expect(viewport).toContain('maximum-scale=1.0')
+  expect(viewport).toContain('user-scalable=no')
+  expect(await page.locator('html').evaluate((elemento) => getComputedStyle(elemento).touchAction)).toBe('pan-y')
+})
+
 test('exporta rank e corpo em PNG transparente para Stories', async ({ page }) => {
   const state = baseState()
   await mockBackend(page, state)

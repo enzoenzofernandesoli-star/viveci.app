@@ -31,6 +31,7 @@ html {
   background: var(--color-app);
   color-scheme: dark;
   scrollbar-color: var(--color-line) transparent;
+  touch-action: pan-y;
 }
 
 body, #root { min-height: 100%; }
