@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BicepsFlexed, Check, Lock, X } from 'lucide-react'
 import { conquistasDaSequencia, nivelDaSequencia, type NivelSequencia } from '../lib/conquistasSequencia'
+import { Modal } from './Modal'
 
 const COR: Record<NivelSequencia, string> = {
   azul: 'text-brand border-brand/35 bg-brand/10',
@@ -31,8 +32,8 @@ export function SequenciaBadge({ dias }: { dias: number }) {
       </button>
 
       {aberto && (
-        <div role="dialog" aria-modal="true" aria-label="Conquistas de sequência" className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center">
-          <div className="animar-entrada w-full max-w-md rounded-[var(--radius-media)] border border-line bg-card p-5">
+        <Modal fechar={() => setAberto(false)} rotulo="Conquistas de sequência">
+          <div className="animar-escala max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto overscroll-contain rounded-[var(--radius-media)] border border-line bg-card p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Sua sequência</p>
@@ -59,7 +60,7 @@ export function SequenciaBadge({ dias }: { dias: number }) {
               ))}
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </>
   )

@@ -10,6 +10,7 @@ import { usePerfilPublico } from '../lib/perfil'
 import { usePostsDoUsuario } from '../lib/social/posts'
 import { useRelacaoSocial, seguir, deixarDeSeguir } from '../lib/social/seguidores'
 import { SequenciaBadge } from '../components/SequenciaBadge'
+import { Portal } from '../components/Modal'
 
 export default function PerfilPublico() {
   const { id } = useParams<{ id: string }>()
@@ -61,9 +62,11 @@ export default function PerfilPublico() {
         <Empty text="Usuário não encontrado." />
       ) : (
         <>
-          <div className="fixed left-[7rem] top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:left-auto lg:right-10 lg:top-8">
-            <SequenciaBadge dias={perfil.sequencia_atual ?? 0} />
-          </div>
+          <Portal>
+            <div className="fixed right-4 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:right-10 lg:top-8">
+              <SequenciaBadge dias={perfil.sequencia_atual ?? 0} />
+            </div>
+          </Portal>
           <div className="mt-8 text-center">
             <div className="mx-auto h-24 w-24 overflow-hidden rounded-full border border-line bg-card-hover">
               {perfil.foto_url ? (

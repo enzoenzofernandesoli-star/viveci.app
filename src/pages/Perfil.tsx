@@ -24,6 +24,7 @@ import { useFotosProgresso } from '../lib/bodyScan'
 import { LIMITE_BIO } from '../lib/social/limites'
 import { useRelacaoSocial } from '../lib/social/seguidores'
 import { SequenciaBadge } from '../components/SequenciaBadge'
+import { Portal } from '../components/Modal'
 
 function formatoBR(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -448,16 +449,18 @@ export default function Perfil() {
 
   return (
     <Page title="Perfil">
-      <div className="fixed left-[7rem] top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:left-auto lg:right-24 lg:top-8">
-        <SequenciaBadge dias={streak} />
-      </div>
-      <button
-        onClick={() => navigate('/perfil/configuracoes')}
-        aria-label="Configurações"
-        className="fixed right-5 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 flex size-10 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-card-hover hover:text-ink active:scale-95 lg:right-10 lg:top-8"
-      >
-        <Settings size={20} strokeWidth={1.75} />
-      </button>
+      <Portal>
+        <div className="fixed right-4 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 flex items-center gap-1.5 lg:right-10 lg:top-8">
+          <SequenciaBadge dias={streak} />
+          <button
+            onClick={() => navigate('/perfil/configuracoes')}
+            aria-label="Configurações"
+            className="flex size-10 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-card-hover hover:text-ink active:scale-95"
+          >
+            <Settings size={20} strokeWidth={1.75} />
+          </button>
+        </div>
+      </Portal>
       <div className="mt-7 text-center">
         <button
           onClick={() => fileInputRef.current?.click()}

@@ -11,6 +11,7 @@ import { usePerfil, type Perfil as PerfilCalculo } from '../lib/perfil'
 import { useRotinas } from '../lib/rotinas'
 import { useVivici } from '../lib/vivici'
 import { SequenciaBadge } from '../components/SequenciaBadge'
+import { Portal } from '../components/Modal'
 
 function ConteudoHome({ userId, perfil }: { userId: string; perfil: NonNullable<ReturnType<typeof usePerfil>['perfil']> }) {
   const rotinasState = useRotinas(userId)
@@ -35,9 +36,11 @@ function ConteudoHome({ userId, perfil }: { userId: string; perfil: NonNullable<
   return (
     <div className="mx-auto w-full max-w-[1120px] animar-entrada">
       {viviciState.resultado && (
-        <div className="fixed right-5 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:right-10 lg:top-8">
-          <SequenciaBadge dias={viviciState.resultado.sequenciaAtual} />
-        </div>
+        <Portal>
+          <div className="fixed right-4 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:right-10 lg:top-8">
+            <SequenciaBadge dias={viviciState.resultado.sequenciaAtual} />
+          </div>
+        </Portal>
       )}
       <div className="mb-5 flex items-end justify-between gap-4 lg:mb-7">
         <div>

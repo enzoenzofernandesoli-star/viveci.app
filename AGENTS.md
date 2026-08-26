@@ -413,6 +413,12 @@ dias seguidos com pelo menos 1 treino concluído, terminando hoje. Se o usuário
 ainda não treinou hoje mas treinou ontem, a sequência **não zera** — só quebra
 de verdade quando passa um dia inteiro sem nenhum treino.
 
+No cabeçalho mobile do Perfil, o braço de sequência fica agrupado à esquerda
+da engrenagem, ambos no canto superior direito. Os painéis de conquistas e de
+ranks usam `src/components/Modal.tsx`, renderizado por portal no `body`, para
+ficarem centralizados na área visível mesmo quando a página está rolada ou
+dentro de um ancestral animado com `transform`.
+
 A aba "Treinos" busca o histórico via `useHistoricoTreinos`, que junta
 `sessoes_concluidas` → `plano_sessoes` → `planos` pra achar o nome da rotina;
 sessão sem `sessao_id` (treino rápido) ou com rotina já excluída mostra
