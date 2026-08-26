@@ -61,7 +61,7 @@ export default function PerfilPublico() {
         <Empty text="Usuário não encontrado." />
       ) : (
         <>
-          <div className="fixed right-5 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:static lg:mt-4 lg:ml-auto lg:w-fit">
+          <div className="fixed left-[7rem] top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:left-auto lg:right-10 lg:top-8">
             <SequenciaBadge dias={perfil.sequencia_atual ?? 0} />
           </div>
           <div className="mt-8 text-center">

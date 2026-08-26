@@ -448,9 +448,16 @@ export default function Perfil() {
 
   return (
     <Page title="Perfil">
-      <div className="fixed right-5 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:static lg:mb-[-2.5rem] lg:ml-auto lg:w-fit">
+      <div className="fixed left-[7rem] top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 lg:left-auto lg:right-24 lg:top-8">
         <SequenciaBadge dias={streak} />
       </div>
+      <button
+        onClick={() => navigate('/perfil/configuracoes')}
+        aria-label="Configurações"
+        className="fixed right-5 top-[calc(env(safe-area-inset-top)+0.45rem)] z-20 flex size-10 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-card-hover hover:text-ink active:scale-95 lg:right-10 lg:top-8"
+      >
+        <Settings size={20} strokeWidth={1.75} />
+      </button>
       <div className="mt-7 text-center">
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -520,18 +527,6 @@ export default function Perfil() {
           Ver planos
         </button>
       </div>
-
-      <button
-        onClick={() => navigate('/perfil/configuracoes')}
-        className="mt-2 flex min-h-14 w-full items-center gap-3 border-b border-line/60 text-left transition-colors hover:text-brand"
-      >
-        <Settings size={18} strokeWidth={1.75} className="shrink-0 text-ink-2" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">Configurações</p>
-          <p className="text-xs text-ink-2">Personalize sua experiência no VIVECI</p>
-        </div>
-        <ChevronRight size={18} strokeWidth={1.75} className="shrink-0 text-ink-3" />
-      </button>
 
       <button
         onClick={() => navigate('/perfil/body-scan')}

@@ -217,7 +217,7 @@ qualquer entrega.
   3 números reais (treinos concluídos / seguindo / seguidores), listas
   clicáveis das conexões sociais e braço de sequência no topo (azul, Ferro,
   Bronze, Prata e Dourado conforme os dias consecutivos),
-  link pra **Configurações**, e 2 abas: **Treinos** (histórico de sessões
+  ícone de **Configurações** no canto superior direito, e 2 abas: **Treinos** (histórico de sessões
   concluídas) e **Evolução** (DNA de treino, peso com gráfico, consistência
   7/30 dias, cargas por exercício com gráfico).
 - **Configurações** (`/perfil/configuracoes`) — menu de categorias dentro do

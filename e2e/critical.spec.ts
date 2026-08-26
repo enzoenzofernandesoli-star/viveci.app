@@ -214,6 +214,16 @@ test('Perfil mostra treinos e conexões sociais', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Conexões' })).toBeVisible()
 })
 
+test('Perfil abre configurações somente pelo ícone no topo', async ({ page }) => {
+  const state = baseState()
+  await mockBackend(page, state)
+  await page.goto('/perfil')
+
+  await expect(page.getByText('Personalize sua experiência no VIVECI')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Configurações' }).click()
+  await expect(page).toHaveURL(/\/perfil\/configuracoes$/)
+})
+
 test('mantém scroll vertical e bloqueia zoom da interface', async ({ page }) => {
   const state = baseState()
   await mockBackend(page, state)
