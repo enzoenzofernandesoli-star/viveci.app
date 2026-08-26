@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Download } from 'lucide-react'
+import { Camera, Download } from 'lucide-react'
 import { Empty } from '../components/Empty'
 import { MapaCorporal } from '../components/MapaCorporal'
 import { PainelRankCorporal } from '../components/RankCorporal'
@@ -12,12 +12,14 @@ import { usePerfil } from '../lib/perfil'
 import { calcularRankCorporal } from '../lib/rankCorporal'
 import { useRotinas } from '../lib/rotinas'
 import { useVivici } from '../lib/vivici'
+import { TAMANHO_MAX_PROGRESSO, validarImagem } from '../lib/uploadSeguro'
 
 export default function Corpo() {
   const [mostrarTodos, setMostrarTodos] = useState(false)
   const [exportando, setExportando] = useState(false)
   const [erroExportacao, setErroExportacao] = useState<string | null>(null)
   const mapaRef = useRef<HTMLElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
   const { sessao } = useSessao()
   const perfilState = usePerfil(sessao?.user.id)
   const rotinasState = useRotinas(sessao?.user.id)
@@ -36,7 +38,7 @@ export default function Corpo() {
   const gruposVisiveis = mostrarTodos ? gruposOrdenados : gruposOrdenados.slice(0, 5)
   const rank = resultado ? calcularRankCorporal(resultado.percentuaisSemana) : null
 
-  async function salvarImagem() {
+  async function salvarImagem(fotoFundo?: File) {
     const mapaSvg = mapaRef.current?.querySelector('svg')
     if (!resultado || !rank || !mapaSvg) {
       setErroExportacao('O mapa ainda não está pronto para ser salvo.')
@@ -48,11 +50,25 @@ export default function Corpo() {
       await exportarResumoCorporal({
         rank,
         mapaSvg,
+        fotoFundo,
       })
     } catch (erro) {
       setErroExportacao(erro instanceof Error ? erro.message : 'Não foi possível salvar a imagem.')
     } finally {
       setExportando(false)
+    }
+  }
+
+  async function fotografarComMapa(evento: React.ChangeEvent<HTMLInputElement>) {
+    const foto = evento.target.files?.[0]
+    if (!foto) return
+    try {
+      validarImagem(foto, TAMANHO_MAX_PROGRESSO)
+      await salvarImagem(foto)
+    } catch (erro) {
+      setErroExportacao(erro instanceof Error ? erro.message : 'Não foi possível usar essa foto.')
+    } finally {
+      evento.target.value = ''
     }
   }
 
@@ -64,12 +80,6 @@ export default function Corpo() {
           <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.045em]">Mapa de estímulo</h1>
           <p className="mt-1 text-xs text-ink-3">Últimos 7 dias</p>
         </div>
-        {resultado && (
-          <button type="button" onClick={salvarImagem} disabled={exportando} className="flex min-h-11 items-center gap-2 text-xs font-semibold text-ink-2 hover:text-ink disabled:opacity-50">
-            <Download size={17} strokeWidth={1.75} />
-            {exportando ? 'Gerando...' : 'Salvar imagem'}
-          </button>
-        )}
       </header>
       {erroExportacao && <p role="alert" className="mt-3 text-xs text-down">{erroExportacao}</p>}
 
@@ -88,6 +98,18 @@ export default function Corpo() {
               estatisticasPorGrupo={resultado.estatisticasPorGrupo}
               modoEditorial
             />
+          </section>
+
+          <section aria-label="Compartilhar mapa de estímulo" className="grid gap-3 border-y border-line/60 py-5 sm:grid-cols-2">
+            <button type="button" onClick={() => salvarImagem()} disabled={exportando} className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-action)] bg-brand px-4 text-xs font-semibold text-white hover:bg-brand-hover disabled:opacity-50">
+              <Download size={17} strokeWidth={1.75} />
+              {exportando ? 'Gerando...' : 'Salvar mapa de estímulo'}
+            </button>
+            <button type="button" onClick={() => cameraRef.current?.click()} disabled={exportando} className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-action)] border border-line px-4 text-xs font-semibold text-ink hover:bg-card-hover disabled:opacity-50">
+              <Camera size={17} strokeWidth={1.75} />
+              Tirar foto com o mapa
+            </button>
+            <input ref={cameraRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={fotografarComMapa} className="hidden" />
           </section>
 
           {semEstimulos && (

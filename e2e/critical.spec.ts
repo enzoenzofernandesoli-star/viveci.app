@@ -241,11 +241,16 @@ test('exporta rank e corpo em PNG transparente para Stories', async ({ page }) =
   await page.goto('/corpo')
 
   await expect(page.getByRole('heading', { name: 'Ferro' })).toBeVisible()
+  await page.getByRole('button', { name: /Ferro/ }).click()
+  await expect(page.getByRole('heading', { name: 'Seus ranks' })).toBeVisible()
+  await expect(page.getByText('Radiante', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Fechar' }).click()
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Salvar imagem' }).click(),
+    page.getByRole('button', { name: 'Salvar mapa de estímulo' }).click(),
   ])
-  expect(download.suggestedFilename()).toMatch(/^viveci-corpo-\d{4}-\d{2}-\d{2}\.png$/)
+  expect(download.suggestedFilename()).toMatch(/^viveci-mapa-\d{4}-\d{2}-\d{2}\.png$/)
+  await expect(page.getByRole('button', { name: 'Tirar foto com o mapa' })).toBeVisible()
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
 

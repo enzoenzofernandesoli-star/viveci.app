@@ -382,11 +382,12 @@ percentuais dos 10 grupos do mapa. Faixas: Ferro 0, Bronze 15, Prata 30,
 Ouro 45, Platina 60, Diamante 72, Ascendente 82, Imortal 90 e Radiante 97.
 Os nomes seguem a hierarquia competitiva pedida pelo dono do produto, mas os
 brasões são desenhos originais do VIVECI (`src/components/RankCorporal.tsx`),
-sem copiar símbolos de outro jogo. A exportação em
+sem copiar símbolos de outro jogo. Tocar no rank abre todos os níveis,
+separando os já desbloqueados dos futuros. A exportação em
 `src/lib/exportarResumoCorporal.ts` gera PNG vertical 1080×1920, próprio para
-Stories e com transparência real. O arquivo mostra somente a marca VIVECI
-pequena, o brasão/nome do rank e o corpo iluminado, para ser sobreposto a uma
-foto escolhida fora do app — não adicionar estatísticas ao PNG.
+Stories. Há duas opções: PNG transparente ou foto tirada no celular já com a
+composição. Marca, brasão e corpo ficam pequenos à esquerda; não adicionar
+estatísticas ao PNG nem enviar a foto ao servidor.
 
 ### Diário alimentar — `src/lib/diario.ts`, `src/lib/alimentos.ts`
 

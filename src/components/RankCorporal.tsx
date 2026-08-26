@@ -1,4 +1,6 @@
-import type { RankCorporal as Rank } from '../lib/rankCorporal'
+import { useState } from 'react'
+import { Check, Lock, X } from 'lucide-react'
+import { RANKS_CORPORAIS, type RankCorporal as Rank } from '../lib/rankCorporal'
 
 export function BrasaoRank({ rank, tamanho = 112 }: { rank: Rank; tamanho?: number }) {
   const camadas = Math.min(4, 1 + Math.floor(rank.indice / 2))
@@ -15,8 +17,17 @@ export function BrasaoRank({ rank, tamanho = 112 }: { rank: Rank; tamanho?: numb
 }
 
 export function PainelRankCorporal({ rank }: { rank: Rank }) {
+  const [aberto, setAberto] = useState(false)
   return (
-    <section aria-labelledby="titulo-rank" className="grid items-center gap-6 border-y border-line/60 py-7 sm:grid-cols-[140px_1fr] sm:gap-10">
+    <>
+    <section
+      aria-labelledby="titulo-rank"
+      role="button"
+      tabIndex={0}
+      onClick={() => setAberto(true)}
+      onKeyDown={(evento) => { if (evento.key === 'Enter' || evento.key === ' ') setAberto(true) }}
+      className="grid cursor-pointer items-center gap-6 border-y border-line/60 py-7 transition-colors hover:bg-card/35 sm:grid-cols-[140px_1fr] sm:gap-10"
+    >
       <div className="flex justify-center sm:justify-start">
         <BrasaoRank rank={rank} tamanho={132} />
       </div>
@@ -34,7 +45,41 @@ export function PainelRankCorporal({ rank }: { rank: Rank }) {
             ? `Faltam ${rank.pontosParaProximo} pontos de média para ${rank.proximoRank}.`
             : 'Você alcançou o rank máximo desta semana.'}
         </p>
+        <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-brand">Ver todos os ranks</p>
       </div>
     </section>
+
+    {aberto && (
+      <div role="dialog" aria-modal="true" aria-label="Progressão de ranks" className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center">
+        <div className="animar-entrada max-h-[82dvh] w-full max-w-md overflow-y-auto rounded-[var(--radius-media)] border border-line bg-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Progressão corporal</p>
+              <h2 className="mt-1 text-xl font-semibold">Seus ranks</h2>
+              <p className="mt-1 text-xs text-ink-2">{rank.indice + 1} de {RANKS_CORPORAIS.length} desbloqueados</p>
+            </div>
+            <button onClick={() => setAberto(false)} aria-label="Fechar" className="flex size-11 items-center justify-center text-ink-2 hover:text-ink">
+              <X size={20} strokeWidth={1.75} />
+            </button>
+          </div>
+          <div className="mt-5 divide-y divide-line/60 border-y border-line/60">
+            {RANKS_CORPORAIS.map((item, indice) => {
+              const desbloqueado = indice <= rank.indice
+              return (
+                <div key={item.nome} className="flex min-h-20 items-center gap-3 py-3">
+                  <div className={desbloqueado ? '' : 'grayscale opacity-35'}><BrasaoRank rank={{ ...rank, nome: item.nome, indice, cor: item.cor }} tamanho={58} /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm font-semibold ${desbloqueado ? 'text-ink' : 'text-ink-3'}`}>{item.nome}</p>
+                    <p className="text-xs text-ink-2">Média semanal a partir de {item.minimo}%</p>
+                  </div>
+                  {desbloqueado ? <Check size={18} className="text-brand" /> : <Lock size={16} className="text-ink-3" />}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

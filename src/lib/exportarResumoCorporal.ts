@@ -63,12 +63,39 @@ async function carregarSvg(svgOriginal: SVGSVGElement): Promise<HTMLImageElement
   }
 }
 
+async function carregarFoto(arquivo: File): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(arquivo)
+  try {
+    const imagem = new Image()
+    imagem.decoding = 'async'
+    imagem.src = url
+    await imagem.decode()
+    return imagem
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+function desenharFotoCobrindo(ctx: CanvasRenderingContext2D, imagem: HTMLImageElement) {
+  const escala = Math.max(1080 / imagem.naturalWidth, 1920 / imagem.naturalHeight)
+  const largura = imagem.naturalWidth * escala
+  const altura = imagem.naturalHeight * escala
+  ctx.drawImage(imagem, (1080 - largura) / 2, (1920 - altura) / 2, largura, altura)
+  const sombra = ctx.createLinearGradient(0, 0, 620, 0)
+  sombra.addColorStop(0, 'rgba(7,10,16,.86)')
+  sombra.addColorStop(1, 'rgba(7,10,16,0)')
+  ctx.fillStyle = sombra
+  ctx.fillRect(0, 0, 680, 1920)
+}
+
 export async function exportarResumoCorporal({
   rank,
   mapaSvg,
+  fotoFundo,
 }: {
   rank: RankCorporal
   mapaSvg: SVGSVGElement
+  fotoFundo?: File
 }) {
   const canvas = document.createElement('canvas')
   canvas.width = 1080
@@ -76,22 +103,24 @@ export async function exportarResumoCorporal({
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Seu navegador não conseguiu criar a imagem.')
 
-  // O canvas começa transparente de propósito: a imagem pode ser colocada
-  // sobre qualquer foto em um editor de Stories.
-  ctx.textAlign = 'center'
+  if (fotoFundo) desenharFotoCobrindo(ctx, await carregarFoto(fotoFundo))
+
+  // Sem foto, o canvas continua transparente para uso em qualquer editor.
+  // A assinatura visual fica compacta à esquerda para não cobrir a pessoa.
+  ctx.textAlign = 'left'
   ctx.fillStyle = '#F4F5F7'
-  ctx.font = '600 22px Sora, sans-serif'
-  ctx.letterSpacing = '10px'
-  ctx.fillText('VIVECI', 540, 104)
+  ctx.font = '600 18px Sora, sans-serif'
+  ctx.letterSpacing = '8px'
+  ctx.fillText('VIVECI', 72, 104)
   ctx.letterSpacing = '0px'
 
-  desenharBrasao(ctx, rank, 540, 290, 1.65)
+  desenharBrasao(ctx, rank, 190, 260, 1.15)
   ctx.fillStyle = rank.cor
-  ctx.font = '700 52px Sora, sans-serif'
-  ctx.fillText(rank.nome.toUpperCase(), 540, 425)
+  ctx.font = '700 34px Sora, sans-serif'
+  ctx.fillText(rank.nome.toUpperCase(), 72, 390)
 
   const imagemCorpo = await carregarSvg(mapaSvg)
-  ctx.drawImage(imagemCorpo, 230, 500, 620, 1097)
+  ctx.drawImage(imagemCorpo, 52, 470, 380, 673)
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((resultado) => resultado ? resolve(resultado) : reject(new Error('Não foi possível gerar o PNG.')), 'image/png')
@@ -99,7 +128,7 @@ export async function exportarResumoCorporal({
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `viveci-corpo-${new Date().toISOString().slice(0, 10)}.png`
+  link.download = `viveci-mapa-${new Date().toISOString().slice(0, 10)}.png`
   link.click()
   URL.revokeObjectURL(url)
 }
