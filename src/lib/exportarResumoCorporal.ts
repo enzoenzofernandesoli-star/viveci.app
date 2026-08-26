@@ -1,4 +1,5 @@
 import type { RankCorporal } from './rankCorporal'
+import { calcularLayoutResumo, type PosicaoResumoCorporal } from './posicaoResumoCorporal'
 
 function desenharBrasao(ctx: CanvasRenderingContext2D, rank: RankCorporal, cx: number, cy: number, escala: number) {
   const pontos = [[0, -52], [44, -29], [44, 18], [0, 56], [-44, 18], [-44, -29]]
@@ -76,26 +77,37 @@ async function carregarFoto(arquivo: File): Promise<HTMLImageElement> {
   }
 }
 
-function desenharFotoCobrindo(ctx: CanvasRenderingContext2D, imagem: HTMLImageElement) {
+function desenharFotoCobrindo(ctx: CanvasRenderingContext2D, imagem: HTMLImageElement, posicao: PosicaoResumoCorporal) {
   const escala = Math.max(1080 / imagem.naturalWidth, 1920 / imagem.naturalHeight)
   const largura = imagem.naturalWidth * escala
   const altura = imagem.naturalHeight * escala
   ctx.drawImage(imagem, (1080 - largura) / 2, (1920 - altura) / 2, largura, altura)
-  const sombra = ctx.createLinearGradient(0, 0, 620, 0)
-  sombra.addColorStop(0, 'rgba(7,10,16,.86)')
-  sombra.addColorStop(1, 'rgba(7,10,16,0)')
-  ctx.fillStyle = sombra
-  ctx.fillRect(0, 0, 680, 1920)
+  if (posicao === 'centro') {
+    const sombra = ctx.createRadialGradient(540, 960, 40, 540, 960, 520)
+    sombra.addColorStop(0, 'rgba(7,10,16,.78)')
+    sombra.addColorStop(1, 'rgba(7,10,16,0)')
+    ctx.fillStyle = sombra
+    ctx.fillRect(0, 360, 1080, 1200)
+  } else {
+    const direita = posicao.endsWith('direito')
+    const sombra = ctx.createLinearGradient(direita ? 1080 : 0, 0, direita ? 460 : 620, 0)
+    sombra.addColorStop(0, 'rgba(7,10,16,.86)')
+    sombra.addColorStop(1, 'rgba(7,10,16,0)')
+    ctx.fillStyle = sombra
+    ctx.fillRect(direita ? 400 : 0, 0, 680, 1920)
+  }
 }
 
 export async function exportarResumoCorporal({
   rank,
   mapaSvg,
   fotoFundo,
+  posicao = 'inferior-esquerdo',
 }: {
   rank: RankCorporal
   mapaSvg: SVGSVGElement
   fotoFundo?: File
+  posicao?: PosicaoResumoCorporal
 }) {
   const canvas = document.createElement('canvas')
   canvas.width = 1080
@@ -103,24 +115,26 @@ export async function exportarResumoCorporal({
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Seu navegador não conseguiu criar a imagem.')
 
-  if (fotoFundo) desenharFotoCobrindo(ctx, await carregarFoto(fotoFundo))
+  if (fotoFundo) desenharFotoCobrindo(ctx, await carregarFoto(fotoFundo), posicao)
+
+  const layout = calcularLayoutResumo(posicao)
 
   // Sem foto, o canvas continua transparente para uso em qualquer editor.
   // A assinatura visual fica compacta à esquerda para não cobrir a pessoa.
-  ctx.textAlign = 'left'
+  ctx.textAlign = layout.alinhamento
   ctx.fillStyle = '#F4F5F7'
   ctx.font = '600 18px Sora, sans-serif'
   ctx.letterSpacing = '8px'
-  ctx.fillText('VIVECI', 64, 1040)
+  ctx.fillText('VIVECI', layout.logoX, layout.logoY)
   ctx.letterSpacing = '0px'
 
-  desenharBrasao(ctx, rank, 164, 1148, 1.02)
+  desenharBrasao(ctx, rank, layout.brasaoX, layout.brasaoY, 1.02)
   ctx.fillStyle = rank.cor
   ctx.font = '700 30px Sora, sans-serif'
-  ctx.fillText(rank.nome.toUpperCase(), 64, 1252)
+  ctx.fillText(rank.nome.toUpperCase(), layout.rankX, layout.rankY)
 
   const imagemCorpo = await carregarSvg(mapaSvg)
-  ctx.drawImage(imagemCorpo, 42, 1290, 300, 531)
+  ctx.drawImage(imagemCorpo, layout.corpoX, layout.corpoY, 300, 531)
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((resultado) => resultado ? resolve(resultado) : reject(new Error('Não foi possível gerar o PNG.')), 'image/png')
