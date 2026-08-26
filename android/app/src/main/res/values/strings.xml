@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VIVECI</string>
+    <string name="title_activity_main">VIVECI</string>
+    <string name="package_name">com.viveci.app</string>
+    <string name="custom_url_scheme">com.viveci.app</string>
+</resources>

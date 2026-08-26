@@ -5,3 +5,7 @@ dist
 /videos
 /test-results
 /playwright-report
+/.android-tools
+/.gradle-local
+/.gradle-apk-build
+/VIVECI-teste.apk

@@ -1,7 +1,8 @@
 # Viveci — guia do projeto
 
 App de treino e nutrição personalizados, em português do Brasil. Web app + PWA
-instalável.
+instalável. O projeto também possui um contêiner Android nativo via Capacitor
+em `android/`, com identificador `com.viveci.app`, SDK mínimo 24 e alvo 36.
 Este arquivo é a fonte da verdade. Leia antes de escrever qualquer código.
 
 **Antes de codar qualquer coisa nova**, rode `git log --oneline` pra ver o
@@ -137,6 +138,13 @@ src/
 Arquivos de teste (`*.test.ts`) só importam módulos **puros** (sem `import.meta.env`,
 sem o client do Supabase) — por isso a lógica de negócio fica separada da
 camada de I/O em arquivos próprios (ex: `progressaoCarga.ts` puro vs `registros.ts` com I/O).
+
+**Android:** `npm run android:sync` compila a aplicação web e sincroniza os
+arquivos com o projeto Capacitor. `npm run android:apk` gera o APK debug em
+`android/app/build/outputs/apk/debug/app-debug.apk` quando JDK 21 e Android SDK
+36 estiverem configurados. APK, SDK, JDK portátil e caches locais não entram no
+Git. A versão debug serve para instalação e teste direto; publicação na Play
+Store exige AAB release e chave privada de assinatura própria.
 
 **Navegação:** 5 abas fixas — Início, Treino, Social, Nutrição, Perfil (`src/lib/nav.ts`,
 compartilhado entre `Sidebar.tsx` e `BottomNav.tsx`) — mais um botão redondo
