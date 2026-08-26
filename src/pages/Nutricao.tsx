@@ -12,7 +12,7 @@ import { useDia, somar, adicionarItem, removerItem, type ItemDiario } from '../l
 import { hojeISO } from '../lib/data'
 import { REFEICOES, REFEICOES_PRINCIPAIS, type Refeicao } from '../lib/refeicoes'
 import { ALIMENTOS, type Alimento } from '../data/alimentos'
-import { calcularMacrosPorQuantidade } from '../lib/alimentos'
+import { calcularMacrosPorQuantidade, converterPorcaoEmGramas, nomePorcao, obterPorcoesAlimento } from '../lib/alimentos'
 
 function formatoBR(n: number): string {
   return Math.round(n).toLocaleString('pt-BR')
@@ -154,7 +154,8 @@ function AdicionarAlimento({
   const [aba, setAba] = useState<'buscar' | 'rapida'>('buscar')
   const [busca, setBusca] = useState('')
   const [selecionado, setSelecionado] = useState<Alimento | null>(null)
-  const [quantidade, setQuantidade] = useState('100')
+  const [quantidade, setQuantidade] = useState('1')
+  const [porcaoId, setPorcaoId] = useState('')
   const [nomeRapido, setNomeRapido] = useState('')
   const [kcalRapido, setKcalRapido] = useState('')
   const [protRapido, setProtRapido] = useState('')
@@ -166,8 +167,18 @@ function AdicionarAlimento({
     return ALIMENTOS.filter((a) => a.nome.toLowerCase().includes(termo)).slice(0, 20)
   }, [busca])
 
+  const porcoes = selecionado ? obterPorcoesAlimento(selecionado) : []
+  const porcaoSelecionada = porcoes.find((porcao) => porcao.id === porcaoId) ?? porcoes[0]
   const qtdNum = Number(quantidade.replace(',', '.'))
-  const macrosPreview = selecionado && qtdNum > 0 ? calcularMacrosPorQuantidade(selecionado, qtdNum) : null
+  const quantidadeGramas = porcaoSelecionada ? converterPorcaoEmGramas(porcaoSelecionada, qtdNum) : 0
+  const macrosPreview = selecionado && quantidadeGramas > 0 ? calcularMacrosPorQuantidade(selecionado, quantidadeGramas) : null
+
+  function selecionarAlimento(alimento: Alimento) {
+    const primeiraPorcao = obterPorcoesAlimento(alimento)[0]
+    setSelecionado(alimento)
+    setPorcaoId(primeiraPorcao.id)
+    setQuantidade(primeiraPorcao.id === 'gramas' ? '100' : '1')
+  }
 
   async function confirmarAlimento() {
     if (!selecionado || !macrosPreview) return
@@ -177,7 +188,7 @@ function AdicionarAlimento({
         origem: 'alimento',
         nome: selecionado.nome,
         alimento_id: selecionado.id,
-        quantidade: qtdNum,
+        quantidade: quantidadeGramas,
         ...macrosPreview,
       })
     } finally {
@@ -236,15 +247,38 @@ function AdicionarAlimento({
               <div className="rounded-2xl border border-line bg-card p-6">
                 <p className="text-[17px] font-semibold text-ink">{selecionado.nome}</p>
                 <label className="mb-1.5 mt-4 block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">
-                  Quantidade (g)
+                  Quantidade
                 </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={quantidade}
-                  onChange={(e) => setQuantidade(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
-                />
+                <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)] gap-2">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step={porcaoSelecionada?.passo ?? 1}
+                    value={quantidade}
+                    onChange={(e) => setQuantidade(e.target.value)}
+                    aria-label="Quantidade consumida"
+                    className="h-12 min-w-0 rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
+                  />
+                  <select
+                    value={porcaoSelecionada?.id ?? ''}
+                    onChange={(e) => {
+                      setPorcaoId(e.target.value)
+                      setQuantidade(e.target.value === 'gramas' ? '100' : '1')
+                    }}
+                    aria-label="Medida do alimento"
+                    className="h-12 min-w-0 rounded-xl border border-line bg-card-hover px-3 text-sm text-ink focus:border-brand focus:outline-none"
+                  >
+                    {porcoes.map((porcao) => (
+                      <option key={porcao.id} value={porcao.id}>
+                        {nomePorcao(porcao, qtdNum)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {porcaoSelecionada?.id !== 'gramas' && quantidadeGramas > 0 && (
+                  <p className="mt-2 text-xs text-ink-3">Equivale a aproximadamente {quantidadeGramas.toLocaleString('pt-BR')} g</p>
+                )}
                 {macrosPreview && (
                   <p className="mt-3 text-sm text-ink-2">
                     <span className="num text-ink">{macrosPreview.kcal} kcal</span> · P {formatoBR1(macrosPreview.prot_g)}g · C{' '}
@@ -281,12 +315,12 @@ function AdicionarAlimento({
                   {filtrados.map((a) => (
                     <button
                       key={a.id}
-                      onClick={() => setSelecionado(a)}
+                      onClick={() => selecionarAlimento(a)}
                       className="w-full rounded-xl border border-line bg-card px-4 py-3 text-left transition-colors hover:bg-card-hover"
                     >
                       <p className="text-sm font-medium text-ink">{a.nome}</p>
                       <p className="mt-0.5 text-xs text-ink-2">
-                        {a.kcal_100} kcal / 100g · {a.categoria}
+                        {a.kcal_100} kcal / 100 g · {a.categoria} · {obterPorcoesAlimento(a)[0].singular}
                       </p>
                     </button>
                   ))}

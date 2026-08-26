@@ -396,9 +396,13 @@ servidor. O PNG transparente usa inferior esquerdo como padrão.
 
 Anel: azul até 99% · verde `up` de 100 a 110% · âmbar `gold` acima, com arco de
 excedente. **Nunca vermelho** — passar da meta não é falha.
-Registro por busca no catálogo (`ALIMENTOS`, calcula kcal/macros pela
-quantidade em gramas) ou entrada rápida (nome + kcal + proteína, pra reduzir
-atrito). Refeições principais sempre visíveis (Café da manhã, Almoço, Lanche
+Registro por busca no catálogo (`ALIMENTOS`, 120 itens) ou entrada rápida
+(nome + kcal + proteína, pra reduzir atrito). Na busca, a pessoa escolhe uma
+medida adequada ao alimento (unidade, fatia, colher, concha, xícara, copo,
+porção etc.); `converterPorcaoEmGramas` converte a escolha pra gramas antes do
+cálculo e da persistência, preservando o formato atual do banco. Gramas segue
+disponível como alternativa em todos os itens. Refeições principais sempre
+visíveis (Café da manhã, Almoço, Lanche
 da tarde, Jantar); as demais só aparecem se tiverem item.
 
 **Ainda não construído:** registro por receita, refeição salva, botão "Copiar

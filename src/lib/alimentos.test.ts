@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { calcularMacrosPorQuantidade } from './alimentos.ts'
-import type { Alimento } from '../data/alimentos.ts'
+import { calcularMacrosPorQuantidade, converterPorcaoEmGramas, nomePorcao, obterPorcoesAlimento } from './alimentos.ts'
+import type { Alimento, PorcaoAlimento } from '../data/alimentos.ts'
 
 const FRANGO: Alimento = {
   id: 5,
@@ -34,4 +34,27 @@ test('150g calcula proporcionalmente', () => {
 test('0g devolve tudo zero', () => {
   const r = calcularMacrosPorQuantidade(FRANGO, 0)
   assert.deepEqual(r, { kcal: 0, prot_g: 0, carb_g: 0, gord_g: 0 })
+})
+
+test('ovo usa unidade de 50g como medida principal', () => {
+  const ovo: Alimento = { ...FRANGO, id: 12, nome: 'Ovo cozido' }
+  const porcao = obterPorcoesAlimento(ovo)[0]
+  assert.equal(porcao.singular, 'unidade')
+  assert.equal(converterPorcaoEmGramas(porcao, 3), 150)
+})
+
+test('arroz permite colher, xícara e gramas', () => {
+  const arroz: Alimento = { ...FRANGO, id: 1, nome: 'Arroz branco cozido', categoria: 'Carboidrato' }
+  assert.deepEqual(obterPorcoesAlimento(arroz).map((porcao) => porcao.id), ['colher', 'xicara', 'gramas'])
+})
+
+test('nome da medida acompanha singular e plural', () => {
+  const porcao: PorcaoAlimento = { id: 'fatia', singular: 'fatia', plural: 'fatias', gramas: 25 }
+  assert.equal(nomePorcao(porcao, 1), 'fatia')
+  assert.equal(nomePorcao(porcao, 2), 'fatias')
+})
+
+test('quantidade inválida não gera peso negativo', () => {
+  const porcao: PorcaoAlimento = { id: 'unidade', singular: 'unidade', plural: 'unidades', gramas: 50 }
+  assert.equal(converterPorcaoEmGramas(porcao, -2), 0)
 })
