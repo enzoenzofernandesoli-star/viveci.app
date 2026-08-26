@@ -157,15 +157,19 @@ export function MapaCorporal({
   desequilibrios,
   estatisticasPorGrupo,
   modoEditorial = false,
+  vistaInicial = 'frente',
+  vistaFixa = false,
 }: {
   percentuais: PercentualPorGrupo
   desequilibrios: Desequilibrio[]
   estatisticasPorGrupo?: Record<GrupoMuscular, EstatisticasGrupo>
   modoEditorial?: boolean
+  vistaInicial?: 'frente' | 'costas'
+  vistaFixa?: boolean
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<BodyChart | null>(null)
-  const [vista, setVista] = useState<ViewSide>(ViewSide.FRONT)
+  const [vista, setVista] = useState<ViewSide>(vistaInicial === 'costas' ? ViewSide.BACK : ViewSide.FRONT)
   const [selecionado, setSelecionado] = useState<GrupoMuscular | null>(null)
 
   // a lib guarda o callback de hover só na criação; usamos refs pra sempre ler
@@ -215,7 +219,7 @@ export function MapaCorporal({
         <div>
           <div className={`flex items-center ${modoEditorial ? 'justify-center' : 'justify-between'}`}>
             {!modoEditorial && <h2 className="text-[17px] font-semibold">Mapa corporal</h2>}
-            <div className="flex border-b border-line/70">
+            {!vistaFixa && <div className="flex border-b border-line/70">
               <button
                 type="button"
                 onClick={() => setVista(ViewSide.FRONT)}
@@ -234,7 +238,7 @@ export function MapaCorporal({
               >
                 Costas
               </button>
-            </div>
+            </div>}
           </div>
 
           {!modoEditorial && <p className="mt-1 text-xs text-ink-2">Toque num músculo pra ver os detalhes. Volume dos últimos 7 dias.</p>}

@@ -1,5 +1,5 @@
 import type { RankCorporal } from './rankCorporal'
-import { calcularLayoutResumo, type PosicaoResumoCorporal } from './posicaoResumoCorporal'
+import { calcularLayoutCorpos, calcularLayoutResumo, type PosicaoResumoCorporal } from './posicaoResumoCorporal'
 
 function desenharBrasao(ctx: CanvasRenderingContext2D, rank: RankCorporal, cx: number, cy: number, escala: number) {
   const pontos = [[0, -52], [44, -29], [44, 18], [0, 56], [-44, 18], [-44, -29]]
@@ -101,11 +101,13 @@ function desenharFotoCobrindo(ctx: CanvasRenderingContext2D, imagem: HTMLImageEl
 export async function exportarResumoCorporal({
   rank,
   mapaSvg,
+  mapaCostasSvg,
   fotoFundo,
   posicao = 'inferior-esquerdo',
 }: {
   rank: RankCorporal
   mapaSvg: SVGSVGElement
+  mapaCostasSvg?: SVGSVGElement
   fotoFundo?: File
   posicao?: PosicaoResumoCorporal
 }) {
@@ -133,8 +135,13 @@ export async function exportarResumoCorporal({
   ctx.font = '700 30px Sora, sans-serif'
   ctx.fillText(rank.nome.toUpperCase(), layout.rankX, layout.rankY)
 
-  const imagemCorpo = await carregarSvg(mapaSvg)
-  ctx.drawImage(imagemCorpo, layout.corpoX, layout.corpoY, 300, 531)
+  const imagens = [await carregarSvg(mapaSvg)]
+  if (mapaCostasSvg) imagens.push(await carregarSvg(mapaCostasSvg))
+  const corpos = calcularLayoutCorpos(posicao, Boolean(mapaCostasSvg))
+  imagens.forEach((imagem, indice) => {
+    const corpo = corpos[indice]
+    ctx.drawImage(imagem, corpo.x, corpo.y, corpo.largura, corpo.altura)
+  })
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((resultado) => resultado ? resolve(resultado) : reject(new Error('Não foi possível gerar o PNG.')), 'image/png')

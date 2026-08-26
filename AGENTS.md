@@ -394,7 +394,9 @@ sem copiar símbolos de outro jogo. Tocar no rank abre todos os níveis,
 separando os já desbloqueados dos futuros. A exportação em
 `src/lib/exportarResumoCorporal.ts` gera PNG vertical 1080×1920, próprio para
 Stories. Há duas opções: PNG transparente ou foto tirada no celular já com a
-composição. Depois de tirar a foto, o usuário escolhe entre superior esquerdo,
+composição. Antes da posição, o usuário escolhe entre somente frente ou frente
++ costas lado a lado, tanto no mapa semanal quanto no mapa gerado ao terminar
+um treino. Depois de tirar a foto, o usuário escolhe entre superior esquerdo,
 superior direito, inferior esquerdo, inferior direito ou centro. Marca, brasão
 e corpo ficam pequenos; não adicionar estatísticas ao PNG nem enviar a foto ao
 servidor. O PNG transparente usa inferior esquerdo como padrão.

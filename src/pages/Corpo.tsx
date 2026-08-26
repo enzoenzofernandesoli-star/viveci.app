@@ -1,28 +1,20 @@
-import { useRef, useState } from 'react'
-import { Camera, Download, X } from 'lucide-react'
+import { useState } from 'react'
+import { AcoesExportarMapa } from '../components/AcoesExportarMapa'
 import { Empty } from '../components/Empty'
 import { MapaCorporal } from '../components/MapaCorporal'
-import { Modal } from '../components/Modal'
 import { PainelRankCorporal } from '../components/RankCorporal'
 import { Divider } from '../components/ui/Surface'
 import { Eyebrow, MetaText } from '../components/ui/Typography'
 import { useSessao } from '../lib/auth'
-import { exportarResumoCorporal } from '../lib/exportarResumoCorporal'
-import { POSICOES_RESUMO, type PosicaoResumoCorporal } from '../lib/posicaoResumoCorporal'
 import { GRUPOS_MUSCULARES } from '../lib/mapaCorporal'
 import { usePerfil } from '../lib/perfil'
 import { calcularRankCorporal } from '../lib/rankCorporal'
 import { useRotinas } from '../lib/rotinas'
 import { useVivici } from '../lib/vivici'
-import { TAMANHO_MAX_PROGRESSO, validarImagem } from '../lib/uploadSeguro'
 
 export default function Corpo() {
   const [mostrarTodos, setMostrarTodos] = useState(false)
-  const [exportando, setExportando] = useState(false)
   const [erroExportacao, setErroExportacao] = useState<string | null>(null)
-  const [fotoPendente, setFotoPendente] = useState<File | null>(null)
-  const mapaRef = useRef<HTMLElement>(null)
-  const cameraRef = useRef<HTMLInputElement>(null)
   const { sessao } = useSessao()
   const perfilState = usePerfil(sessao?.user.id)
   const rotinasState = useRotinas(sessao?.user.id)
@@ -41,48 +33,6 @@ export default function Corpo() {
   const gruposVisiveis = mostrarTodos ? gruposOrdenados : gruposOrdenados.slice(0, 5)
   const rank = resultado ? calcularRankCorporal(resultado.percentuaisSemana) : null
 
-  async function salvarImagem(fotoFundo?: File, posicao: PosicaoResumoCorporal = 'inferior-esquerdo') {
-    const mapaSvg = mapaRef.current?.querySelector('svg')
-    if (!resultado || !rank || !mapaSvg) {
-      setErroExportacao('O mapa ainda não está pronto para ser salvo.')
-      return
-    }
-    setExportando(true)
-    setErroExportacao(null)
-    try {
-      await exportarResumoCorporal({
-        rank,
-        mapaSvg,
-        fotoFundo,
-        posicao,
-      })
-    } catch (erro) {
-      setErroExportacao(erro instanceof Error ? erro.message : 'Não foi possível salvar a imagem.')
-    } finally {
-      setExportando(false)
-    }
-  }
-
-  async function fotografarComMapa(evento: React.ChangeEvent<HTMLInputElement>) {
-    const foto = evento.target.files?.[0]
-    if (!foto) return
-    try {
-      validarImagem(foto, TAMANHO_MAX_PROGRESSO)
-      setFotoPendente(foto)
-    } catch (erro) {
-      setErroExportacao(erro instanceof Error ? erro.message : 'Não foi possível usar essa foto.')
-    } finally {
-      evento.target.value = ''
-    }
-  }
-
-  async function escolherPosicao(posicao: PosicaoResumoCorporal) {
-    if (!fotoPendente) return
-    const foto = fotoPendente
-    setFotoPendente(null)
-    await salvarImagem(foto, posicao)
-  }
-
   return (
     <div className="animar-entrada mx-auto w-full max-w-[1120px]">
       <header className="flex items-end justify-between gap-4 border-b border-line/60 pb-4">
@@ -94,42 +44,6 @@ export default function Corpo() {
       </header>
       {erroExportacao && <p role="alert" className="mt-3 text-xs text-down">{erroExportacao}</p>}
 
-      {fotoPendente && (
-        <Modal fechar={() => setFotoPendente(null)} rotulo="Escolher posição do mapa de estímulo">
-          <div className="animar-escala w-full max-w-sm rounded-[var(--radius-media)] border border-line bg-card p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <Eyebrow>Posição na foto</Eyebrow>
-                <h2 className="mt-1 text-xl font-semibold">Onde fica o mapa?</h2>
-                <p className="mt-1 text-xs text-ink-2">Escolha onde o rank e o corpo aparecerão.</p>
-              </div>
-              <button type="button" onClick={() => setFotoPendente(null)} aria-label="Fechar" className="flex size-11 items-center justify-center text-ink-2 hover:text-ink">
-                <X size={20} strokeWidth={1.75} />
-              </button>
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              {POSICOES_RESUMO.map((item) => (
-                <button
-                  key={item.valor}
-                  type="button"
-                  onClick={() => escolherPosicao(item.valor)}
-                  className={`relative min-h-20 rounded-xl border border-line bg-app text-[11px] font-semibold text-ink-2 hover:border-brand/60 hover:text-ink ${item.valor === 'centro' ? 'col-span-2' : ''}`}
-                >
-                  <span className={`absolute h-5 w-3 rounded-sm bg-brand ${
-                    item.valor === 'superior-esquerdo' ? 'left-3 top-3' :
-                    item.valor === 'superior-direito' ? 'right-3 top-3' :
-                    item.valor === 'inferior-esquerdo' ? 'bottom-3 left-3' :
-                    item.valor === 'inferior-direito' ? 'bottom-3 right-3' :
-                    'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
-                  }`} />
-                  <span className="absolute inset-x-2 bottom-2">{item.nome}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </Modal>
-      )}
-
       {viviciState.carregando || perfilState.carregando || rotinasState.carregando ? (
         <Empty text="Carregando seu mapa de estímulo..." />
       ) : viviciState.erro || perfilState.erro || rotinasState.erro || !resultado ? (
@@ -138,7 +52,7 @@ export default function Corpo() {
         <>
           {rank && <PainelRankCorporal rank={rank} />}
 
-          <section ref={mapaRef} aria-label="Mapa corporal interativo" className="py-4 sm:py-7">
+          <section aria-label="Mapa corporal interativo" className="py-4 sm:py-7">
             <MapaCorporal
               percentuais={resultado.percentuaisSemana}
               desequilibrios={resultado.desequilibrios}
@@ -147,16 +61,8 @@ export default function Corpo() {
             />
           </section>
 
-          <section aria-label="Compartilhar mapa de estímulo" className="grid gap-3 border-y border-line/60 py-5 sm:grid-cols-2">
-            <button type="button" onClick={() => salvarImagem()} disabled={exportando} className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-action)] bg-brand px-4 text-xs font-semibold text-white hover:bg-brand-hover disabled:opacity-50">
-              <Download size={17} strokeWidth={1.75} />
-              {exportando ? 'Gerando...' : 'Salvar mapa de estímulo'}
-            </button>
-            <button type="button" onClick={() => cameraRef.current?.click()} disabled={exportando} className="flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-action)] border border-line px-4 text-xs font-semibold text-ink hover:bg-card-hover disabled:opacity-50">
-              <Camera size={17} strokeWidth={1.75} />
-              Tirar foto com o mapa
-            </button>
-            <input ref={cameraRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={fotografarComMapa} className="hidden" />
+          <section aria-label="Compartilhar mapa de estímulo" className="border-y border-line/60 py-5">
+            {rank && <AcoesExportarMapa percentuais={resultado.percentuaisSemana} rank={rank} onErro={setErroExportacao} />}
           </section>
 
           {semEstimulos && (
