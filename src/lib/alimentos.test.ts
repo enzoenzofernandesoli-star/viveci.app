@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { calcularMacrosPorQuantidade, converterPorcaoEmGramas, nomePorcao, obterPorcoesAlimento } from './alimentos.ts'
 import type { Alimento, PorcaoAlimento } from '../data/alimentos.ts'
+import { ALIMENTOS } from '../data/alimentos.ts'
 
 const FRANGO: Alimento = {
   id: 5,
@@ -57,4 +58,19 @@ test('nome da medida acompanha singular e plural', () => {
 test('quantidade inválida não gera peso negativo', () => {
   const porcao: PorcaoAlimento = { id: 'unidade', singular: 'unidade', plural: 'unidades', gramas: 50 }
   assert.equal(converterPorcaoEmGramas(porcao, -2), 0)
+})
+
+test('catálogo ampliado possui 200 alimentos sem IDs repetidos', () => {
+  assert.equal(ALIMENTOS.length, 200)
+  assert.equal(new Set(ALIMENTOS.map((alimento) => alimento.id)).size, 200)
+})
+
+test('catálogo contém variações de ovos e pães', () => {
+  const nomes = ALIMENTOS.map((alimento) => alimento.nome)
+  assert.ok(nomes.includes('Ovo frito'))
+  assert.ok(nomes.includes('Ovo pochê'))
+  assert.ok(nomes.includes('Omelete com queijo'))
+  assert.ok(nomes.includes('Pão australiano'))
+  assert.ok(nomes.includes('Pão de centeio'))
+  assert.ok(nomes.includes('Pão de forma sem glúten'))
 })

@@ -31,6 +31,8 @@ const PORCOES_POR_CATEGORIA: Record<string, PorcaoAlimento[]> = {
   Bebida: [{ id: 'copo', singular: 'copo', plural: 'copos', gramas: 200 }],
   Suplemento: [{ id: 'scoop', singular: 'scoop', plural: 'scoops', gramas: 30 }],
   Outro: [{ id: 'porcao', singular: 'porção', plural: 'porções', gramas: 50 }],
+  'Prato pronto': [{ id: 'porcao', singular: 'porção', plural: 'porções', gramas: 250 }],
+  Lanche: [{ id: 'unidade', singular: 'unidade', plural: 'unidades', gramas: 100 }],
 }
 
 /** Retorna medidas caseiras adequadas ao alimento e mantém gramas como alternativa. */
