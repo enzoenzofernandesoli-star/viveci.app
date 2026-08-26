@@ -18,6 +18,8 @@ import { detectarPR } from '../lib/recordesPessoais'
 import { reconstruirTreinoExpress, type ItemParaExpress } from '../lib/treinoExpress'
 import { EXERCICIOS, type Exercicio } from '../data/exercicios'
 import { mensagemErro } from '../lib/mensagemErro'
+import { calcularPercentuais, calcularVolumePorGrupo } from '../lib/mapaCorporal'
+import { ExportarMapaTreino } from '../components/ExportarMapaTreino'
 
 const DESCANSO_PADRAO = 90
 
@@ -320,8 +322,18 @@ function ExecutorTreino({
 
   if (treinoConcluido) {
     const seriesConcluidas = exercicios.reduce((total, exercicio) => total + exercicio.sets.filter((set) => set.completo).length, 0)
+    const percentuaisTreino = calcularPercentuais(calcularVolumePorGrupo(
+      exercicios.flatMap((exercicio) => exercicio.sets
+        .filter((serie) => serie.completo)
+        .map((serie) => ({
+          exercicio_id: exercicio.exercicioId,
+          peso_kg: Number(serie.peso.replace(',', '.')) || 0,
+          reps: Number(serie.reps) || 0,
+        }))),
+      EXERCICIOS,
+    ))
     return (
-      <div className="animar-entrada mx-auto flex min-h-[70dvh] w-full max-w-xl flex-col justify-center py-8 text-center">
+      <div className="animar-entrada mx-auto w-full max-w-xl py-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand">Treino concluído</p>
           <p className="num mt-5 text-[64px] font-semibold leading-none tracking-[-0.07em]">{formatoTempo(elapsedSeg)}</p>
           <p className="mt-2 text-xs text-ink-2">duração total</p>
@@ -349,6 +361,7 @@ function ExecutorTreino({
               </button>
             )}
           </div>
+          {seriesConcluidas > 0 && <ExportarMapaTreino percentuais={percentuaisTreino} />}
       </div>
     )
   }

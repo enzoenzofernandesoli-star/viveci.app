@@ -185,6 +185,9 @@ qualquer entrega.
 - **Sessão de treino** — cronômetro total no topo, carrossel de bolinhas pra
   trocar de exercício livremente, tabela de séries (peso/reps/check), descanso
   editável por exercício (persiste), sugestão de carga baseada no histórico.
+  Ao concluir, o mapa de estímulo é calculado somente com as séries feitas
+  naquela sessão e pode ser salvo transparente ou aplicado a uma foto tirada
+  na hora, com escolha de posição.
 - **Treino rápido** — sessão avulsa sem rotina salva, exercícios adicionados
   na hora; fica só no histórico.
 - **Cardio** — aba dentro de Treino: equipamento, duração, distância, ritmo
@@ -257,7 +260,7 @@ qualquer entrega.
   exercício. **100% simulado**: sempre devolve a mesma mensagem avisando
   que a análise real ainda não está conectada, nunca finge diagnóstico.
 - **VIVECI Social** (`/social`) — núcleo real (sem mock): feed Amigos/Descobrir,
-  publicar foto + legenda + treino real anexado (com controle de quais dados
+  tirar foto ou escolher da galeria + legenda + treino real anexado (com controle de quais dados
   aparecem), curtir, comentar, seguir, perfil público, card "Desafio inicial"
   com progresso calculado de verdade. **Sem vídeo, XP/rankings, notificações,
   desafios além do inicial, moderação ou tempo real** — ver seção própria
