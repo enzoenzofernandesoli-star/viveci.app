@@ -14,7 +14,7 @@ import {
   type EstatisticasGrupo,
 } from './mapaCorporal.ts'
 import { calcularDNA, interpretarDNA, type DNATreino, type PerfilDNA } from './dnaTreino.ts'
-import { calcularConsistencia } from './consistencia.ts'
+import { calcularConsistencia, calcularStreak } from './consistencia.ts'
 import { detectarEventosPR, type EventoPR } from './recordesPessoais.ts'
 import { recomendarTreinoHoje, type RecomendacaoTreino } from './recomendacaoTreino.ts'
 import { calcularDailyScore, type DailyScore } from './dailyScore.ts'
@@ -34,6 +34,7 @@ export type ResultadoVivici = {
   recomendacao: RecomendacaoTreino | null
   eventosPR: EventoPR[]
   dailyScore: DailyScore
+  sequenciaAtual: number
 }
 
 /**
@@ -103,6 +104,7 @@ export function useVivici(
 
         const datasConcluidas = sessoes.map((s) => s.finalizada_em)
         const { ultimos7Dias, ultimos30Dias } = calcularConsistencia(datasConcluidas, hojeISO)
+        const sequenciaAtual = calcularStreak(datasConcluidas, hojeISO)
         const dna = calcularDNA(seriesParaDNA, ultimos30Dias, hojeISO, diasSemanaMeta)
         const perfilDNA = interpretarDNA(dna)
 
@@ -148,6 +150,7 @@ export function useVivici(
             recomendacao,
             eventosPR,
             dailyScore,
+            sequenciaAtual,
           })
         }
       } catch (err) {

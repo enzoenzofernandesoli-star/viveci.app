@@ -206,7 +206,8 @@ qualquer entrega.
   estatísticas + mapa como PNG de fundo transparente.
 - **Dashboard** — dados reais: recomendação "O que eu treino hoje?" (com
   motivo), Daily Score, nutrição do dia, alerta de PR recente, alerta de
-  músculo negligenciado, mapa corporal.
+  músculo negligenciado, mapa corporal e braço de sequência no canto superior
+  direito com o mesmo painel de conquistas do Perfil.
 - **Treino Express** — dentro de Treino, botão "Treino express" em cada
   rotina abre um seletor de duração (15 a 90 min) que reconstrói a sessão
   pra caber no tempo (reduz/remove isolados antes de tocar em compostos),
