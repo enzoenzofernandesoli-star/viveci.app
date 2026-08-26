@@ -3,7 +3,9 @@ import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
 import type { Post } from '../lib/social/posts'
 import { curtir, descurtir, excluirPost } from '../lib/social/posts'
 import { bloquearUsuario, denunciarPost } from '../lib/social/moderacao'
-import { EditorialMedia } from './ui/EditorialMedia'
+import { CarrosselPost } from './CarrosselPost'
+import { DetalhesTreinoPost } from './DetalhesTreinoPost'
+import { percentuaisDoTreinoCompartilhado } from '../lib/social/treinoCompartilhado'
 
 function formatoBR(n: number): string {
   return Math.round(n).toLocaleString('pt-BR')
@@ -41,6 +43,8 @@ export function PostCard({
   const [enviando, setEnviando] = useState(false)
   const [menuAberto, setMenuAberto] = useState(false)
   const [mensagem, setMensagem] = useState<string | null>(null)
+  const [detalhesAbertos, setDetalhesAbertos] = useState(false)
+  const percentuais = post.exercicios.length > 0 ? percentuaisDoTreinoCompartilhado(post.exercicios) : null
 
   async function alternarCurtida() {
     if (enviando) return
@@ -76,19 +80,13 @@ export function PostCard({
       </div>}
       {mensagem && <p className="mt-2 text-xs text-ink-2">{mensagem}</p>}
 
-      {post.fotoUrl && (
-        <EditorialMedia
-          src={post.fotoUrl}
-          alt={`Publicação de ${post.autor.nome}`}
-          className="mt-4 aspect-[4/5] max-h-[620px] w-full rounded-2xl"
-        />
-      )}
+      {(post.fotoUrl || percentuais) && <CarrosselPost fotoUrl={post.fotoUrl} autor={post.autor.nome} percentuais={percentuais} />}
 
       <div className="pt-4">
         {post.legenda && <p className="line-clamp-3 text-sm leading-relaxed text-ink">{post.legenda}</p>}
 
         {post.resumoTreino && (
-          <div className="mt-4 border-l border-brand/60 pl-3">
+          <button type="button" onClick={() => post.exercicios.length > 0 && setDetalhesAbertos(true)} className="mt-4 block w-full border-l border-brand/60 pl-3 text-left">
             <p className="text-xs font-semibold text-ink">{post.resumoTreino.nome}</p>
             <div className="flex flex-wrap gap-x-2 text-xs text-ink-2">
               {post.mostrarDuracao && post.resumoTreino.duracaoSeg !== null && (
@@ -99,7 +97,8 @@ export function PostCard({
                 <span className="num">{formatoBR(post.resumoTreino.volumeTotalKg)} kg</span>
               )}
             </div>
-          </div>
+            {post.exercicios.length > 0 && <span className="mt-1 block text-xs font-semibold text-brand">Ver exercícios</span>}
+          </button>
         )}
 
         <div className="mt-4 flex items-center gap-6">
@@ -113,6 +112,7 @@ export function PostCard({
           </button>
         </div>
       </div>
+      {detalhesAbertos && <DetalhesTreinoPost post={post} fechar={() => setDetalhesAbertos(false)} />}
     </article>
   )
 }

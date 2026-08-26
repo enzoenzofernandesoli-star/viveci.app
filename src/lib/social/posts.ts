@@ -4,6 +4,7 @@ import { buscarSeguindoIds } from './seguidores.ts'
 import { TAMANHO_MAX_POST, validarImagem } from '../uploadSeguro.ts'
 import { LIMITE_COMENTARIO, LIMITE_LEGENDA, validarTextoSocial } from './limites.ts'
 import { filtrarMetricasCompartilhadas } from './metricasCompartilhadas.ts'
+import { normalizarExerciciosCompartilhados, type ExercicioTreinoCompartilhado } from './treinoCompartilhado.ts'
 
 export type Autor = { id: string; nome: string; fotoUrl: string | null }
 
@@ -27,6 +28,7 @@ export type Post = {
   mostrarDuracao: boolean
   mostrarSeries: boolean
   mostrarVolume: boolean
+  exercicios: ExercicioTreinoCompartilhado[]
 }
 
 type PostBruto = {
@@ -43,6 +45,7 @@ type PostBruto = {
   treino_duracao_seg: number | null
   treino_series: number | null
   treino_volume_kg: number | null
+  treino_exercicios?: unknown
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -100,6 +103,7 @@ async function montarPosts(postsBrutos: PostBruto[], meuId: string): Promise<Pos
       mostrarDuracao: p.mostrar_duracao,
       mostrarSeries: p.mostrar_series,
       mostrarVolume: p.mostrar_volume,
+      exercicios: normalizarExerciciosCompartilhados(p.treino_exercicios),
     }
   })
 }
@@ -258,6 +262,14 @@ export async function excluirPost(postId: string) {
     const { error: erroStorage } = await supabase.storage.from('midia-publica').remove([fotoPath])
     if (erroStorage) throw erroStorage
   }
+}
+
+export async function copiarTreinoDoPost(postId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('copiar_treino_post', { p_post_id: postId })
+  if (error) throw error
+  const resultado = Array.isArray(data) ? data[0] : data
+  if (!resultado?.rotina_id) throw new Error('Não deu pra copiar esse treino.')
+  return resultado.rotina_id
 }
 
 export type Comentario = {

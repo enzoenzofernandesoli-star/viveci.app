@@ -590,6 +590,14 @@ autor escolhe ao publicar (`src/components/CriarPost.tsx`). PR do post não
 foi implementado ainda (calcular PR retroativo por post seria caro demais
 pra fazer por item de feed).
 
+Post com treino também recebe um snapshot público mínimo em
+`posts.treino_exercicios` (exercício, número de séries, faixa de repetições e
+descanso — nunca cargas). Esse snapshot alimenta o segundo slide do carrossel,
+com o mapa de estímulo daquele treino, e o modal aberto ao tocar no resumo. O
+botão **Copiar para meus treinos** chama `copiar_treino_post`, cria uma rotina
+real editável e continua sujeito ao limite Free no banco. A publicação nunca
+referencia diretamente dados privados da sessão no feed.
+
 **Feed Amigos** = posts de quem o usuário segue + os próprios
 (`buscarSeguindoIds` em `seguidores.ts`). **Descobrir** = todos os posts
 públicos recentes, sem algoritmo de recomendação — só ordem cronológica,
@@ -628,8 +636,9 @@ Projeto `Viveci APP`. Scripts em `sql/`, rodar em ordem crescente:
 → `05_cardio` → `06_perfil_bio` → `07_preferencias` → `08_social` →
 `09_seguranca_beta` → `10_integridade_rotinas` → `11_indices_performance` →
 `12_privacidade_metricas_social` → `13_privilegios_minimos` →
-`14_idade_minima` → `15_idade_minima_18`. As migrations 01–15 foram confirmadas
-no remoto em 18/08/2026.
+`14_idade_minima` → `15_idade_minima_18` → `17_social_treino_compartilhado`.
+As migrations 01–15 foram confirmadas no remoto em 18/08/2026; a 17 precisa
+ser aplicada antes de liberar mapa/detalhes/cópia de treino no Social.
 
 Bucket de fotos: **`Fotos`** (com F maiúsculo). Caminho obrigatório do arquivo:
 `<user_id>/nome.jpg`, senão a policy bloqueia. Avatar usa

@@ -7,7 +7,7 @@ const GRUPOS_FRENTE: GrupoMuscular[] = ['Ombros', 'Peito', 'Bíceps', 'Abdômen'
 const GRUPOS_COSTAS: GrupoMuscular[] = ['Costas', 'Tríceps', 'Glúteos', 'Posterior', 'Panturrilha']
 
 /** Cada id anatômico da lib body-muscles mapeado pro nosso grupo muscular de 10 posições. */
-const ID_PARA_GRUPO: Record<string, GrupoMuscular> = {
+export const ID_PARA_GRUPO: Record<string, GrupoMuscular> = {
   'shoulder-front-left': 'Ombros',
   'shoulder-front-right': 'Ombros',
   'shoulder-side-left': 'Ombros',
