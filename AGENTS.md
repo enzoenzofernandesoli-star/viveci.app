@@ -387,8 +387,9 @@ sem copiar símbolos de outro jogo. Tocar no rank abre todos os níveis,
 separando os já desbloqueados dos futuros. A exportação em
 `src/lib/exportarResumoCorporal.ts` gera PNG vertical 1080×1920, próprio para
 Stories. Há duas opções: PNG transparente ou foto tirada no celular já com a
-composição. Marca, brasão e corpo ficam pequenos à esquerda; não adicionar
-estatísticas ao PNG nem enviar a foto ao servidor.
+composição. Marca, brasão e corpo ficam pequenos e ancorados no canto inferior
+esquerdo; não adicionar estatísticas ao PNG, não levar o conjunto de volta ao
+topo e nem enviar a foto ao servidor.
 
 ### Diário alimentar — `src/lib/diario.ts`, `src/lib/alimentos.ts`
 

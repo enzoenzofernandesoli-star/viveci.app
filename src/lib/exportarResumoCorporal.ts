@@ -111,16 +111,16 @@ export async function exportarResumoCorporal({
   ctx.fillStyle = '#F4F5F7'
   ctx.font = '600 18px Sora, sans-serif'
   ctx.letterSpacing = '8px'
-  ctx.fillText('VIVECI', 72, 104)
+  ctx.fillText('VIVECI', 64, 1040)
   ctx.letterSpacing = '0px'
 
-  desenharBrasao(ctx, rank, 190, 260, 1.15)
+  desenharBrasao(ctx, rank, 164, 1148, 1.02)
   ctx.fillStyle = rank.cor
-  ctx.font = '700 34px Sora, sans-serif'
-  ctx.fillText(rank.nome.toUpperCase(), 72, 390)
+  ctx.font = '700 30px Sora, sans-serif'
+  ctx.fillText(rank.nome.toUpperCase(), 64, 1252)
 
   const imagemCorpo = await carregarSvg(mapaSvg)
-  ctx.drawImage(imagemCorpo, 52, 470, 380, 673)
+  ctx.drawImage(imagemCorpo, 42, 1290, 300, 531)
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((resultado) => resultado ? resolve(resultado) : reject(new Error('Não foi possível gerar o PNG.')), 'image/png')
