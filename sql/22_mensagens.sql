@@ -89,3 +89,38 @@ begin
 end $$;
 
 grant execute on function public.listar_convites_grupo(), public.recusar_convite_grupo(uuid) to authenticated;
+
+create or replace function public.listar_mensagens(
+  p_conversa_id uuid default null,
+  p_grupo_id uuid default null,
+  p_antes bigint default null
+)
+returns table (
+  id bigint, remetente_id uuid, texto text, treino_id uuid,
+  criada_em timestamptz, nome text, foto_url text
+)
+language plpgsql stable security definer set search_path=public as $$
+begin
+  if auth.uid() is null or ((p_conversa_id is not null)::integer+(p_grupo_id is not null)::integer)<>1 then
+    raise exception 'Destino inválido.' using errcode='22023';
+  end if;
+  if p_conversa_id is not null and not exists(
+    select 1 from public.conversas c where c.id=p_conversa_id and auth.uid() in(c.usuario_a,c.usuario_b)
+  ) then raise exception 'Sem acesso.' using errcode='42501'; end if;
+  if p_grupo_id is not null and not exists(
+    select 1 from public.grupo_membros gm where gm.grupo_id=p_grupo_id and gm.user_id=auth.uid()
+  ) then raise exception 'Sem acesso.' using errcode='42501'; end if;
+
+  return query
+  select m.id, m.remetente_id, m.texto, m.treino_id, m.criada_em,
+    coalesce(p.nome,'Atleta VIVECI'), p.foto_url
+  from public.mensagens m
+  left join public.perfis p on p.id=m.remetente_id
+  where (p_conversa_id is null or m.conversa_id=p_conversa_id)
+    and (p_grupo_id is null or m.grupo_id=p_grupo_id)
+    and (p_antes is null or m.id<p_antes)
+  order by m.id desc limit 40;
+end $$;
+
+revoke all on function public.listar_mensagens(uuid,uuid,bigint) from public, anon;
+grant execute on function public.listar_mensagens(uuid,uuid,bigint) to authenticated;

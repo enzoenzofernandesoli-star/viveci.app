@@ -19,15 +19,8 @@ export async function listarConversas(meuId:string):Promise<Conversa[]> {
 }
 
 export async function listarMensagens(destino:{conversaId?:string;grupoId?:string}, antes?:number):Promise<Mensagem[]> {
-  let q=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em').order('id',{ascending:false}).limit(40)
-  q=destino.conversaId?q.eq('conversa_id',destino.conversaId):q.eq('grupo_id',destino.grupoId!)
-  if(antes)q=q.lt('id',antes)
-  const {data,error}=await q;if(error)throw error
-  const ids=[...new Set((data??[]).map(m=>m.remetente_id))]
-  if(!ids.length)return []
-  const {data:perfis,error:ep}=await supabase.from('perfis_publicos').select('id,nome,foto_url').in('id',ids);if(ep)throw ep
-  const mapa=new Map((perfis??[]).map(p=>[p.id,p]))
-  return (data??[]).reverse().map(m=>({id:m.id,remetenteId:m.remetente_id,texto:m.texto,treinoId:m.treino_id,criadaEm:m.criada_em,nome:mapa.get(m.remetente_id)?.nome??'Atleta VIVECI',fotoUrl:mapa.get(m.remetente_id)?.foto_url??null}))
+  const {data,error}=await supabase.rpc('listar_mensagens',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_antes:antes??null});if(error)throw error
+  return (data??[]).reverse().map((m:Record<string,unknown>)=>({id:Number(m.id),remetenteId:String(m.remetente_id),texto:m.texto?String(m.texto):null,treinoId:m.treino_id?String(m.treino_id):null,criadaEm:String(m.criada_em),nome:String(m.nome??'Atleta VIVECI'),fotoUrl:m.foto_url?String(m.foto_url):null}))
 }
 
 export async function enviarMensagem(destino:{conversaId?:string;grupoId?:string},texto:string,treinoId?:string){const {error}=await supabase.rpc('enviar_mensagem',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_texto:texto||null,p_treino_id:treinoId??null});if(error)throw error}
