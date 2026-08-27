@@ -24,6 +24,7 @@ export async function listarMensagens(destino:{conversaId?:string;grupoId?:strin
 }
 
 export async function enviarMensagem(destino:{conversaId?:string;grupoId?:string},texto:string,treinoId?:string){const {error}=await supabase.rpc('enviar_mensagem',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_texto:texto||null,p_treino_id:treinoId??null});if(error)throw error}
+export async function excluirMensagem(mensagemId:number){const{error}=await supabase.rpc('excluir_mensagem',{p_mensagem_id:mensagemId});if(error)throw error}
 
 export async function listarConvitesGrupo():Promise<ConviteGrupo[]>{const{data,error}=await supabase.rpc('listar_convites_grupo');if(error)throw error;return(data??[]).map((c:Record<string,unknown>)=>({conviteId:String(c.convite_id),grupoId:String(c.grupo_id),nome:String(c.nome),fotoUrl:c.foto_url?String(c.foto_url):null,convidadoPor:String(c.convidado_por),expiraEm:String(c.expira_em)}))}
 export async function recusarConviteGrupo(conviteId:string){const{error}=await supabase.rpc('recusar_convite_grupo',{p_convite_id:conviteId});if(error)throw error}

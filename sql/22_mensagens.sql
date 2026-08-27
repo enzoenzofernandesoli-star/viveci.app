@@ -124,3 +124,14 @@ end $$;
 
 revoke all on function public.listar_mensagens(uuid,uuid,bigint) from public, anon;
 grant execute on function public.listar_mensagens(uuid,uuid,bigint) to authenticated;
+
+create or replace function public.excluir_mensagem(p_mensagem_id bigint)
+returns void language plpgsql security definer set search_path=public as $$
+begin
+  if auth.uid() is null then raise exception 'Autenticação necessária.' using errcode='42501'; end if;
+  delete from public.mensagens where id=p_mensagem_id and remetente_id=auth.uid();
+  if not found then raise exception 'Mensagem não encontrada ou sem permissão.' using errcode='42501'; end if;
+end $$;
+
+revoke all on function public.excluir_mensagem(bigint) from public, anon;
+grant execute on function public.excluir_mensagem(bigint) to authenticated;

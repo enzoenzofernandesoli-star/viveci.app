@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Camera, Crown, Lock, Search, Shield, UserMinus, Users } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronRight, Crown, Lock, MessageCircle, Search, Shield, UserMinus, Users } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { BrasaoRank } from '../components/RankCorporal'
 import { Empty } from '../components/Empty'
@@ -20,6 +20,7 @@ export default function GrupoDetalhe() {
   const [convidando, setConvidando] = useState(false)
   const [versao, setVersao] = useState(0)
   const [atualizandoFoto, setAtualizandoFoto] = useState(false)
+  const [visao, setVisao] = useState<'chat' | 'info'>('chat')
 
   useEffect(() => {
     if (!id) return
@@ -55,9 +56,23 @@ export default function GrupoDetalhe() {
   if (editando) return <EditarGrupo grupo={grupo} fechar={() => setEditando(false)} salvo={() => { setEditando(false); setVersao((v) => v + 1) }} />
   if (convidando) return <ConvidarGrupo grupoId={id} fechar={() => setConvidando(false)} />
 
+  if (grupo.souMembro && visao === 'chat') return (
+    <div className="animar-entrada mx-auto w-full max-w-[640px] pb-4">
+      <header className="sticky top-0 z-10 flex min-h-16 items-center gap-2 border-b border-line bg-app">
+        <button onClick={() => navigate('/social')} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2"><ArrowLeft size={20} /></button>
+        <button onClick={() => setVisao('info')} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 text-left" aria-label="Ver informações do grupo">
+          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card">{grupo.fotoUrl ? <img src={grupo.fotoUrl} alt="" className="size-full object-cover" /> : <Users size={19} className="text-ink-3" />}</div>
+          <div className="min-w-0 flex-1"><p className="truncate text-base font-semibold">{grupo.nome}</p><p className="truncate text-[11px] text-ink-2">{grupo.totalMembros} {grupo.totalMembros === 1 ? 'membro' : 'membros'} · toque para ver a guilda</p></div>
+          <ChevronRight size={18} className="mr-2 shrink-0 text-ink-3" />
+        </button>
+      </header>
+      <Chat grupoId={id} mostrarAutores />
+    </div>
+  )
+
   return (
     <div className="animar-entrada mx-auto w-full max-w-[640px] pb-8">
-      <header className="flex min-h-12 items-center gap-2 border-b border-line/60 pb-3"><button onClick={() => navigate('/social')} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2"><ArrowLeft size={20} /></button><p className="text-sm font-semibold">Grupo VIVECI</p></header>
+      <header className="flex min-h-12 items-center gap-2 border-b border-line/60 pb-3"><button onClick={() => grupo.souMembro ? setVisao('chat') : navigate('/social')} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2"><ArrowLeft size={20} /></button><p className="text-sm font-semibold">Perfil da guilda</p></header>
       <section className="py-6 text-center">
         <div className="relative mx-auto size-24">
           <div className="flex size-24 items-center justify-center overflow-hidden rounded-[24px] border border-line bg-card">{grupo.fotoUrl ? <img src={grupo.fotoUrl} alt={`Foto do grupo ${grupo.nome}`} className="size-full object-cover" /> : <Users size={34} className="text-ink-3" />}</div>
@@ -82,7 +97,7 @@ export default function GrupoDetalhe() {
           <section className="flex items-center gap-5 border-y border-line/60 py-6"><BrasaoRank rank={rank} tamanho={100} /><div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Rank coletivo semanal</p><h2 className="mt-2 text-2xl font-semibold" style={{ color: rank.cor }}>{rank.nome}</h2><p className="mt-1 text-xs text-ink-2">Média do grupo: {rank.mediaSemanal}%</p><div className="mt-4 h-1.5 overflow-hidden bg-line"><div className="h-full" style={{ width: `${rank.progressoNoRank}%`, backgroundColor: rank.cor }} /></div><p className="mt-2 text-[11px] text-ink-3">{rank.proximoRank ? `Faltam ${rank.pontosParaProximo} pontos para ${rank.proximoRank}.` : 'Rank máximo alcançado.'}</p></div></section>
           {gerencia && <div className="grid grid-cols-2 gap-2 border-b border-line/60 py-4"><button onClick={() => setEditando(true)} className="min-h-11 rounded-xl border border-line text-xs font-semibold text-ink-2">Editar grupo</button><button onClick={() => setConvidando(true)} className="min-h-11 rounded-xl border border-line text-xs font-semibold text-brand">Convidar pessoa</button></div>}
           <section className="mt-7"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Integrantes e contribuição</p>{erro && <p className="mt-3 text-sm text-down">{erro}</p>}<div className="mt-3 divide-y divide-line/60 border-y border-line/60">{membros.map((m) => <Membro key={m.userId} membro={m} meuPapel={grupo.meuPapel} grupoId={id} atualizado={() => setVersao((v) => v + 1)} onErro={setErro} />)}</div></section>
-          <section className="mt-8"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Conversa do grupo</p><Chat grupoId={id} mostrarAutores /></section>
+          <button onClick={() => setVisao('chat')} className="sticky bottom-3 mt-8 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white"><MessageCircle size={19} /> Mensagens</button>
         </>
       )}
     </div>

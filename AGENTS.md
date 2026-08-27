@@ -589,8 +589,13 @@ página do grupo. Uma mensagem pode marcar um treino concluído do próprio
 remetente. Conversas privadas só podem ser lidas pelos dois participantes e
 mensagens de grupo somente por membros. Listas têm limite, índice por cursor e
 o envio é limitado a 30 mensagens por minuto por usuário.
+Ao abrir um grupo do qual já é membro, a conversa é a tela principal. O
+cabeçalho com foto/nome abre o perfil da guilda (rank, integrantes e edição),
+que possui um botão azul `Mensagens` para retornar ao chat.
 Convites pendentes para grupos aparecem no topo da aba Mensagens, com ações
 para aceitar (entrada sem senha e abertura do grupo) ou recusar.
+Cada usuário pode excluir somente as próprias mensagens; a autorização é
+validada pela RPC `excluir_mensagem`, nunca apenas pela interface.
 
 **Sem conta privada nessa primeira versão** — qualquer usuário autenticado
 lê qualquer post/comentário/curtida/perfil (RLS só restringe *escrita* ao
