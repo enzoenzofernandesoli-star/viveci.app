@@ -29,7 +29,7 @@ Cargas, metas, recomendações e indicadores dependem dos dados registrados e de
 
 ## 5. Recursos demonstrativos
 
-Food Scanner, Label Scanner, análise de movimento e análise de físico são demonstrações. Resultados fixos ou estimados não representam análise real de IA, OCR, diagnóstico, composição corporal ou avaliação clínica.
+Análise de movimento e análise de físico são demonstrações. Resultados fixos ou estimados não representam análise real de IA, diagnóstico, composição corporal ou avaliação clínica.
 
 ## 6. Social e conteúdo enviado
 

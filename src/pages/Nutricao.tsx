@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Camera, Pencil, ScanBarcode, X } from 'lucide-react'
+import { Pencil, X } from 'lucide-react'
 import { Page } from '../components/Page'
 import { Empty } from '../components/Empty'
-import { EscanearRefeicao } from '../components/EscanearRefeicao'
-import { EscanearRotulo } from '../components/EscanearRotulo'
 import type { Perfil } from '../lib/perfil'
 import { useSessao } from '../lib/auth'
 import { usePerfil } from '../lib/perfil'
@@ -396,10 +394,7 @@ export default function Nutricao() {
   const consumido = somar(itens)
 
   const [refeicaoAdicionando, setRefeicaoAdicionando] = useState<Refeicao | null>(null)
-  const [refeicaoEscaneando, setRefeicaoEscaneando] = useState<Refeicao | null>(null)
-  const [refeicaoRotulo, setRefeicaoRotulo] = useState<Refeicao | null>(null)
   const [editandoMeta, setEditandoMeta] = useState(false)
-  const [scannerEscolhendo, setScannerEscolhendo] = useState<'refeicao' | 'rotulo' | null>(null)
 
   const perfilCalculo: Perfil | null =
     perfil?.nome && perfil.sexo && perfil.idade && perfil.altura_cm && perfil.peso_kg && perfil.dias_semana && perfil.objetivo
@@ -441,36 +436,6 @@ export default function Nutricao() {
           await adicionarItem(sessao.user.id, { ...dados, data: hoje, refeicao: refeicaoAdicionando })
           recarregar()
           setRefeicaoAdicionando(null)
-        }}
-      />
-    )
-  }
-
-  if (refeicaoEscaneando) {
-    return (
-      <EscanearRefeicao
-        refeicao={refeicaoEscaneando}
-        onFechar={() => setRefeicaoEscaneando(null)}
-        onAdicionarTodos={async (itensList) => {
-          for (const dados of itensList) {
-            await adicionarItem(sessao.user.id, { ...dados, data: hoje, refeicao: refeicaoEscaneando })
-          }
-          recarregar()
-          setRefeicaoEscaneando(null)
-        }}
-      />
-    )
-  }
-
-  if (refeicaoRotulo) {
-    return (
-      <EscanearRotulo
-        refeicao={refeicaoRotulo}
-        onFechar={() => setRefeicaoRotulo(null)}
-        onAdicionar={async (dados) => {
-          await adicionarItem(sessao.user.id, { ...dados, data: hoje, refeicao: refeicaoRotulo })
-          recarregar()
-          setRefeicaoRotulo(null)
         }}
       />
     )
@@ -584,43 +549,6 @@ export default function Nutricao() {
         )}
       </div>
 
-      <section className="mt-10 border-t border-line/60 pt-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gold">Experimental · Demonstração</p>
-            <h2 className="mt-1 text-lg font-semibold">Scanners</h2>
-            <p className="mt-1 text-xs text-ink-2">A análise visual ainda não usa IA real.</p>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <button onClick={() => setScannerEscolhendo('refeicao')} className="flex min-h-12 items-center justify-center gap-2 border border-line text-xs font-semibold text-ink-2 hover:text-ink">
-            <Camera size={16} strokeWidth={1.75} /> Refeição
-          </button>
-          <button onClick={() => setScannerEscolhendo('rotulo')} className="flex min-h-12 items-center justify-center gap-2 border border-line text-xs font-semibold text-ink-2 hover:text-ink">
-            <ScanBarcode size={16} strokeWidth={1.75} /> Rótulo
-          </button>
-        </div>
-        {scannerEscolhendo && (
-          <div className="mt-4 border-t border-line/60 pt-4">
-            <p className="text-xs text-ink-2">Em qual refeição deseja registrar?</p>
-            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
-              {REFEICOES_PRINCIPAIS.map((refeicao) => (
-                <button
-                  key={refeicao}
-                  onClick={() => {
-                    if (scannerEscolhendo === 'refeicao') setRefeicaoEscaneando(refeicao)
-                    else setRefeicaoRotulo(refeicao)
-                    setScannerEscolhendo(null)
-                  }}
-                  className="min-h-11 text-xs font-semibold text-brand"
-                >
-                  {refeicao}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
     </Page>
   )
 }

@@ -153,9 +153,7 @@ Na barra inferior o botão fica entre a 3ª e a 4ª aba (grupo esquerdo com
 3 itens, direito com 2 — `BottomNav.tsx` desestrutura `NAV` manualmente,
 cuidado ao adicionar/remover item). Planos não tem aba própria (acessível a
 partir do Perfil e de telas de bloqueio). Evolução não é mais rota — é a 2ª
-aba dentro da própria página de Perfil (a 1ª é Treinos). Food Scanner e
-Label Scanner não são rotas — abrem como view cheia de dentro de Nutrição
-(ícone de câmera em cada refeição). Body Scan (`/perfil/body-scan`),
+aba dentro da própria página de Perfil (a 1ª é Treinos). Body Scan (`/perfil/body-scan`),
 Configurações (`/perfil/configuracoes`), Analisar movimento
 (`/treino/analisar/:id`) e Perfil público (`/social/usuario/:id`) são rotas
 próprias sem aba própria na navegação inferior.
@@ -248,14 +246,6 @@ qualquer entrega.
   isso é intencional, só entra quando o dono do produto decidir o quê.
 - **PWA** — manifest, ícones, service worker (offline básico); a interface
   bloqueia zoom por pinça/duplo toque e mantém apenas o scroll vertical.
-- **Food Scanner** (câmera na Nutrição) — identifica alimentos numa foto do
-  prato, estima kcal/macros/fibra por item, permite ajustar quantidade
-  (Pouco/Médio/Muito) e adiciona ao diário de verdade. **Análise é
-  simulada** (mock declarado) — não há IA de visão conectada.
-- **Label Scanner** (câmera na Nutrição) — lê a tabela nutricional de um
-  rótulo, explica os números em linguagem simples, calcula quantas porções
-  a pessoa realmente comeu (matemática real) e adiciona ao diário.
-  **Leitura do rótulo é simulada** — sem OCR conectado.
 - **Body Scan** (`/perfil/body-scan`) — fotos de progresso reais (frente/
   lateral/costas) sobem pro bucket `Fotos` e ficam em `fotos_progresso`;
   timeline filtrável por 7/30/90 dias; comparação lado a lado entre duas
@@ -508,17 +498,11 @@ antagonistas (Peito↔Costas etc).
 
 ### IA de visão (mock declarado) — `src/lib/services/`
 
-Food Scanner, Label Scanner, Análise de movimento e a pontuação do Body Scan
-dependem de IA de visão computacional / OCR real, que este projeto **não
+Análise de movimento e a pontuação do Body Scan dependem de IA de visão
+computacional real, que este projeto **não
 tem configurada**. Em vez de fingir, cada um segue o padrão UI → Service →
 dado mock, igual à seção 33 do prompt original:
 
-- `src/lib/services/foodScannerService.ts` — `FoodScannerService.analisarFoto`
-  sempre devolve o mesmo prato de exemplo (frango, arroz, feijão, salada)
-  com confiança de 78%. Usado por `src/components/EscanearRefeicao.tsx`.
-- `src/lib/services/labelScannerService.ts` — `LabelScannerService.escanearRotulo`
-  sempre devolve o mesmo rótulo de exemplo. Usado por
-  `src/components/EscanearRotulo.tsx`.
 - `src/lib/services/movementAnalysisService.ts` — sempre devolve a mesma
   mensagem avisando que é simulação, nunca finge diagnóstico. Usado por
   `src/pages/AnalisarMovimento.tsx`.
@@ -531,15 +515,6 @@ dentro do arquivo do serviço (a interface já está pronta) — nunca a UI que
 consome. Toda tela que usa esses serviços mostra um aviso visível
 ("Simulação — ..." em `gold`) enquanto o resultado for mockado; isso não é
 opcional, é o que impede o usuário de confiar num número inventado.
-
-O que **é** real nesses fluxos, mesmo com o mock: os cálculos em cima do
-resultado. `src/lib/analiseRefeicao.ts` (ajuste de quantidade Pouco/Médio/
-Muito, heurística "como posso melhorar" por proteína/fibra) e
-`src/lib/analiseRotulo.ts` (explicador de rótulo em linguagem simples,
-`calcularConsumoPorPorcao` — matemática real de porções) são funções puras
-testadas, e o botão "Adicionar ao diário" grava de verdade em
-`diario_alimentar` via `src/lib/diario.ts`. Só a etapa de "olhar a foto e
-identificar o que tem nela" é simulada.
 
 ### Body Scan — `src/pages/BodyScan.tsx`, `src/lib/bodyScan.ts`
 
@@ -555,7 +530,7 @@ de treinos concluídos no período (via `useHistoricoTreinos`).
 inspirado no app Symmetry (carrossel de instruções → foto → pontuação),
 pedido explicitamente pelo dono do produto pra imitar esse visual. A
 pontuação (`src/lib/services/physiqueScoreService.ts`) é **mock
-declarado**, igual Food/Label Scanner: sempre devolve o mesmo conjunto de
+declarado**: sempre devolve o mesmo conjunto de
 números (Overall 74, Potencial 82 etc.), nunca varia com a foto enviada, e
 a tela mostra aviso dourado de simulação — nunca remover isso. A foto pode
 ser salva de verdade como registro de progresso (mesmo fluxo de

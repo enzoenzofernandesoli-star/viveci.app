@@ -44,7 +44,7 @@ As bases legais aplicáveis devem ser definidas por revisão jurídica conforme 
 
 ## 5. Demonstrações experimentais
 
-Food Scanner, Label Scanner, análise de movimento e análise de físico não possuem IA/OCR real no beta auditado. Seus resultados são exemplos fixos identificados como `DEMONSTRAÇÃO` e não devem ser interpretados como diagnóstico, prescrição ou medição clínica.
+Análise de movimento e análise de físico não possuem IA real no beta auditado. Seus resultados são exemplos fixos identificados como `DEMONSTRAÇÃO` e não devem ser interpretados como diagnóstico, prescrição ou medição clínica.
 
 ## 6. Armazenamento e fornecedores
 
