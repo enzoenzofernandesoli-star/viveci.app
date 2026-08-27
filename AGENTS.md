@@ -267,6 +267,10 @@ qualquer entrega.
   azul. Abrir o chat marca como lidas somente as mensagens acessíveis ao usuário;
   mensagens enviadas pelo próprio usuário não entram na contagem. As abas
   superiores Mensagens e Grupos também mostram a soma não lida da seção.
+- **Convites e entrada em guildas** — administradores convidam pela busca no
+  perfil da guilda e o convite aparece como cartão acionável no chat individual.
+  Entradas iniciadas pela pesquisa viram solicitações; dono ou administrador
+  precisa aceitar no perfil da guilda. A autorização é validada no banco.
 - **Grupos sociais** — terceira aba dentro de Social. Grupos abertos e privados
   aparecem na pesquisa; os abertos aceitam entrada direta e os privados exigem
   convite válido ou senha. Dono e administradores podem editar nome/foto,

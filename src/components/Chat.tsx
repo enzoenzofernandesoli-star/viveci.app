@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { Dumbbell, Send, Trash2 } from 'lucide-react'
+import { Check, Dumbbell, Send, Trash2, Users, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useSessao } from '../lib/auth'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
-import { enviarMensagem, excluirMensagem, listarMensagens, marcarMensagensComoLidas, type Mensagem } from '../lib/social/mensagens'
+import { aceitarConviteGrupo, enviarMensagem, excluirMensagem, listarMensagens, marcarMensagensComoLidas, recusarConviteGrupo, type Mensagem } from '../lib/social/mensagens'
 
 type ChatProps = { conversaId?: string; grupoId?: string; mostrarAutores?: boolean }
 
 export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps) {
   const { sessao } = useSessao()
+  const navigate = useNavigate()
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [texto, setTexto] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -62,6 +64,19 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
     catch { setErro('Não foi possível excluir a mensagem.') }
   }
 
+  async function responderConvite(mensagem: Mensagem, aceitar: boolean) {
+    if (!mensagem.conviteId || !mensagem.conviteGrupoId) return
+    try {
+      if (aceitar) {
+        await aceitarConviteGrupo(mensagem.conviteGrupoId)
+        navigate(`/social/grupo/${mensagem.conviteGrupoId}`)
+      } else {
+        await recusarConviteGrupo(mensagem.conviteId)
+        await carregar()
+      }
+    } catch { setErro('Não foi possível responder ao convite.') }
+  }
+
   return (
     <section className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto border-b border-line/60 py-4">
@@ -74,6 +89,7 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
             <div className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 ${minha ? 'rounded-br-md bg-brand text-white' : 'rounded-bl-md bg-card text-ink'}`}>
               {mostrarAutores && !minha && <p className="mb-1 text-xs font-semibold text-brand">{mensagem.nome}</p>}
               {mensagem.texto && <p className="whitespace-pre-wrap break-words text-sm leading-5">{mensagem.texto}</p>}
+              {mensagem.conviteGrupoId && <div className="mt-2 border-t border-white/20 pt-3"><div className="flex items-center gap-2"><div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-app/40">{mensagem.conviteGrupoFoto ? <img src={mensagem.conviteGrupoFoto} alt="" className="size-full object-cover" /> : <Users size={18} />}</div><div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] opacity-60">Convite para guilda</p><p className="truncate text-sm font-semibold">{mensagem.conviteGrupoNome}</p></div></div>{!minha && mensagem.conviteAtivo && <div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => void responderConvite(mensagem, false)} className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-line bg-app/30 text-xs font-semibold"><X size={15} /> Recusar</button><button onClick={() => void responderConvite(mensagem, true)} className="flex min-h-11 items-center justify-center gap-1 rounded-xl bg-white text-xs font-semibold text-app"><Check size={15} /> Aceitar</button></div>}{!mensagem.conviteAtivo && <p className="mt-2 text-xs opacity-60">Convite encerrado</p>}</div>}
               {mensagem.treinoId && <div className="mt-2 flex items-center gap-2 border-t border-white/20 pt-2 text-xs font-semibold"><Dumbbell size={15} /> Treino marcado</div>}
               <p className={`mt-1 text-right text-[10px] ${minha ? 'text-white/60' : 'text-ink-3'}`}>{new Date(mensagem.criadaEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
             </div>

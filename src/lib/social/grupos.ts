@@ -27,6 +27,8 @@ export type MembroGrupo = {
   mediaSemanal: number
 }
 
+export type SolicitacaoGrupo = { id: string; userId: string; nome: string; fotoUrl: string | null; criadaEm: string }
+
 function mapearGrupo(item: Record<string, unknown>): GrupoSocial {
   return {
     id: String(item.id),
@@ -91,11 +93,22 @@ export async function criarGrupo(dados: {
   return grupoId
 }
 
-export async function entrarNoGrupo(grupoId: string, senha?: string) {
-  const { data, error } = await supabase.rpc('entrar_grupo', { p_grupo_id: grupoId, p_senha: senha || null })
-  if (error) throw new Error(error.message)
-  if (data === 'bloqueado') throw new Error('Muitas tentativas. Aguarde 15 minutos para tentar novamente.')
-  if (data !== 'entrou') throw new Error('Senha incorreta.')
+export async function solicitarEntradaGrupo(grupoId: string, senha?: string) {
+  const { data, error } = await supabase.rpc('solicitar_entrada_grupo', { p_grupo_id: grupoId, p_senha: senha || null })
+  if (error) throw error
+  if (data === 'senha_incorreta') throw new Error('Senha incorreta.')
+  return String(data)
+}
+
+export async function listarSolicitacoesGrupo(grupoId: string): Promise<SolicitacaoGrupo[]> {
+  const { data, error } = await supabase.rpc('listar_solicitacoes_grupo', { p_grupo_id: grupoId })
+  if (error) throw error
+  return ((data ?? []) as Record<string, unknown>[]).map((item) => ({ id: String(item.id), userId: String(item.user_id), nome: String(item.nome), fotoUrl: item.foto_url ? String(item.foto_url) : null, criadaEm: String(item.criada_em) }))
+}
+
+export async function responderSolicitacaoGrupo(solicitacaoId: string, aceitar: boolean) {
+  const { error } = await supabase.rpc('responder_solicitacao_grupo', { p_solicitacao_id: solicitacaoId, p_aceitar: aceitar })
+  if (error) throw error
 }
 
 export async function atualizarGrupo(grupoId: string, dados: { nome: string; descricao: string; visibilidade: VisibilidadeGrupo; senha: string }) {

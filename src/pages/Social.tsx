@@ -98,7 +98,7 @@ export default function Social() {
 
       {pesquisando && (
         <section className="border-b border-line/60 py-4" aria-label="Pesquisa de pessoas">
-          <div className="flex items-center gap-2 rounded-xl border border-line bg-card px-3 focus-within:border-brand">
+          <div className="campo-pesquisa flex items-center gap-2 rounded-xl border border-line bg-card px-3 focus-within:border-brand">
             <Search size={17} strokeWidth={1.75} className="shrink-0 text-ink-3" />
             <input
               autoFocus

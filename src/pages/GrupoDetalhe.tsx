@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Camera, ChevronRight, Crown, Lock, MessageCircle, Search, Shield, UserMinus, Users } from 'lucide-react'
+import { ArrowLeft, Camera, Check, ChevronRight, Crown, Lock, MessageCircle, Search, Shield, UserMinus, Users, X } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { BrasaoRank } from '../components/RankCorporal'
 import { Empty } from '../components/Empty'
 import { Chat } from '../components/Chat'
 import { calcularRankPorMedia } from '../lib/rankCorporal'
-import { alterarPapelMembro, atualizarFotoGrupo, atualizarGrupo, carregarGrupo, carregarMembrosGrupo, convidarParaGrupo, entrarNoGrupo, removerMembroGrupo, type GrupoSocial, type MembroGrupo, type VisibilidadeGrupo } from '../lib/social/grupos'
+import { alterarPapelMembro, atualizarFotoGrupo, atualizarGrupo, carregarGrupo, carregarMembrosGrupo, convidarParaGrupo, listarSolicitacoesGrupo, removerMembroGrupo, responderSolicitacaoGrupo, solicitarEntradaGrupo, type GrupoSocial, type MembroGrupo, type SolicitacaoGrupo, type VisibilidadeGrupo } from '../lib/social/grupos'
 import { usePesquisaPessoas } from '../lib/social/pesquisaPessoas'
 
 export default function GrupoDetalhe() {
@@ -21,13 +21,15 @@ export default function GrupoDetalhe() {
   const [versao, setVersao] = useState(0)
   const [atualizandoFoto, setAtualizandoFoto] = useState(false)
   const [visao, setVisao] = useState<'chat' | 'info'>('chat')
+  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoGrupo[]>([])
+  const [solicitacaoEnviada, setSolicitacaoEnviada] = useState(false)
 
   useEffect(() => {
     if (!id) return
     let cancelado = false
     setCarregando(true); setErro(null)
-    carregarGrupo(id).then(async (g) => ({ g, m: g.souMembro ? await carregarMembrosGrupo(id) : [] }))
-      .then(({ g, m }) => { if (!cancelado) { setGrupo(g); setMembros(m) } })
+    carregarGrupo(id).then(async (g) => ({ g, m: g.souMembro ? await carregarMembrosGrupo(id) : [], s: g.meuPapel === 'dono' || g.meuPapel === 'admin' ? await listarSolicitacoesGrupo(id) : [] }))
+      .then(({ g, m, s }) => { if (!cancelado) { setGrupo(g); setMembros(m); setSolicitacoes(s) } })
       .catch(() => { if (!cancelado) setErro('Não foi possível carregar este grupo.') })
       .finally(() => { if (!cancelado) setCarregando(false) })
     return () => { cancelado = true }
@@ -87,21 +89,30 @@ export default function GrupoDetalhe() {
 
       {!grupo.souMembro ? (
         <section className="border-y border-line/60 py-6">
-          <p className="text-sm font-semibold">Entre para acompanhar o rank coletivo</p>
+          <p className="text-sm font-semibold">Solicite entrada para acompanhar o rank coletivo</p>
           {grupo.visibilidade === 'privado' && <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Senha do grupo" className="mt-4 h-12 w-full rounded-xl border border-line bg-card px-3 text-sm outline-none focus:border-brand" />}
           {erro && <p className="mt-3 text-sm text-down">{erro}</p>}
-          <button onClick={async () => { try { await entrarNoGrupo(id, senha); setVersao((v) => v + 1) } catch (e) { setErro(e instanceof Error ? e.message : 'Não foi possível entrar.') } }} className="mt-4 min-h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white">{grupo.visibilidade === 'privado' ? 'Entrar com senha ou convite' : 'Entrar no grupo'}</button>
+          {solicitacaoEnviada ? <p className="mt-4 rounded-xl border border-brand/30 bg-brand/10 p-4 text-sm text-brand">Solicitação enviada. Um administrador precisa aprovar sua entrada.</p> : <button onClick={async () => { try { await solicitarEntradaGrupo(id, senha); setSolicitacaoEnviada(true) } catch (e) { setErro(e instanceof Error ? e.message : 'Não foi possível solicitar a entrada.') } }} className="mt-4 min-h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white">Solicitar entrada</button>}
         </section>
       ) : (
         <>
           <section className="flex items-center gap-5 border-y border-line/60 py-6"><BrasaoRank rank={rank} tamanho={100} /><div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Rank coletivo semanal</p><h2 className="mt-2 text-2xl font-semibold" style={{ color: rank.cor }}>{rank.nome}</h2><p className="mt-1 text-xs text-ink-2">Média do grupo: {rank.mediaSemanal}%</p><div className="mt-4 h-1.5 overflow-hidden bg-line"><div className="h-full" style={{ width: `${rank.progressoNoRank}%`, backgroundColor: rank.cor }} /></div><p className="mt-2 text-[11px] text-ink-3">{rank.proximoRank ? `Faltam ${rank.pontosParaProximo} pontos para ${rank.proximoRank}.` : 'Rank máximo alcançado.'}</p></div></section>
-          {gerencia && <div className="grid grid-cols-2 gap-2 border-b border-line/60 py-4"><button onClick={() => setEditando(true)} className="min-h-11 rounded-xl border border-line text-xs font-semibold text-ink-2">Editar grupo</button><button onClick={() => setConvidando(true)} className="min-h-11 rounded-xl border border-line text-xs font-semibold text-brand">Convidar pessoa</button></div>}
+          {gerencia && solicitacoes.length > 0 && <Solicitacoes solicitacoes={solicitacoes} remover={(solicitacaoId) => setSolicitacoes((atuais) => atuais.filter((item) => item.id !== solicitacaoId))} atualizar={() => setVersao((valor) => valor + 1)} onErro={setErro} />}
+          {gerencia && <div className="grid grid-cols-2 gap-2 border-b border-line/60 py-4"><button onClick={() => setEditando(true)} className="min-h-11 rounded-xl border border-line text-xs font-semibold text-ink-2">Editar grupo</button><button onClick={() => setConvidando(true)} className="min-h-11 rounded-xl bg-brand text-xs font-semibold text-white">Convidar pessoas</button></div>}
           <section className="mt-7"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Integrantes e contribuição</p>{erro && <p className="mt-3 text-sm text-down">{erro}</p>}<div className="mt-3 divide-y divide-line/60 border-y border-line/60">{membros.map((m) => <Membro key={m.userId} membro={m} meuPapel={grupo.meuPapel} grupoId={id} atualizado={() => setVersao((v) => v + 1)} onErro={setErro} />)}</div></section>
           <button onClick={() => setVisao('chat')} className="sticky bottom-3 mt-8 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white"><MessageCircle size={19} /> Mensagens</button>
         </>
       )}
     </div>
   )
+}
+
+function Solicitacoes({ solicitacoes, remover, atualizar, onErro }: { solicitacoes: SolicitacaoGrupo[]; remover: (id: string) => void; atualizar: () => void; onErro: (erro: string | null) => void }) {
+  async function responder(solicitacao: SolicitacaoGrupo, aceitar: boolean) {
+    try { await responderSolicitacaoGrupo(solicitacao.id, aceitar); remover(solicitacao.id); if (aceitar) atualizar() }
+    catch { onErro('Não foi possível responder à solicitação.') }
+  }
+  return <section className="border-b border-line/60 py-6"><p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-2">Solicitações para entrar</p><div className="mt-3 divide-y divide-line/60">{solicitacoes.map((solicitacao) => <div key={solicitacao.id} className="flex min-h-16 items-center gap-3 py-2"><div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card">{solicitacao.fotoUrl ? <img src={solicitacao.fotoUrl} alt="" className="size-full object-cover" /> : solicitacao.nome[0]}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{solicitacao.nome}</p><p className="text-xs text-ink-2">Quer entrar na guilda</p></div><button onClick={() => void responder(solicitacao, false)} aria-label="Recusar solicitação" className="flex size-11 items-center justify-center text-ink-2"><X size={18} /></button><button onClick={() => void responder(solicitacao, true)} aria-label="Aceitar solicitação" className="flex size-11 items-center justify-center rounded-full bg-brand text-white"><Check size={18} /></button></div>)}</div></section>
 }
 
 function Membro({ membro, meuPapel, grupoId, atualizado, onErro }: { membro: MembroGrupo; meuPapel: GrupoSocial['meuPapel']; grupoId: string; atualizado: () => void; onErro: (erro: string | null) => void }) {

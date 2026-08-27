@@ -1,8 +1,7 @@
 import { supabase } from '../supabase'
 
-export type Mensagem = { id:number; remetenteId:string; texto:string|null; treinoId:string|null; criadaEm:string; nome:string; fotoUrl:string|null }
+export type Mensagem = { id:number; remetenteId:string; texto:string|null; treinoId:string|null; criadaEm:string; nome:string; fotoUrl:string|null; conviteId:string|null; conviteGrupoId:string|null; conviteGrupoNome:string|null; conviteGrupoFoto:string|null; conviteAtivo:boolean }
 export type Conversa = { id:string; pessoaId:string; nome:string; fotoUrl:string|null; ultimaEm:string; naoLidas:number }
-export type ConviteGrupo = { conviteId:string; grupoId:string; nome:string; fotoUrl:string|null; convidadoPor:string; expiraEm:string }
 export type PessoaConversa = { id:string; nome:string; fotoUrl:string|null }
 
 export async function abrirConversa(pessoaId:string) { const {data,error}=await supabase.rpc('abrir_conversa',{p_usuario_id:pessoaId}); if(error)throw error; return String(data) }
@@ -23,11 +22,11 @@ export async function marcarMensagensComoLidas(destino:{conversaId?:string;grupo
 
 export async function listarMensagens(destino:{conversaId?:string;grupoId?:string}, antes?:number):Promise<Mensagem[]> {
   const {data,error}=await supabase.rpc('listar_mensagens',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_antes:antes??null});if(error)throw error
-  return (data??[]).reverse().map((m:Record<string,unknown>)=>({id:Number(m.id),remetenteId:String(m.remetente_id),texto:m.texto?String(m.texto):null,treinoId:m.treino_id?String(m.treino_id):null,criadaEm:String(m.criada_em),nome:String(m.nome??'Atleta VIVECI'),fotoUrl:m.foto_url?String(m.foto_url):null}))
+  return (data??[]).reverse().map((m:Record<string,unknown>)=>({id:Number(m.id),remetenteId:String(m.remetente_id),texto:m.texto?String(m.texto):null,treinoId:m.treino_id?String(m.treino_id):null,criadaEm:String(m.criada_em),nome:String(m.nome??'Atleta VIVECI'),fotoUrl:m.foto_url?String(m.foto_url):null,conviteId:m.convite_id?String(m.convite_id):null,conviteGrupoId:m.convite_grupo_id?String(m.convite_grupo_id):null,conviteGrupoNome:m.convite_grupo_nome?String(m.convite_grupo_nome):null,conviteGrupoFoto:m.convite_grupo_foto?String(m.convite_grupo_foto):null,conviteAtivo:m.convite_ativo===true}))
 }
 
 export async function enviarMensagem(destino:{conversaId?:string;grupoId?:string},texto:string,treinoId?:string){const {error}=await supabase.rpc('enviar_mensagem',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_texto:texto||null,p_treino_id:treinoId??null});if(error)throw error}
 export async function excluirMensagem(mensagemId:number){const{error}=await supabase.rpc('excluir_mensagem',{p_mensagem_id:mensagemId});if(error)throw error}
 
-export async function listarConvitesGrupo():Promise<ConviteGrupo[]>{const{data,error}=await supabase.rpc('listar_convites_grupo');if(error)throw error;return(data??[]).map((c:Record<string,unknown>)=>({conviteId:String(c.convite_id),grupoId:String(c.grupo_id),nome:String(c.nome),fotoUrl:c.foto_url?String(c.foto_url):null,convidadoPor:String(c.convidado_por),expiraEm:String(c.expira_em)}))}
 export async function recusarConviteGrupo(conviteId:string){const{error}=await supabase.rpc('recusar_convite_grupo',{p_convite_id:conviteId});if(error)throw error}
+export async function aceitarConviteGrupo(grupoId:string){const{data,error}=await supabase.rpc('entrar_grupo',{p_grupo_id:grupoId,p_senha:null});if(error)throw error;if(data!=='entrou')throw new Error('Este convite não está mais disponível.')}

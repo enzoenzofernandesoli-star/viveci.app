@@ -18,7 +18,7 @@ export function GruposSocial() {
   return (
     <div className="pb-6 pt-5">
       <div className="flex items-center gap-2">
-        <label className="flex min-h-12 flex-1 items-center gap-2 rounded-xl border border-line bg-card px-3 focus-within:border-brand">
+        <label className="campo-pesquisa flex min-h-12 flex-1 items-center gap-2 rounded-xl border border-line bg-card px-3 focus-within:border-brand">
           <Search size={17} className="text-ink-3" strokeWidth={1.75} />
           <input value={busca} onChange={(e) => setBusca(e.target.value)} maxLength={60} placeholder="Pesquisar grupos" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-ink-3" />
         </label>
@@ -97,7 +97,7 @@ function FormularioGrupo({ onFechar, onCriado }: { onFechar: () => void; onCriad
       <label className="mt-5 block text-xs font-semibold text-ink-2">Nome<input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={60} className="mt-2 h-12 w-full rounded-xl border border-line bg-card px-3 text-sm text-ink outline-none focus:border-brand" /></label>
       <label className="mt-4 block text-xs font-semibold text-ink-2">Descrição<textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={280} rows={3} className="mt-2 w-full resize-none rounded-xl border border-line bg-card p-3 text-sm text-ink outline-none focus:border-brand" /></label>
       <div className="mt-4 grid grid-cols-2 gap-2">{(['aberto','privado'] as const).map((tipo) => <button key={tipo} onClick={() => setVisibilidade(tipo)} className={`min-h-12 rounded-xl border text-xs font-semibold capitalize ${visibilidade === tipo ? 'border-brand bg-brand/10 text-brand' : 'border-line text-ink-2'}`}>{tipo}</button>)}</div>
-      {visibilidade === 'privado' && <label className="mt-4 block text-xs font-semibold text-ink-2">Senha para entrar<input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} maxLength={72} className="mt-2 h-12 w-full rounded-xl border border-line bg-card px-3 text-sm outline-none focus:border-brand" /><span className="mt-2 block font-normal leading-5">O grupo aparecerá na pesquisa, mas só será acessado com convite ou senha.</span></label>}
+      {visibilidade === 'privado' && <label className="mt-4 block text-xs font-semibold text-ink-2">Senha para solicitar entrada<input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} maxLength={72} className="mt-2 h-12 w-full rounded-xl border border-line bg-card px-3 text-sm outline-none focus:border-brand" /><span className="mt-2 block font-normal leading-5">O grupo aparece na pesquisa. A senha valida a solicitação, que ainda precisa da aprovação de um administrador.</span></label>}
       {erro && <p role="alert" className="mt-4 text-sm text-down">{erro}</p>}
       <button disabled={salvando} onClick={salvar} className="mt-6 min-h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white disabled:opacity-50">{salvando ? 'Criando...' : 'Criar grupo'}</button>
     </section>
