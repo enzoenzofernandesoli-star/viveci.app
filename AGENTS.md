@@ -263,6 +263,11 @@ qualquer entrega.
   com progresso calculado de verdade. **Sem vídeo, XP/rankings, notificações,
   desafios além do inicial, moderação ou tempo real** — ver seção própria
   abaixo pra escopo completo do que ficou de fora do MVP.
+- **Grupos sociais** — terceira aba dentro de Social. Grupos abertos e privados
+  aparecem na pesquisa; os abertos aceitam entrada direta e os privados exigem
+  convite válido ou senha. Dono e administradores podem editar nome/foto,
+  convidar e gerenciar integrantes. Cada grupo possui rank corporal coletivo
+  semanal calculado pela média real dos mapas de estímulo dos integrantes.
 
 **Não existe (e não tem ordem definida pra construir):** Desafio 24 Dias,
 receitas, IA de dieta personalizada, vídeo/Stories no Social, XP e rankings,
@@ -564,6 +569,17 @@ comentários, seguir, perfil público, desafio inicial), **sem** vídeo,
 XP/rankings, notificações, desafios além do inicial, moderação/denúncia ou
 tempo real — essas partes do prompt original (seções 28-33, 38-43, 48,
 65-73 do prompt master) não foram implementadas ainda.
+
+**Grupos** (`src/components/GruposSocial.tsx`, `src/pages/GrupoDetalhe.tsx`,
+`src/lib/social/grupos.ts`, `sql/21_grupos_sociais.sql`) — aparecem como terceira
+aba ao lado de Amigos e Descobrir. A pesquisa lista grupos abertos e privados.
+Grupo aberto permite entrada direta; privado permite entrada por convite de 7
+dias ou senha, armazenada somente como hash e protegida contra tentativas
+repetidas. Dono e administradores editam nome/foto, convidam e removem membros;
+somente o dono promove ou rebaixa administradores. O rank coletivo usa os
+registros reais dos últimos 7 dias e calcula a média dos dez grupos musculares
+de cada integrante. Dados e permissões são expostos apenas por RPCs com RLS;
+as senhas e registros individuais não são retornados pela pesquisa.
 
 **Sem conta privada nessa primeira versão** — qualquer usuário autenticado
 lê qualquer post/comentário/curtida/perfil (RLS só restringe *escrita* ao

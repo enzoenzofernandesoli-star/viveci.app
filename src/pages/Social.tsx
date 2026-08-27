@@ -6,6 +6,7 @@ import { PostCard } from '../components/PostCard'
 import { ComentariosPost } from '../components/ComentariosPost'
 import { CriarPost } from '../components/CriarPost'
 import { CardDesafioInicial } from '../components/CardDesafioInicial'
+import { GruposSocial } from '../components/GruposSocial'
 import { useSessao } from '../lib/auth'
 import { useFeedAmigos, useFeedDescobrir } from '../lib/social/posts'
 import { useEhHost } from '../lib/social/host'
@@ -17,7 +18,7 @@ export default function Social() {
   const [searchParams, setSearchParams] = useSearchParams()
   const userId = sessao?.user.id
   const { ehHost } = useEhHost(userId)
-  const [aba, setAba] = useState<'amigos' | 'descobrir'>('amigos')
+  const [aba, setAba] = useState<'amigos' | 'descobrir' | 'grupos'>('amigos')
   const [comentandoPostId, setComentandoPostId] = useState<string | null>(null)
   const [criandoPost, setCriandoPost] = useState(searchParams.get('criar') === '1')
   const [pesquisando, setPesquisando] = useState(false)
@@ -144,12 +145,22 @@ export default function Social() {
           >
             Descobrir
           </button>
+          <button
+            onClick={() => setAba('grupos')}
+            className={`relative min-h-12 px-4 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
+              aba === 'grupos' ? 'text-ink after:absolute after:inset-x-4 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'
+            }`}
+          >
+            Grupos
+          </button>
         </div>
       </div>
 
       {aba === 'amigos' && <CardDesafioInicial userId={userId} />}
 
-      <div className="mt-2 pb-4">
+      {aba === 'grupos' && <GruposSocial />}
+
+      {aba !== 'grupos' && <div className="mt-2 pb-4">
         {feed.carregando && feed.posts.length === 0 ? (
           <Empty text="Carregando publicações..." />
         ) : feed.erro ? (
@@ -176,7 +187,7 @@ export default function Social() {
         {feed.temMais && (
           <button disabled={feed.carregando} onClick={feed.carregarMais} className="mt-4 min-h-11 w-full text-xs font-semibold text-brand disabled:opacity-50">{feed.carregando ? 'Carregando...' : 'Carregar mais'}</button>
         )}
-      </div>
+      </div>}
     </div>
   )
 }

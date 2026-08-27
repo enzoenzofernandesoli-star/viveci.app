@@ -18,6 +18,7 @@ const AnalisarMovimento = lazy(() => import('./pages/AnalisarMovimento'))
 const Social = lazy(() => import('./pages/Social'))
 const PerfilPublico = lazy(() => import('./pages/PerfilPublico'))
 const ConexoesSociais = lazy(() => import('./pages/ConexoesSociais'))
+const GrupoDetalhe = lazy(() => import('./pages/GrupoDetalhe'))
 const Planos = lazy(() => import('./pages/Planos'))
 const Corpo = lazy(() => import('./pages/Corpo'))
 const RecuperarSenha = lazy(() => import('./pages/RecuperarSenha'))
@@ -46,6 +47,7 @@ export default function App() {
               <Route path="corpo" element={<Corpo />} />
               <Route path="social/usuario/:id" element={<PerfilPublico />} />
               <Route path="social/usuario/:id/conexoes" element={<ConexoesSociais />} />
+              <Route path="social/grupo/:id" element={<GrupoDetalhe />} />
               <Route path="perfil" element={<Perfil />} />
               <Route path="perfil/configuracoes" element={<Configuracoes />} />
               <Route path="perfil/body-scan" element={<BodyScan />} />

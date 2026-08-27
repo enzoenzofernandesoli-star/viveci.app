@@ -28,7 +28,11 @@ export function calcularMediaCorporal(percentuais: PercentualPorGrupo): number {
 }
 
 export function calcularRankCorporal(percentuais: PercentualPorGrupo): RankCorporal {
-  const mediaSemanal = calcularMediaCorporal(percentuais)
+  return calcularRankPorMedia(calcularMediaCorporal(percentuais))
+}
+
+export function calcularRankPorMedia(media: number): RankCorporal {
+  const mediaSemanal = Math.max(0, Math.min(100, Math.round(media)))
   let indice = 0
   for (let i = 0; i < RANKS_CORPORAIS.length; i++) {
     if (mediaSemanal >= RANKS_CORPORAIS[i].minimo) indice = i
