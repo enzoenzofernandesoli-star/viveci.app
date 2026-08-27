@@ -7,6 +7,7 @@ import { ComentariosPost } from '../components/ComentariosPost'
 import { CriarPost } from '../components/CriarPost'
 import { CardDesafioInicial } from '../components/CardDesafioInicial'
 import { GruposSocial } from '../components/GruposSocial'
+import { MensagensSocial } from '../components/MensagensSocial'
 import { useSessao } from '../lib/auth'
 import { useFeedAmigos, useFeedDescobrir } from '../lib/social/posts'
 import { useEhHost } from '../lib/social/host'
@@ -18,7 +19,7 @@ export default function Social() {
   const [searchParams, setSearchParams] = useSearchParams()
   const userId = sessao?.user.id
   const { ehHost } = useEhHost(userId)
-  const [aba, setAba] = useState<'amigos' | 'descobrir' | 'grupos'>('amigos')
+  const [aba, setAba] = useState<'amigos' | 'descobrir' | 'grupos' | 'mensagens'>('amigos')
   const [comentandoPostId, setComentandoPostId] = useState<string | null>(null)
   const [criandoPost, setCriandoPost] = useState(searchParams.get('criar') === '1')
   const [pesquisando, setPesquisando] = useState(false)
@@ -153,14 +154,16 @@ export default function Social() {
           >
             Grupos
           </button>
+          <button onClick={() => setAba('mensagens')} className={`relative min-h-12 px-3 text-xs font-semibold uppercase tracking-[0.04em] ${aba === 'mensagens' ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'}`}>Mensagens</button>
         </div>
       </div>
 
       {aba === 'amigos' && <CardDesafioInicial userId={userId} />}
 
       {aba === 'grupos' && <GruposSocial />}
+      {aba === 'mensagens' && <MensagensSocial />}
 
-      {aba !== 'grupos' && <div className="mt-2 pb-4">
+      {aba !== 'grupos' && aba !== 'mensagens' && <div className="mt-2 pb-4">
         {feed.carregando && feed.posts.length === 0 ? (
           <Empty text="Carregando publicações..." />
         ) : feed.erro ? (

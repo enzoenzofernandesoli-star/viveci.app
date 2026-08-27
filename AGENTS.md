@@ -581,6 +581,17 @@ registros reais dos últimos 7 dias e calcula a média dos dez grupos musculares
 de cada integrante. Dados e permissões são expostos apenas por RPCs com RLS;
 as senhas e registros individuais não são retornados pela pesquisa.
 
+**Mensagens** (`src/components/MensagensSocial.tsx`, `src/components/Chat.tsx`,
+`src/pages/Conversa.tsx`, `src/lib/social/mensagens.ts`, `sql/22_mensagens.sql`)
+— quarta aba dentro do Social. Permite pesquisar uma pessoa, abrir conversa
+privada e trocar mensagens; membros de um grupo também conversam dentro da
+página do grupo. Uma mensagem pode marcar um treino concluído do próprio
+remetente. Conversas privadas só podem ser lidas pelos dois participantes e
+mensagens de grupo somente por membros. Listas têm limite, índice por cursor e
+o envio é limitado a 30 mensagens por minuto por usuário.
+Convites pendentes para grupos aparecem no topo da aba Mensagens, com ações
+para aceitar (entrada sem senha e abertura do grupo) ou recusar.
+
 **Sem conta privada nessa primeira versão** — qualquer usuário autenticado
 lê qualquer post/comentário/curtida/perfil (RLS só restringe *escrita* ao
 dono, ver `sql/08_social.sql`). A tabela `perfis` só tinha a policy "dono"
