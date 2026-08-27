@@ -94,8 +94,6 @@ end $$;
 grant select on public.conversas, public.mensagens to authenticated;
 grant execute on function public.abrir_conversa(uuid), public.enviar_mensagem(uuid,uuid,text,uuid) to authenticated;
 
-drop function if exists public.listar_convites_grupo();
-
 create or replace function public.recusar_convite_grupo(p_convite_id uuid)
 returns void language plpgsql security definer set search_path=public as $$
 begin
