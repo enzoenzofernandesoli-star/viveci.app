@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, X } from 'lucide-react'
 import { Empty } from '../components/Empty'
@@ -12,6 +12,7 @@ import { useSessao } from '../lib/auth'
 import { useFeedAmigos, useFeedDescobrir } from '../lib/social/posts'
 import { useEhHost } from '../lib/social/host'
 import { usePesquisaPessoas } from '../lib/social/pesquisaPessoas'
+import { listarMensagensNaoLidas } from '../lib/social/mensagens'
 
 export default function Social() {
   const { sessao } = useSessao()
@@ -24,8 +25,26 @@ export default function Social() {
   const [criandoPost, setCriandoPost] = useState(searchParams.get('criar') === '1')
   const [pesquisando, setPesquisando] = useState(false)
   const [termoPesquisa, setTermoPesquisa] = useState('')
+  const [naoLidas, setNaoLidas] = useState({ mensagens: 0, grupos: 0 })
   const sessaoInicialId = searchParams.get('sessao')
   const pesquisa = usePesquisaPessoas(termoPesquisa, pesquisando)
+
+  useEffect(() => {
+    if (!userId) return
+    let cancelado = false
+    const atualizar = async () => {
+      try {
+        const contagens = await listarMensagensNaoLidas()
+        if (!cancelado) setNaoLidas({
+          mensagens: [...contagens.conversas.values()].reduce((soma, valor) => soma + valor, 0),
+          grupos: [...contagens.grupos.values()].reduce((soma, valor) => soma + valor, 0),
+        })
+      } catch { if (!cancelado) setNaoLidas({ mensagens: 0, grupos: 0 }) }
+    }
+    void atualizar()
+    const intervalo = window.setInterval(() => void atualizar(), 8000)
+    return () => { cancelado = true; window.clearInterval(intervalo) }
+  }, [userId, aba])
 
   function fecharCriacao() {
     setCriandoPost(false)
@@ -146,14 +165,14 @@ export default function Social() {
           >
             Descobrir
           </button>
-          <button onClick={() => setAba('mensagens')} className={`relative min-h-12 px-3 text-xs font-semibold uppercase tracking-[0.04em] ${aba === 'mensagens' ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'}`}>Mensagens</button>
+          <button onClick={() => setAba('mensagens')} className={`relative flex min-h-12 items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-[0.04em] ${aba === 'mensagens' ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'}`}>Mensagens{naoLidas.mensagens > 0 && <span aria-label={`${naoLidas.mensagens} mensagens não lidas`} className="flex min-w-5 items-center justify-center rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-bold tracking-normal text-white">{naoLidas.mensagens > 99 ? '99+' : naoLidas.mensagens}</span>}</button>
           <button
             onClick={() => setAba('grupos')}
             className={`relative min-h-12 px-4 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
               aba === 'grupos' ? 'text-ink after:absolute after:inset-x-4 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'
             }`}
           >
-            Grupos
+            <span className="flex items-center gap-1.5">Grupos{naoLidas.grupos > 0 && <span aria-label={`${naoLidas.grupos} mensagens de grupos não lidas`} className="flex min-w-5 items-center justify-center rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-bold tracking-normal text-white">{naoLidas.grupos > 99 ? '99+' : naoLidas.grupos}</span>}</span>
           </button>
         </div>
       </nav>
