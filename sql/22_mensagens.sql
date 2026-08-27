@@ -73,7 +73,7 @@ begin
   if auth.uid() is null or p_usuario_id is null or p_usuario_id=auth.uid() then raise exception 'Conversa inválida.' using errcode='22023'; end if;
   insert into public.conversas(usuario_a,usuario_b) values(a,b) on conflict(usuario_a,usuario_b) do update set atualizada_em=conversas.atualizada_em returning id into resultado;
   return resultado;
-end $$;
+end; $$;
 
 create or replace function public.enviar_mensagem(p_conversa_id uuid, p_grupo_id uuid, p_texto text default null, p_treino_id uuid default null)
 returns bigint language plpgsql security definer set search_path=public as $$
@@ -89,7 +89,7 @@ begin
   insert into public.mensagens(remetente_id,conversa_id,grupo_id,texto,treino_id) values(auth.uid(),p_conversa_id,p_grupo_id,texto_limpo,p_treino_id) returning id into nova_id;
   if p_conversa_id is not null then update public.conversas set atualizada_em=now() where id=p_conversa_id; end if;
   return nova_id;
-end $$;
+end; $$;
 
 grant select on public.conversas, public.mensagens to authenticated;
 grant execute on function public.abrir_conversa(uuid), public.enviar_mensagem(uuid,uuid,text,uuid) to authenticated;
@@ -98,7 +98,7 @@ create or replace function public.recusar_convite_grupo(p_convite_id uuid)
 returns void language plpgsql security definer set search_path=public as $$
 begin
   delete from public.grupo_convites where id=p_convite_id and convidado_id=auth.uid() and usado_em is null;
-end $$;
+end; $$;
 
 grant execute on function public.recusar_convite_grupo(uuid) to authenticated;
 
@@ -137,7 +137,7 @@ begin
     and (p_grupo_id is null or m.grupo_id=p_grupo_id)
     and (p_antes is null or m.id<p_antes)
   order by m.id desc limit 40;
-end $$;
+end; $$;
 
 revoke all on function public.listar_mensagens(uuid,uuid,bigint) from public, anon;
 grant execute on function public.listar_mensagens(uuid,uuid,bigint) to authenticated;
@@ -148,7 +148,7 @@ begin
   if auth.uid() is null then raise exception 'Autenticação necessária.' using errcode='42501'; end if;
   delete from public.mensagens where id=p_mensagem_id and remetente_id=auth.uid();
   if not found then raise exception 'Mensagem não encontrada ou sem permissão.' using errcode='42501'; end if;
-end $$;
+end; $$;
 
 revoke all on function public.excluir_mensagem(bigint) from public, anon;
 grant execute on function public.excluir_mensagem(bigint) to authenticated;
@@ -175,7 +175,7 @@ begin
   values(auth.uid(),tipo,destino,ultima)
   on conflict(user_id,destino_tipo,destino_id) do update
     set ultima_mensagem_id=greatest(mensagens_leituras.ultima_mensagem_id,excluded.ultima_mensagem_id), atualizada_em=now();
-end $$;
+end; $$;
 
 create or replace function public.listar_mensagens_nao_lidas()
 returns table (destino_tipo text, destino_id uuid, quantidade bigint)
@@ -216,7 +216,7 @@ begin
   on conflict(usuario_a,usuario_b) do update set atualizada_em=now() returning id into conversa;
   insert into public.mensagens(remetente_id,conversa_id,texto,convite_grupo_id)
   values(auth.uid(),conversa,'Convite para a guilda '||nome_grupo,convite);
-end $$;
+end; $$;
 
 create or replace function public.solicitar_entrada_grupo(p_grupo_id uuid,p_senha text default null)
 returns text language plpgsql security definer set search_path=public,extensions as $$
@@ -231,7 +231,7 @@ begin
   values(p_grupo_id,auth.uid(),'pendente',now(),null,null)
   on conflict(grupo_id,solicitante_id) do update set status='pendente',criada_em=now(),respondida_em=null,respondida_por=null;
   return 'pendente';
-end $$;
+end; $$;
 
 create or replace function public.listar_solicitacoes_grupo(p_grupo_id uuid)
 returns table(id uuid,user_id uuid,nome text,foto_url text,criada_em timestamptz)
@@ -250,7 +250,7 @@ begin
   if solicitacao.id is null or public.papel_no_grupo(solicitacao.grupo_id) not in('dono','admin') then raise exception 'Sem permissão.' using errcode='42501'; end if;
   if p_aceitar then insert into public.grupo_membros(grupo_id,user_id,papel) values(solicitacao.grupo_id,solicitacao.solicitante_id,'membro') on conflict do nothing; end if;
   update public.grupo_solicitacoes set status=case when p_aceitar then 'aceita' else 'recusada' end,respondida_em=now(),respondida_por=auth.uid() where id=p_solicitacao_id;
-end $$;
+end; $$;
 
 create or replace function public.entrar_grupo(p_grupo_id uuid,p_senha text default null)
 returns text language plpgsql security definer set search_path=public as $$
@@ -261,7 +261,7 @@ begin
   insert into public.grupo_membros(grupo_id,user_id,papel) values(p_grupo_id,auth.uid(),'membro');
   update public.grupo_convites set usado_em=now() where grupo_id=p_grupo_id and convidado_id=auth.uid() and usado_em is null;
   return 'entrou';
-end $$;
+end; $$;
 
 revoke all on function public.convidar_para_grupo(uuid,uuid), public.solicitar_entrada_grupo(uuid,text), public.listar_solicitacoes_grupo(uuid), public.responder_solicitacao_grupo(uuid,boolean), public.entrar_grupo(uuid,text) from public,anon;
 grant execute on function public.convidar_para_grupo(uuid,uuid), public.solicitar_entrada_grupo(uuid,text), public.listar_solicitacoes_grupo(uuid), public.responder_solicitacao_grupo(uuid,boolean), public.entrar_grupo(uuid,text) to authenticated;
