@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { CheckCircle2 } from 'lucide-react'
 import { Logo } from '../components/Logo'
 import { entrar, cadastrar, useSessao } from '../lib/auth'
 import homeHero from '../assets/viveci/home-hero.webp'
@@ -8,6 +9,8 @@ import { mensagemErro } from '../lib/mensagemErro'
 type Modo = 'entrar' | 'cadastrar'
 
 export default function Login() {
+  const navigate = useNavigate()
+  const [parametros, setParametros] = useSearchParams()
   const { sessao, carregando: carregandoSessao } = useSessao()
   const [modo, setModo] = useState<Modo>('entrar')
   const [nome, setNome] = useState('')
@@ -16,12 +19,19 @@ export default function Login() {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [cadastroFeito, setCadastroFeito] = useState(false)
+  const [emailConfirmado, setEmailConfirmado] = useState(false)
 
   useEffect(() => {
     setErro(null)
   }, [modo])
 
-  if (!carregandoSessao && sessao) return <Navigate to="/" replace />
+  useEffect(() => {
+    if (carregandoSessao || !sessao?.user.email_confirmed_at || parametros.get('email-confirmado') !== '1') return
+    setEmailConfirmado(true)
+    setParametros({}, { replace: true })
+  }, [carregandoSessao, parametros, sessao, setParametros])
+
+  if (!carregandoSessao && sessao && !emailConfirmado && parametros.get('email-confirmado') !== '1') return <Navigate to="/" replace />
 
   async function enviar(e: FormEvent) {
     e.preventDefault()
@@ -63,7 +73,16 @@ export default function Login() {
             {modo === 'entrar' ? 'Continue de onde parou.' : 'Comece sua evolução no VIVECI.'}
           </p>
 
-          {cadastroFeito ? (
+          {emailConfirmado ? (
+            <div className="mt-8 border-y border-line py-8 text-center" role="status">
+              <CheckCircle2 aria-hidden="true" className="mx-auto size-12 text-brand" strokeWidth={1.75} />
+              <p className="mt-5 text-xl font-semibold text-ink">E-mail confirmado.</p>
+              <p className="mt-2 text-sm leading-6 text-ink-2">Sua conta está pronta. Agora você já pode continuar no VIVECI.</p>
+              <button type="button" onClick={() => navigate('/', { replace: true })} className="mt-6 h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover">
+                Continuar
+              </button>
+            </div>
+          ) : cadastroFeito ? (
             <div className="mt-8 border-y border-line py-6">
               <p className="text-sm font-semibold text-ink">Conta criada.</p>
               <p className="mt-2 text-sm leading-6 text-ink-2">Confira seu email para confirmar o cadastro antes de entrar.</p>

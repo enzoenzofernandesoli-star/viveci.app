@@ -40,7 +40,7 @@ export async function cadastrar(email: string, senha: string, nome: string) {
     password: senha,
     options: {
       data: { nome },
-      emailRedirectTo: window.location.origin,
+      emailRedirectTo: `${window.location.origin}/login?email-confirmado=1`,
     },
   })
   if (error) throw error
