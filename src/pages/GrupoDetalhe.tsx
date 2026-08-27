@@ -18,6 +18,7 @@ export default function GrupoDetalhe() {
   const [editando, setEditando] = useState(false)
   const [convidando, setConvidando] = useState(false)
   const [versao, setVersao] = useState(0)
+  const [atualizandoFoto, setAtualizandoFoto] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -37,6 +38,19 @@ export default function GrupoDetalhe() {
   if (!grupo || !id) return <Empty text={erro ?? 'Grupo não encontrado.'} />
   const gerencia = grupo.meuPapel === 'dono' || grupo.meuPapel === 'admin'
 
+  async function trocarFoto(foto?: File) {
+    if (!foto || !id) return
+    setAtualizandoFoto(true); setErro(null)
+    try {
+      await atualizarFotoGrupo(id, foto)
+      setVersao((v) => v + 1)
+    } catch {
+      setErro('Não foi possível atualizar a foto do grupo. Tente novamente.')
+    } finally {
+      setAtualizandoFoto(false)
+    }
+  }
+
   if (editando) return <EditarGrupo grupo={grupo} fechar={() => setEditando(false)} salvo={() => { setEditando(false); setVersao((v) => v + 1) }} />
   if (convidando) return <ConvidarGrupo grupoId={id} fechar={() => setConvidando(false)} />
 
@@ -44,7 +58,12 @@ export default function GrupoDetalhe() {
     <div className="animar-entrada mx-auto w-full max-w-[640px] pb-8">
       <header className="flex min-h-12 items-center gap-2 border-b border-line/60 pb-3"><button onClick={() => navigate('/social')} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2"><ArrowLeft size={20} /></button><p className="text-sm font-semibold">Grupo VIVECI</p></header>
       <section className="py-6 text-center">
-        <div className="mx-auto flex size-24 items-center justify-center overflow-hidden rounded-[24px] border border-line bg-card">{grupo.fotoUrl ? <img src={grupo.fotoUrl} alt="" className="size-full object-cover" /> : <Users size={34} className="text-ink-3" />}</div>
+        <div className="relative mx-auto size-24">
+          <div className="flex size-24 items-center justify-center overflow-hidden rounded-[24px] border border-line bg-card">{grupo.fotoUrl ? <img src={grupo.fotoUrl} alt={`Foto do grupo ${grupo.nome}`} className="size-full object-cover" /> : <Users size={34} className="text-ink-3" />}</div>
+          {gerencia && <label aria-label="Alterar foto do grupo" className={`absolute -bottom-2 -right-2 flex size-11 cursor-pointer items-center justify-center rounded-full border border-line bg-card text-brand ${atualizandoFoto ? 'pointer-events-none opacity-50' : ''}`}><Camera size={18} /><input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={atualizandoFoto} onChange={(e) => { void trocarFoto(e.target.files?.[0]); e.target.value = '' }} /></label>}
+        </div>
+        {atualizandoFoto && <p className="mt-3 text-xs text-ink-2">Atualizando foto...</p>}
+        {erro && grupo.souMembro && <p className="mt-3 text-sm text-down">{erro}</p>}
         <div className="mt-4 flex items-center justify-center gap-2"><h1 className="text-2xl font-semibold tracking-[-0.04em]">{grupo.nome}</h1>{grupo.visibilidade === 'privado' && <Lock size={15} className="text-ink-3" />}</div>
         {grupo.descricao && <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-2">{grupo.descricao}</p>}
         <p className="mt-2 text-xs text-ink-3">{grupo.totalMembros} {grupo.totalMembros === 1 ? 'membro' : 'membros'} · Grupo {grupo.visibilidade}</p>
