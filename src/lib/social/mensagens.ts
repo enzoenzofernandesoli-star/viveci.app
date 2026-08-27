@@ -3,8 +3,11 @@ import { supabase } from '../supabase'
 export type Mensagem = { id:number; remetenteId:string; texto:string|null; treinoId:string|null; criadaEm:string; nome:string; fotoUrl:string|null }
 export type Conversa = { id:string; pessoaId:string; nome:string; fotoUrl:string|null; ultimaEm:string }
 export type ConviteGrupo = { conviteId:string; grupoId:string; nome:string; fotoUrl:string|null; convidadoPor:string; expiraEm:string }
+export type PessoaConversa = { id:string; nome:string; fotoUrl:string|null }
 
 export async function abrirConversa(pessoaId:string) { const {data,error}=await supabase.rpc('abrir_conversa',{p_usuario_id:pessoaId}); if(error)throw error; return String(data) }
+
+export async function carregarPessoaConversa(conversaId:string,meuId:string):Promise<PessoaConversa>{const{data,error}=await supabase.from('conversas').select('usuario_a,usuario_b').eq('id',conversaId).single();if(error)throw error;const id=data.usuario_a===meuId?data.usuario_b:data.usuario_a;const{data:p,error:ep}=await supabase.from('perfis_publicos').select('id,nome,foto_url').eq('id',id).single();if(ep)throw ep;return{id:p.id,nome:p.nome??'Atleta VIVECI',fotoUrl:p.foto_url??null}}
 
 export async function listarConversas(meuId:string):Promise<Conversa[]> {
   const {data,error}=await supabase.from('conversas').select('id,usuario_a,usuario_b,atualizada_em').order('atualizada_em',{ascending:false}).limit(50); if(error)throw error

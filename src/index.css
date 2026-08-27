@@ -35,6 +35,26 @@ html {
   touch-action: pan-y;
 }
 
+.abas-social {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand) var(--color-line);
+  touch-action: pan-x;
+  overscroll-behavior-inline: contain;
+}
+
+.abas-social::-webkit-scrollbar {
+  height: 3px;
+}
+
+.abas-social::-webkit-scrollbar-track {
+  background: var(--color-line);
+}
+
+.abas-social::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--color-brand);
+}
+
 body, #root { min-height: 100%; }
 
 body {

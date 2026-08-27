@@ -31,10 +31,13 @@ alter table public.conversas enable row level security;
 alter table public.mensagens enable row level security;
 revoke all on public.conversas, public.mensagens from public, anon, authenticated;
 
+drop policy if exists "participantes leem conversa" on public.conversas;
 create policy "participantes leem conversa" on public.conversas for select to authenticated using (auth.uid() in (usuario_a, usuario_b));
+drop policy if exists "participantes leem mensagens privadas" on public.mensagens;
 create policy "participantes leem mensagens privadas" on public.mensagens for select to authenticated using (
   conversa_id is not null and exists(select 1 from public.conversas c where c.id=conversa_id and auth.uid() in (c.usuario_a,c.usuario_b))
 );
+drop policy if exists "membros leem mensagens do grupo" on public.mensagens;
 create policy "membros leem mensagens do grupo" on public.mensagens for select to authenticated using (
   grupo_id is not null and exists(select 1 from public.grupo_membros gm where gm.grupo_id=mensagens.grupo_id and gm.user_id=auth.uid())
 );

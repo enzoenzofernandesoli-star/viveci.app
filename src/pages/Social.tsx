@@ -128,8 +128,8 @@ export default function Social() {
           )}
         </section>
       )}
-      <div className="flex items-center justify-between border-b border-line/60">
-        <div className="flex">
+      <nav className="abas-social overflow-x-auto border-b border-line/60 pb-1" aria-label="Seções do Social">
+        <div className="flex min-w-max">
           <button
             onClick={() => setAba('amigos')}
             className={`relative min-h-12 px-5 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
@@ -146,6 +146,7 @@ export default function Social() {
           >
             Descobrir
           </button>
+          <button onClick={() => setAba('mensagens')} className={`relative min-h-12 px-3 text-xs font-semibold uppercase tracking-[0.04em] ${aba === 'mensagens' ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'}`}>Mensagens</button>
           <button
             onClick={() => setAba('grupos')}
             className={`relative min-h-12 px-4 text-xs font-semibold uppercase tracking-[0.06em] transition-colors ${
@@ -154,9 +155,8 @@ export default function Social() {
           >
             Grupos
           </button>
-          <button onClick={() => setAba('mensagens')} className={`relative min-h-12 px-3 text-xs font-semibold uppercase tracking-[0.04em] ${aba === 'mensagens' ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-px after:bg-brand' : 'text-ink-3'}`}>Mensagens</button>
         </div>
-      </div>
+      </nav>
 
       {aba === 'amigos' && <CardDesafioInicial userId={userId} />}
 
