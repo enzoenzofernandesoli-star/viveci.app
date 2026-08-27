@@ -27,9 +27,19 @@ create index if not exists mensagens_grupo_cursor_idx on public.mensagens (grupo
 create index if not exists conversas_a_atualizada_idx on public.conversas (usuario_a, atualizada_em desc);
 create index if not exists conversas_b_atualizada_idx on public.conversas (usuario_b, atualizada_em desc);
 
+create table if not exists public.mensagens_leituras (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  destino_tipo text not null check (destino_tipo in ('conversa','grupo')),
+  destino_id uuid not null,
+  ultima_mensagem_id bigint not null default 0,
+  atualizada_em timestamptz not null default now(),
+  primary key (user_id, destino_tipo, destino_id)
+);
+
 alter table public.conversas enable row level security;
 alter table public.mensagens enable row level security;
-revoke all on public.conversas, public.mensagens from public, anon, authenticated;
+alter table public.mensagens_leituras enable row level security;
+revoke all on public.conversas, public.mensagens, public.mensagens_leituras from public, anon, authenticated;
 
 drop policy if exists "participantes leem conversa" on public.conversas;
 create policy "participantes leem conversa" on public.conversas for select to authenticated using (auth.uid() in (usuario_a, usuario_b));
@@ -135,3 +145,50 @@ end $$;
 
 revoke all on function public.excluir_mensagem(bigint) from public, anon;
 grant execute on function public.excluir_mensagem(bigint) to authenticated;
+
+create or replace function public.marcar_mensagens_lidas(p_conversa_id uuid default null, p_grupo_id uuid default null)
+returns void language plpgsql security definer set search_path=public as $$
+declare tipo text; destino uuid; ultima bigint;
+begin
+  if auth.uid() is null or ((p_conversa_id is not null)::integer+(p_grupo_id is not null)::integer)<>1 then
+    raise exception 'Destino inválido.' using errcode='22023';
+  end if;
+  if p_conversa_id is not null and not exists(
+    select 1 from public.conversas c where c.id=p_conversa_id and auth.uid() in(c.usuario_a,c.usuario_b)
+  ) then raise exception 'Sem acesso.' using errcode='42501'; end if;
+  if p_grupo_id is not null and not exists(
+    select 1 from public.grupo_membros gm where gm.grupo_id=p_grupo_id and gm.user_id=auth.uid()
+  ) then raise exception 'Sem acesso.' using errcode='42501'; end if;
+
+  tipo := case when p_conversa_id is not null then 'conversa' else 'grupo' end;
+  destino := coalesce(p_conversa_id,p_grupo_id);
+  select coalesce(max(m.id),0) into ultima from public.mensagens m
+  where m.conversa_id=p_conversa_id or m.grupo_id=p_grupo_id;
+  insert into public.mensagens_leituras(user_id,destino_tipo,destino_id,ultima_mensagem_id)
+  values(auth.uid(),tipo,destino,ultima)
+  on conflict(user_id,destino_tipo,destino_id) do update
+    set ultima_mensagem_id=greatest(mensagens_leituras.ultima_mensagem_id,excluded.ultima_mensagem_id), atualizada_em=now();
+end $$;
+
+create or replace function public.listar_mensagens_nao_lidas()
+returns table (destino_tipo text, destino_id uuid, quantidade bigint)
+language sql stable security definer set search_path=public as $$
+  with destinos as (
+    select 'conversa'::text tipo, c.id destino
+    from public.conversas c where auth.uid() in(c.usuario_a,c.usuario_b)
+    union all
+    select 'grupo'::text, gm.grupo_id
+    from public.grupo_membros gm where gm.user_id=auth.uid()
+  )
+  select d.tipo, d.destino, count(m.id)::bigint
+  from destinos d
+  join public.mensagens m on
+    (d.tipo='conversa' and m.conversa_id=d.destino) or
+    (d.tipo='grupo' and m.grupo_id=d.destino)
+  left join public.mensagens_leituras l on l.user_id=auth.uid() and l.destino_tipo=d.tipo and l.destino_id=d.destino
+  where m.remetente_id<>auth.uid() and m.id>coalesce(l.ultima_mensagem_id,0)
+  group by d.tipo,d.destino;
+$$;
+
+revoke all on function public.marcar_mensagens_lidas(uuid,uuid), public.listar_mensagens_nao_lidas() from public, anon;
+grant execute on function public.marcar_mensagens_lidas(uuid,uuid), public.listar_mensagens_nao_lidas() to authenticated;

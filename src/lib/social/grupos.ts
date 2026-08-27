@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import { validarImagem, TAMANHO_MAX_AVATAR } from '../uploadSeguro'
 import { LIMITE_NOME_GRUPO, normalizarDescricaoGrupo, normalizarNomeGrupo, validarSenhaGrupo } from './grupoRegras'
+import { listarMensagensNaoLidas } from './mensagens'
 
 export type VisibilidadeGrupo = 'aberto' | 'privado'
 export type PapelGrupo = 'dono' | 'admin' | 'membro'
@@ -15,6 +16,7 @@ export type GrupoSocial = {
   totalMembros: number
   souMembro: boolean
   meuPapel: PapelGrupo | null
+  naoLidas: number
 }
 
 export type MembroGrupo = {
@@ -35,6 +37,7 @@ function mapearGrupo(item: Record<string, unknown>): GrupoSocial {
     totalMembros: Number(item.total_membros ?? 0),
     souMembro: item.sou_membro === true,
     meuPapel: (item.meu_papel as PapelGrupo | null) ?? null,
+    naoLidas: Number(item.nao_lidas ?? 0),
   }
 }
 
@@ -50,13 +53,13 @@ export function useGrupos(termo = '') {
       setCarregando(true)
       setErro(null)
       const busca = termo.trim().replace(/[%_]/g, '').slice(0, LIMITE_NOME_GRUPO)
-      const { data, error } = await supabase.rpc('pesquisar_grupos', { p_busca: busca })
+      const [{ data, error }, naoLidas] = await Promise.all([supabase.rpc('pesquisar_grupos', { p_busca: busca }), listarMensagensNaoLidas()])
       if (cancelado) return
       if (error) {
         setGrupos([])
         setErro('Não foi possível carregar os grupos agora.')
       } else {
-        setGrupos(((data ?? []) as Record<string, unknown>[]).map(mapearGrupo))
+        setGrupos(((data ?? []) as Record<string, unknown>[]).map((item) => ({ ...mapearGrupo(item), naoLidas: naoLidas.grupos.get(String(item.id)) ?? 0 })))
       }
       setCarregando(false)
     }, termo ? 300 : 0)

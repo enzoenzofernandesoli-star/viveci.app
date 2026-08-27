@@ -1,7 +1,7 @@
 import { supabase } from '../supabase'
 
 export type Mensagem = { id:number; remetenteId:string; texto:string|null; treinoId:string|null; criadaEm:string; nome:string; fotoUrl:string|null }
-export type Conversa = { id:string; pessoaId:string; nome:string; fotoUrl:string|null; ultimaEm:string }
+export type Conversa = { id:string; pessoaId:string; nome:string; fotoUrl:string|null; ultimaEm:string; naoLidas:number }
 export type ConviteGrupo = { conviteId:string; grupoId:string; nome:string; fotoUrl:string|null; convidadoPor:string; expiraEm:string }
 export type PessoaConversa = { id:string; nome:string; fotoUrl:string|null }
 
@@ -10,13 +10,16 @@ export async function abrirConversa(pessoaId:string) { const {data,error}=await 
 export async function carregarPessoaConversa(conversaId:string,meuId:string):Promise<PessoaConversa>{const{data,error}=await supabase.from('conversas').select('usuario_a,usuario_b').eq('id',conversaId).single();if(error)throw error;const id=data.usuario_a===meuId?data.usuario_b:data.usuario_a;const{data:p,error:ep}=await supabase.from('perfis_publicos').select('id,nome,foto_url').eq('id',id).single();if(ep)throw ep;return{id:p.id,nome:p.nome??'Atleta VIVECI',fotoUrl:p.foto_url??null}}
 
 export async function listarConversas(meuId:string):Promise<Conversa[]> {
-  const {data,error}=await supabase.from('conversas').select('id,usuario_a,usuario_b,atualizada_em').order('atualizada_em',{ascending:false}).limit(50); if(error)throw error
+  const [{data,error},naoLidas]=await Promise.all([supabase.from('conversas').select('id,usuario_a,usuario_b,atualizada_em').order('atualizada_em',{ascending:false}).limit(50),listarMensagensNaoLidas()]); if(error)throw error
   const linhas=data??[], ids=linhas.map(c=>c.usuario_a===meuId?c.usuario_b:c.usuario_a)
   if(!ids.length)return []
   const {data:perfis,error:ep}=await supabase.from('perfis_publicos').select('id,nome,foto_url').in('id',ids); if(ep)throw ep
   const mapa=new Map((perfis??[]).map(p=>[p.id,p]))
-  return linhas.map(c=>{const pessoaId=c.usuario_a===meuId?c.usuario_b:c.usuario_a,p=mapa.get(pessoaId);return{id:c.id,pessoaId,nome:p?.nome??'Atleta VIVECI',fotoUrl:p?.foto_url??null,ultimaEm:c.atualizada_em}})
+  return linhas.map(c=>{const pessoaId=c.usuario_a===meuId?c.usuario_b:c.usuario_a,p=mapa.get(pessoaId);return{id:c.id,pessoaId,nome:p?.nome??'Atleta VIVECI',fotoUrl:p?.foto_url??null,ultimaEm:c.atualizada_em,naoLidas:naoLidas.conversas.get(c.id)??0}})
 }
+
+export async function listarMensagensNaoLidas(){const{data,error}=await supabase.rpc('listar_mensagens_nao_lidas');if(error)throw error;const conversas=new Map<string,number>(),grupos=new Map<string,number>();for(const item of data??[]){const mapa=item.destino_tipo==='grupo'?grupos:conversas;mapa.set(String(item.destino_id),Number(item.quantidade))}return{conversas,grupos}}
+export async function marcarMensagensComoLidas(destino:{conversaId?:string;grupoId?:string}){const{error}=await supabase.rpc('marcar_mensagens_lidas',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null});if(error)throw error}
 
 export async function listarMensagens(destino:{conversaId?:string;grupoId?:string}, antes?:number):Promise<Mensagem[]> {
   const {data,error}=await supabase.rpc('listar_mensagens',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_antes:antes??null});if(error)throw error

@@ -57,7 +57,7 @@ export default function GrupoDetalhe() {
   if (convidando) return <ConvidarGrupo grupoId={id} fechar={() => setConvidando(false)} />
 
   if (grupo.souMembro && visao === 'chat') return (
-    <div className="animar-entrada mx-auto w-full max-w-[640px] pb-4">
+    <div className="animar-entrada mx-auto flex h-[calc(100dvh-9.5rem-env(safe-area-inset-bottom))] w-full max-w-[640px] flex-col">
       <header className="sticky top-0 z-10 flex min-h-16 items-center gap-2 border-b border-line bg-app">
         <button onClick={() => navigate('/social')} aria-label="Voltar" className="flex size-11 items-center justify-center text-ink-2"><ArrowLeft size={20} /></button>
         <button onClick={() => setVisao('info')} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 text-left" aria-label="Ver informações do grupo">

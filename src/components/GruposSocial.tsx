@@ -63,6 +63,7 @@ function ListaGrupos({ titulo, grupos, abrir }: { titulo: string; grupos: Return
               <p className="mt-1 line-clamp-1 text-xs text-ink-2">{grupo.descricao || (grupo.visibilidade === 'privado' ? 'Grupo privado' : 'Grupo aberto')}</p>
               <p className="mt-1 text-[10px] uppercase tracking-[0.06em] text-ink-3">{grupo.totalMembros} {grupo.totalMembros === 1 ? 'membro' : 'membros'}{grupo.souMembro ? ' · Você participa' : ''}</p>
             </div>
+            {grupo.naoLidas > 0 && <span aria-label={`${grupo.naoLidas} mensagens não lidas`} className="flex min-w-6 shrink-0 items-center justify-center rounded-full bg-brand px-1.5 py-1 text-[10px] font-bold text-white">{grupo.naoLidas > 99 ? '99+' : grupo.naoLidas}</span>}
           </button>
         ))}
       </div>
@@ -102,4 +103,3 @@ function FormularioGrupo({ onFechar, onCriado }: { onFechar: () => void; onCriad
     </section>
   )
 }
-

@@ -263,6 +263,9 @@ qualquer entrega.
   com progresso calculado de verdade. **Sem vídeo, XP/rankings, notificações,
   desafios além do inicial, moderação ou tempo real** — ver seção própria
   abaixo pra escopo completo do que ficou de fora do MVP.
+- **Mensagens não lidas** — conversas individuais e grupos exibem selo numérico
+  azul. Abrir o chat marca como lidas somente as mensagens acessíveis ao usuário;
+  mensagens enviadas pelo próprio usuário não entram na contagem.
 - **Grupos sociais** — terceira aba dentro de Social. Grupos abertos e privados
   aparecem na pesquisa; os abertos aceitam entrada direta e os privados exigem
   convite válido ou senha. Dono e administradores podem editar nome/foto,
