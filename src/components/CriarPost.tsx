@@ -25,6 +25,7 @@ export function CriarPost({
   sessaoInicialId?: string | null
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [legenda, setLegenda] = useState('')
@@ -71,7 +72,7 @@ export function CriarPost({
   async function abrirCamera() {
     try {
       const foto = await capturarFotoNativa()
-      if (foto === undefined) inputRef.current?.click()
+      if (foto === undefined) cameraInputRef.current?.click()
       else if (foto) aplicarFoto(foto)
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : 'Não foi possível abrir a câmera.')
@@ -145,6 +146,7 @@ export function CriarPost({
     <Page title="Nova publicação">
       <div className="mt-6 space-y-7">
         <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherFoto} className="hidden" />
+        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="hidden" />
 
         {preview ? (
           <div className="relative overflow-hidden rounded-2xl">

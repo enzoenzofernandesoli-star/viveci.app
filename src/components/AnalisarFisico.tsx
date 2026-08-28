@@ -51,6 +51,7 @@ export function AnalisarFisico({
   onSalvarFoto: (arquivo: File) => Promise<void>
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const [etapa, setEtapa] = useState<Etapa>('instrucoes')
   const [passoInstrucao, setPassoInstrucao] = useState(0)
   const [arquivo, setArquivo] = useState<File | null>(null)
@@ -75,7 +76,7 @@ export function AnalisarFisico({
   async function abrirCamera() {
     try {
       const foto = await capturarFotoNativa()
-      if (foto === undefined) inputRef.current?.click()
+      if (foto === undefined) cameraInputRef.current?.click()
       else if (foto) aplicarFoto(foto)
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : 'Não foi possível abrir a câmera.')
@@ -144,6 +145,7 @@ export function AnalisarFisico({
       <Page title="Analisar meu físico">
         <div className="animar-entrada mt-6">
           <input ref={inputRef} type="file" accept="image/*" onChange={escolherFoto} className="hidden" />
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={escolherFoto} className="hidden" />
 
           {preview ? (
             <div className="rounded-2xl border border-line bg-card p-4">

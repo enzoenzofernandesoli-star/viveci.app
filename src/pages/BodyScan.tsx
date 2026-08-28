@@ -63,6 +63,7 @@ function SlotAngulo({
         ref={inputRef}
         type="file"
         accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={(e) => {
           const arquivo = e.target.files?.[0]
