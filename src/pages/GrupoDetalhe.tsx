@@ -28,10 +28,41 @@ export default function GrupoDetalhe() {
     if (!id) return
     let cancelado = false
     setCarregando(true); setErro(null)
-    carregarGrupo(id).then(async (g) => ({ g, m: g.souMembro ? await carregarMembrosGrupo(id) : [], s: g.meuPapel === 'dono' || g.meuPapel === 'admin' ? await listarSolicitacoesGrupo(id) : [] }))
-      .then(({ g, m, s }) => { if (!cancelado) { setGrupo(g); setMembros(m); setSolicitacoes(s) } })
-      .catch(() => { if (!cancelado) setErro('Não foi possível carregar este grupo.') })
-      .finally(() => { if (!cancelado) setCarregando(false) })
+    carregarGrupo(id)
+      .then(async (g) => {
+        if (cancelado) return
+        setGrupo(g)
+        setCarregando(false)
+
+        if (g.souMembro) {
+          try {
+            const dados = await carregarMembrosGrupo(id)
+            if (!cancelado) setMembros(dados)
+          } catch {
+            if (!cancelado) setErro('O grupo abriu, mas não foi possível carregar o rank e os integrantes agora.')
+          }
+        } else if (!cancelado) {
+          setMembros([])
+        }
+
+        if (g.meuPapel === 'dono' || g.meuPapel === 'admin') {
+          try {
+            const pendentes = await listarSolicitacoesGrupo(id)
+            if (!cancelado) setSolicitacoes(pendentes)
+          } catch {
+            if (!cancelado) setSolicitacoes([])
+          }
+        } else if (!cancelado) {
+          setSolicitacoes([])
+        }
+      })
+      .catch(() => {
+        if (!cancelado) {
+          setGrupo(null)
+          setErro('Não foi possível carregar este grupo.')
+          setCarregando(false)
+        }
+      })
     return () => { cancelado = true }
   }, [id, versao])
 
