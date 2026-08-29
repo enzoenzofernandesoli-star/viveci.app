@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Dumbbell, Send, Trash2, Users, X } from 'lucide-react'
+import { CalendarDays, Check, Clock3, Dumbbell, MapPin, Send, Trash2, Users, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useSessao } from '../lib/auth'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
-import { aceitarConviteGrupo, enviarMensagem, excluirMensagem, listarMensagens, marcarMensagensComoLidas, recusarConviteGrupo, type Mensagem } from '../lib/social/mensagens'
+import { Modal } from './Modal'
+import { aceitarConviteGrupo, enviarMensagem, excluirMensagem, listarMensagens, marcarMensagensComoLidas, marcarTreino, participarTreino, recusarConviteGrupo, type Mensagem } from '../lib/social/mensagens'
+import { formatarDataHoraTreino, validarTreinoMarcado } from '../lib/social/treinoMarcado'
 
 type ChatProps = { conversaId?: string; grupoId?: string; mostrarAutores?: boolean }
 
@@ -15,6 +17,10 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [escolhendo, setEscolhendo] = useState(false)
+  const [marcando, setMarcando] = useState(false)
+  const [localTreino, setLocalTreino] = useState('')
+  const [dataTreino, setDataTreino] = useState('')
+  const [horaTreino, setHoraTreino] = useState('')
   const fimRef = useRef<HTMLDivElement>(null)
   const historico = useHistoricoTreinos(sessao?.user.id, 10)
   const destino = { conversaId, grupoId }
@@ -77,6 +83,25 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
     } catch { setErro('Não foi possível responder ao convite.') }
   }
 
+  async function confirmarTreino() {
+    const dataHora = dataTreino && horaTreino ? `${dataTreino}T${horaTreino}` : ''
+    const validacao = validarTreinoMarcado({ local: localTreino, dataHora })
+    if (validacao) { setErro(validacao); return }
+    setEnviando(true)
+    try {
+      await marcarTreino(destino, localTreino, dataHora)
+      setMarcando(false); setLocalTreino(''); setDataTreino(''); setHoraTreino(''); setErro(null)
+      await carregar()
+    } catch { setErro('Não foi possível marcar o treino. Verifique se a atualização 23 foi aplicada no banco.') }
+    finally { setEnviando(false) }
+  }
+
+  async function confirmarParticipacao(mensagem: Mensagem) {
+    if (!mensagem.treinoMarcadoId || mensagem.participandoTreino) return
+    try { await participarTreino(mensagem.treinoMarcadoId); await carregar() }
+    catch { setErro('Não foi possível confirmar sua participação.') }
+  }
+
   return (
     <section className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto border-b border-line/60 py-4">
@@ -88,9 +113,14 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
             {mostrarAutores && !minha && <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-card">{mensagem.fotoUrl ? <img src={mensagem.fotoUrl} alt="" className="size-full object-cover" /> : mensagem.nome[0]}</div>}
             <div className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 ${minha ? 'rounded-br-md bg-brand text-white' : 'rounded-bl-md bg-card text-ink'}`}>
               {mostrarAutores && !minha && <p className="mb-1 text-xs font-semibold text-brand">{mensagem.nome}</p>}
-              {mensagem.texto && <p className="whitespace-pre-wrap break-words text-sm leading-5">{mensagem.texto}</p>}
+              {mensagem.texto && !mensagem.treinoMarcadoId && <p className="whitespace-pre-wrap break-words text-sm leading-5">{mensagem.texto}</p>}
               {mensagem.conviteGrupoId && <div className="mt-2 border-t border-white/20 pt-3"><div className="flex items-center gap-2"><div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-app/40">{mensagem.conviteGrupoFoto ? <img src={mensagem.conviteGrupoFoto} alt="" className="size-full object-cover" /> : <Users size={18} />}</div><div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] opacity-60">Convite para guilda</p><p className="truncate text-sm font-semibold">{mensagem.conviteGrupoNome}</p></div></div>{!minha && mensagem.conviteAtivo && <div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => void responderConvite(mensagem, false)} className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-line bg-app/30 text-xs font-semibold"><X size={15} /> Recusar</button><button onClick={() => void responderConvite(mensagem, true)} className="flex min-h-11 items-center justify-center gap-1 rounded-xl bg-white text-xs font-semibold text-app"><Check size={15} /> Aceitar</button></div>}{!mensagem.conviteAtivo && <p className="mt-2 text-xs opacity-60">Convite encerrado</p>}</div>}
               {mensagem.treinoId && <div className="mt-2 flex items-center gap-2 border-t border-white/20 pt-2 text-xs font-semibold"><Dumbbell size={15} /> Treino marcado</div>}
+              {mensagem.treinoMarcadoId && mensagem.treinoMarcadoEm && <div className="mt-2 border-t border-white/20 pt-3">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] opacity-60">Treino marcado</p>
+                <div className="space-y-1.5 text-xs"><p className="flex items-center gap-2"><CalendarDays size={15} /> {formatarDataHoraTreino(mensagem.treinoMarcadoEm)}</p><p className="flex items-center gap-2"><MapPin size={15} /> {mensagem.treinoMarcadoLocal}</p><p className="flex items-center gap-2"><Users size={15} /> {mensagem.treinoMarcadoParticipantes} {mensagem.treinoMarcadoParticipantes === 1 ? 'participante' : 'participantes'}</p></div>
+                <button disabled={mensagem.participandoTreino} onClick={() => void confirmarParticipacao(mensagem)} className={`mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-semibold ${mensagem.participandoTreino ? 'border border-white/20 bg-transparent opacity-70' : 'bg-white text-app'}`}>{mensagem.participandoTreino ? <><Check size={15} /> Participação confirmada</> : <><Dumbbell size={15} /> Participar do treino</>}</button>
+              </div>}
               <p className={`mt-1 text-right text-[10px] ${minha ? 'text-white/60' : 'text-ink-3'}`}>{new Date(mensagem.criadaEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
           </div>
@@ -98,12 +128,13 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
         <div ref={fimRef} />
       </div>
       {erro && <p className="mt-2 text-sm text-down">{erro}</p>}
-      {escolhendo && <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-line bg-card p-2">{historico.carregando ? <p className="p-3 text-xs text-ink-2">Carregando treinos...</p> : historico.treinos.map((treino) => <button key={treino.id} onClick={() => void enviar(treino.id)} className="min-h-12 w-full border-b border-line/60 px-2 text-left text-sm">{treino.nome}</button>)}</div>}
+      {escolhendo && <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-line bg-card p-2"><button onClick={() => { setEscolhendo(false); setMarcando(true); setErro(null) }} className="flex min-h-12 w-full items-center gap-3 border-b border-line px-2 text-left text-sm font-semibold text-brand"><CalendarDays size={18} /> Marcar novo treino</button><p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-2">Compartilhar treino concluído</p>{historico.carregando ? <p className="p-3 text-xs text-ink-2">Carregando treinos...</p> : historico.treinos.map((treino) => <button key={treino.id} onClick={() => void enviar(treino.id)} className="min-h-12 w-full border-b border-line/60 px-2 text-left text-sm">{treino.nome}</button>)}</div>}
       <div className="mt-auto flex shrink-0 items-end gap-2 bg-app py-2">
         <button onClick={() => setEscolhendo((valor) => !valor)} aria-label="Marcar treino" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card text-brand"><Dumbbell size={18} /></button>
         <textarea value={texto} maxLength={1000} onChange={(e) => setTexto(e.target.value)} rows={1} placeholder="Mensagem" className="min-h-12 flex-1 resize-none rounded-3xl border border-line bg-card px-4 py-3 text-sm outline-none focus:border-brand" />
         <button disabled={enviando} onClick={() => void enviar()} aria-label="Enviar mensagem" className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-white disabled:opacity-50"><Send size={18} /></button>
       </div>
+      {marcando && <Modal rotulo="Marcar treino" fechar={() => setMarcando(false)}><div className="w-full max-w-md rounded-2xl border border-line bg-card p-5"><div className="mb-5 flex items-start justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand">Treino em conjunto</p><h2 className="mt-1 text-xl font-semibold">Marcar treino</h2><p className="mt-1 text-sm text-ink-2">Escolha onde e quando vocês vão treinar.</p></div><button onClick={() => setMarcando(false)} aria-label="Fechar" className="flex size-11 items-center justify-center rounded-full border border-line"><X size={18} /></button></div><label className="block text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Local<div className="mt-2 flex items-center rounded-xl border border-line bg-app px-3 focus-within:border-brand"><MapPin size={18} className="text-ink-2" /><input autoFocus value={localTreino} onChange={(e) => setLocalTreino(e.target.value)} maxLength={120} placeholder="Ex.: Academia Central" className="min-h-12 min-w-0 flex-1 bg-transparent px-3 text-sm outline-none" /></div></label><div className="mt-4 grid grid-cols-2 gap-3"><label className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Data<div className="mt-2 flex items-center rounded-xl border border-line bg-app px-3 focus-within:border-brand"><CalendarDays size={17} /><input type="date" value={dataTreino} onChange={(e) => setDataTreino(e.target.value)} className="min-h-12 min-w-0 flex-1 bg-transparent px-2 text-sm outline-none [color-scheme:dark]" /></div></label><label className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-2">Horário<div className="mt-2 flex items-center rounded-xl border border-line bg-app px-3 focus-within:border-brand"><Clock3 size={17} /><input type="time" value={horaTreino} onChange={(e) => setHoraTreino(e.target.value)} className="min-h-12 min-w-0 flex-1 bg-transparent px-2 text-sm outline-none [color-scheme:dark]" /></div></label></div>{erro && <p className="mt-3 text-sm text-down">{erro}</p>}<button disabled={enviando} onClick={() => void confirmarTreino()} className="mt-5 min-h-12 w-full rounded-xl bg-brand font-semibold text-white disabled:opacity-50">{enviando ? 'Marcando...' : 'Marcar treino'}</button></div></Modal>}
     </section>
   )
 }

@@ -271,6 +271,10 @@ qualquer entrega.
   perfil da guilda e o convite aparece como cartão acionável no chat individual.
   Entradas iniciadas pela pesquisa viram solicitações; dono ou administrador
   precisa aceitar no perfil da guilda. A autorização é validada no banco.
+- **Treinos marcados no chat** — pelo botão de treino, o usuário escolhe local,
+  data e horário. O compromisso aparece como cartão acionável na conversa
+  individual ou da guilda; cada participante confirma em “Participar do treino”
+  e a quantidade confirmada é atualizada. O criador já entra como participante.
 - **Grupos sociais** — terceira aba dentro de Social. Grupos abertos e privados
   aparecem na pesquisa; os abertos aceitam entrada direta e os privados exigem
   convite válido ou senha. Dono e administradores podem editar nome/foto,
