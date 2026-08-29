@@ -218,6 +218,13 @@ export async function criarPost(
     mostrarVolume: boolean
   },
 ) {
+  let sessao=(await supabase.auth.getSession()).data.session
+  if(!sessao||!sessao.expires_at||sessao.expires_at*1000<Date.now()+30_000){
+    const{data,error}=await supabase.auth.refreshSession();if(error||!data.session)throw new Error('Sua sessão expirou. Entre novamente para publicar.')
+    sessao=data.session
+  }
+  const{data:usuario,error:erroUsuario}=await supabase.auth.getUser()
+  if(erroUsuario||!usuario.user||usuario.user.id!==userId||sessao.user.id!==userId)throw new Error('Sua sessão expirou. Entre novamente para publicar.')
   let fotoUrl: string | null = null
   let fotoPath: string | null = null
   if (dados.arquivoFoto) {
