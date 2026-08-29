@@ -3,6 +3,22 @@
 
 begin;
 
+-- Reparar uma instalação parcial do bloco de mensagens. Esta tabela não é de
+-- notificações: ela guarda os pedidos de entrada nas guildas e é usada pelas
+-- funções de grupos que já podem estar instaladas no banco.
+create table if not exists public.grupo_solicitacoes (
+  id uuid primary key default gen_random_uuid(),
+  grupo_id uuid not null references public.grupos_sociais(id) on delete cascade,
+  solicitante_id uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'pendente' check (status in ('pendente','aceita','recusada')),
+  criada_em timestamptz not null default now(),
+  respondida_em timestamptz,
+  respondida_por uuid references auth.users(id) on delete set null,
+  unique (grupo_id, solicitante_id)
+);
+alter table public.grupo_solicitacoes enable row level security;
+revoke all on public.grupo_solicitacoes from public, anon, authenticated;
+
 -- Push ainda não configurado: remover primeiro os gatilhos que podem interromper
 -- escritas. Algumas instalações antigas não possuem todas as tabelas sociais;
 -- por isso cada remoção só roda quando a tabela realmente existe.
@@ -23,8 +39,10 @@ begin
   end loop;
 end;
 $$;
+drop trigger if exists enfileirar_push_solicitacao_grupo on public.grupo_solicitacoes;
 drop function if exists public.enfileirar_push_mensagem();
 drop function if exists public.enfileirar_push_social();
+drop function if exists public.enfileirar_push_solicitacao_grupo();
 drop function if exists public.registrar_push_token(text,text);
 drop function if exists public.desativar_meus_push_tokens();
 drop table if exists public.notificacoes_push;
