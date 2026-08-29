@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CalendarDays, Camera, Check, Clock3, Dumbbell, Image, MapPin, Mic, Paperclip, Send, Square, Trash2, Users, X } from 'lucide-react'
+import { CalendarDays, Camera, Check, Clock3, Dumbbell, Image, MapPin, Mic, Paperclip, Pause, Play, Send, Square, Trash2, Users, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useSessao } from '../lib/auth'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
@@ -9,6 +9,34 @@ import { formatarDataHoraTreino, validarTreinoMarcado } from '../lib/social/trei
 import { capturarFotoNativa } from '../lib/cameraNativa'
 
 type ChatProps = { conversaId?: string; grupoId?: string; mostrarAutores?: boolean }
+
+function formatarDuracao(segundos: number) {
+  if (!Number.isFinite(segundos) || segundos < 0) return '0:00'
+  return `${Math.floor(segundos / 60)}:${String(Math.floor(segundos % 60)).padStart(2, '0')}`
+}
+
+function PlayerAudio({ url, minha }: { url: string; minha: boolean }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [tocando, setTocando] = useState(false)
+  const [duracao, setDuracao] = useState(0)
+  const [posicao, setPosicao] = useState(0)
+  const [falhou, setFalhou] = useState(false)
+
+  async function alternar() {
+    const audio = audioRef.current
+    if (!audio) return
+    try {
+      if (audio.paused) await audio.play()
+      else audio.pause()
+    } catch { setFalhou(true) }
+  }
+
+  return <div className="mt-1 flex min-w-[210px] items-center gap-3">
+    <audio ref={audioRef} src={url} preload="metadata" onLoadedMetadata={(e) => { setDuracao(e.currentTarget.duration); setFalhou(false) }} onTimeUpdate={(e) => setPosicao(e.currentTarget.currentTime)} onPlay={() => setTocando(true)} onPause={() => setTocando(false)} onEnded={() => { setTocando(false); setPosicao(0) }} onError={() => setFalhou(true)} />
+    <button type="button" onClick={() => void alternar()} aria-label={tocando ? 'Pausar áudio' : 'Reproduzir áudio'} className={`flex size-11 shrink-0 items-center justify-center rounded-full ${minha ? 'bg-white text-brand' : 'bg-brand text-white'}`}>{tocando ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}</button>
+    <div className="min-w-0 flex-1"><input aria-label="Posição do áudio" type="range" min={0} max={duracao || 0} step={0.1} value={Math.min(posicao, duracao || 0)} onChange={(e) => { const audio = audioRef.current; if (audio) audio.currentTime = Number(e.target.value) }} className="h-1 w-full accent-white" /><p className={`mt-1 text-[10px] ${minha ? 'text-white/70' : 'text-ink-2'}`}>{falhou ? 'Áudio indisponível' : `${formatarDuracao(posicao)} / ${formatarDuracao(duracao)}`}</p></div>
+  </div>
+}
 
 export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps) {
   const { sessao } = useSessao()
@@ -25,6 +53,8 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
   const [anexando, setAnexando] = useState(false)
   const [gravando, setGravando] = useState(false)
   const [segundosAudio, setSegundosAudio] = useState(0)
+  const [audioPendente, setAudioPendente] = useState<File | null>(null)
+  const [audioPendenteUrl, setAudioPendenteUrl] = useState<string | null>(null)
   const fimRef = useRef<HTMLDivElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
   const galeriaRef = useRef<HTMLInputElement>(null)
@@ -75,6 +105,8 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
     if (esperaAudioRef.current !== null) window.clearTimeout(esperaAudioRef.current)
     streamRef.current?.getTracks().forEach((track) => track.stop())
   }, [])
+
+  useEffect(() => () => { if (audioPendenteUrl) URL.revokeObjectURL(audioPendenteUrl) }, [audioPendenteUrl])
 
   async function enviar(treinoId?: string) {
     if (!texto.trim() && !treinoId) return
@@ -144,11 +176,12 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
   }
 
   async function iniciarAudio() {
-    setErro(null); setAnexando(false)
+    descartarAudio(); setErro(null); setAnexando(false)
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') throw new Error('Gravação de áudio não disponível neste aparelho.')
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((tipo) => MediaRecorder.isTypeSupported(tipo))
+      // MP4/AAC é a opção mais confiável para reprodução no WebView Android.
+      const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find((tipo) => MediaRecorder.isTypeSupported(tipo))
       const gravador = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined)
       const partes: Blob[] = []
       gravador.ondataavailable = (evento) => { if (evento.data.size) partes.push(evento.data) }
@@ -156,7 +189,11 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
         const tipo = gravador.mimeType.split(';')[0] || 'audio/webm'
         const extensao = tipo === 'audio/mp4' ? 'm4a' : 'webm'
         stream.getTracks().forEach((track) => track.stop()); streamRef.current = null; setGravando(false)
-        if (partes.length) void enviarArquivo(new File(partes, `audio-${Date.now()}.${extensao}`, { type: tipo }))
+        if (partes.length) {
+          const arquivo = new File(partes, `audio-${Date.now()}.${extensao}`, { type: tipo })
+          setAudioPendente(arquivo)
+          setAudioPendenteUrl(URL.createObjectURL(arquivo))
+        }
       }
       streamRef.current = stream; gravadorRef.current = gravador; setSegundosAudio(0); setGravando(true); gravador.start()
       if (!segurandoAudioRef.current) gravador.stop()
@@ -164,6 +201,21 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
   }
 
   function pararAudio() { if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop() }
+
+  function descartarAudio() {
+    if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
+    if (audioPendenteUrl) URL.revokeObjectURL(audioPendenteUrl)
+    setAudioPendente(null); setAudioPendenteUrl(null); setSegundosAudio(0)
+  }
+
+  async function enviarAudioPendente() {
+    if (!audioPendente) return
+    const arquivo = audioPendente
+    setAudioPendente(null)
+    if (audioPendenteUrl) URL.revokeObjectURL(audioPendenteUrl)
+    setAudioPendenteUrl(null)
+    await enviarArquivo(arquivo)
+  }
 
   function iniciarPressaoAudio(evento: React.PointerEvent<HTMLButtonElement>) {
     if (texto.trim() || enviando || gravando) return
@@ -214,7 +266,7 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
                 <button disabled={mensagem.participandoTreino} onClick={() => void confirmarParticipacao(mensagem)} className={`mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-semibold ${mensagem.participandoTreino ? 'border border-white/20 bg-transparent opacity-70' : 'bg-white text-app'}`}>{mensagem.participandoTreino ? <><Check size={15} /> Participação confirmada</> : <><Dumbbell size={15} /> Participar do treino</>}</button>
               </div>}
               {mensagem.midiaTipo === 'imagem' && mensagem.midiaUrl && <button onClick={() => window.open(mensagem.midiaUrl!, '_blank', 'noopener,noreferrer')} className="mt-1 block overflow-hidden rounded-xl" aria-label="Abrir foto"><img src={mensagem.midiaUrl} alt="Foto enviada na conversa" loading="lazy" className="max-h-80 w-full object-cover" /></button>}
-              {mensagem.midiaTipo === 'audio' && mensagem.midiaUrl && <audio controls preload="metadata" src={mensagem.midiaUrl} className="mt-1 h-11 w-[240px] max-w-full" />}
+              {mensagem.midiaTipo === 'audio' && mensagem.midiaUrl && <PlayerAudio url={mensagem.midiaUrl} minha={minha} />}
               <p className={`mt-1 text-right text-[10px] ${minha ? 'text-white/60' : 'text-ink-3'}`}>{new Date(mensagem.criadaEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
           </div>
@@ -224,11 +276,16 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
       {erro && <p className="mt-2 text-sm text-down">{erro}</p>}
       {escolhendo && <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-line bg-card p-2"><button onClick={() => { setEscolhendo(false); setMarcando(true); setErro(null) }} className="flex min-h-12 w-full items-center gap-3 border-b border-line px-2 text-left text-sm font-semibold text-brand"><CalendarDays size={18} /> Marcar novo treino</button><p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-2">Compartilhar treino concluído</p>{historico.carregando ? <p className="p-3 text-xs text-ink-2">Carregando treinos...</p> : historico.treinos.map((treino) => <button key={treino.id} onClick={() => void enviar(treino.id)} className="min-h-12 w-full border-b border-line/60 px-2 text-left text-sm">{treino.nome}</button>)}</div>}
       {anexando && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl border border-line bg-card p-2"><button onClick={() => void tirarFoto()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Camera size={19} className="text-brand" /> Câmera</button><button onClick={() => galeriaRef.current?.click()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Image size={19} className="text-brand" /> Galeria</button></div>}
+      {audioPendente && audioPendenteUrl && <div className="mt-2 flex min-h-16 items-center gap-3 rounded-2xl border border-line bg-card px-3 py-2">
+        <button type="button" onClick={descartarAudio} aria-label="Excluir gravação" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-down/15 text-down"><Trash2 size={18} /></button>
+        <div className="min-w-0 flex-1"><PlayerAudio url={audioPendenteUrl} minha={false} /><p className="mt-1 text-[10px] uppercase tracking-[0.08em] text-ink-2">Revise antes de enviar</p></div>
+        <button type="button" disabled={enviando} onClick={() => void enviarAudioPendente()} aria-label="Enviar áudio" className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-white disabled:opacity-50"><Send size={19} /></button>
+      </div>}
       <div className="mt-auto flex shrink-0 items-end gap-2 bg-app py-2">
         <button onClick={() => setEscolhendo((valor) => !valor)} aria-label="Marcar treino" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card text-brand"><Dumbbell size={18} /></button>
-        {gravando ? <button onClick={pararAudio} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-3xl border border-down/50 bg-down/10 text-sm text-down"><Square size={15} fill="currentColor" /> Parar · {Math.floor(segundosAudio / 60)}:{String(segundosAudio % 60).padStart(2, '0')}</button> : <textarea value={texto} maxLength={1000} onChange={(e) => setTexto(e.target.value)} rows={1} placeholder="Mensagem" className="min-h-12 min-w-0 flex-1 resize-none rounded-3xl border border-line bg-card px-4 py-3 text-sm outline-none focus:border-brand" />}
-        {!gravando && <button onClick={() => { setAnexando((valor) => !valor); setEscolhendo(false) }} aria-label="Enviar foto" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card text-brand"><Paperclip size={18} /></button>}
-        {!gravando && <button disabled={enviando} onPointerDown={iniciarPressaoAudio} onPointerUp={terminarPressaoAudio} onPointerCancel={terminarPressaoAudio} onClick={acionarEnvio} onContextMenu={(evento) => evento.preventDefault()} aria-label={texto.trim() ? 'Enviar mensagem' : 'Mantenha pressionado para gravar áudio'} className="flex size-12 shrink-0 touch-none items-center justify-center rounded-full bg-brand text-white disabled:opacity-50">{texto.trim() ? <Send size={18} /> : <Mic size={19} />}</button>}
+        {gravando ? <div className="flex min-h-12 flex-1 items-center justify-between gap-2 rounded-3xl border border-down/50 bg-down/10 px-4 text-sm text-down"><span className="size-2 animate-pulse rounded-full bg-down" /><span className="font-semibold">Gravando · {formatarDuracao(segundosAudio)}</span><button type="button" onClick={pararAudio} className="flex min-h-11 items-center gap-2 px-2"><Square size={15} fill="currentColor" /> Parar</button></div> : <textarea disabled={!!audioPendente} value={texto} maxLength={1000} onChange={(e) => setTexto(e.target.value)} rows={1} placeholder={audioPendente ? 'Envie ou exclua a gravação' : 'Mensagem'} className="min-h-12 min-w-0 flex-1 resize-none rounded-3xl border border-line bg-card px-4 py-3 text-sm outline-none focus:border-brand disabled:opacity-50" />}
+        {!gravando && !audioPendente && <button onClick={() => { setAnexando((valor) => !valor); setEscolhendo(false) }} aria-label="Enviar foto" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card text-brand"><Paperclip size={18} /></button>}
+        {!gravando && !audioPendente && <button disabled={enviando} onPointerDown={iniciarPressaoAudio} onPointerUp={terminarPressaoAudio} onPointerCancel={terminarPressaoAudio} onClick={acionarEnvio} onContextMenu={(evento) => evento.preventDefault()} aria-label={texto.trim() ? 'Enviar mensagem' : 'Mantenha pressionado para gravar áudio'} className="flex size-12 shrink-0 touch-none items-center justify-center rounded-full bg-brand text-white disabled:opacity-50">{texto.trim() ? <Send size={18} /> : <Mic size={19} />}</button>}
       </div>
       <input ref={cameraRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" onChange={(e) => { void enviarArquivo(e.target.files?.[0]); e.target.value = '' }} />
       <input ref={galeriaRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { void enviarArquivo(e.target.files?.[0]); e.target.value = '' }} />
