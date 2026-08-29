@@ -275,6 +275,9 @@ qualquer entrega.
   data e horário. O compromisso aparece como cartão acionável na conversa
   individual ou da guilda; cada participante confirma em “Participar do treino”
   e a quantidade confirmada é atualizada. O criador já entra como participante.
+- **Mídias no chat** — conversas individuais e guildas aceitam fotos da câmera
+  ou galeria e áudio gravado de até 5 minutos. Os arquivos ficam no bucket
+  privado `chat-privado`; somente participantes do destino recebem URL assinada.
 - **Grupos sociais** — terceira aba dentro de Social. Grupos abertos e privados
   aparecem na pesquisa; os abertos aceitam entrada direta e os privados exigem
   convite válido ou senha. Dono e administradores podem editar nome/foto,
