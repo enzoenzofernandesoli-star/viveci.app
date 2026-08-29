@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSessao } from '../lib/auth'
 import { useHistoricoTreinos } from '../lib/historicoTreinos'
 import { Modal } from './Modal'
-import { aceitarConviteGrupo, enviarMensagem, enviarMidia, excluirMensagem, listarMensagens, marcarMensagensComoLidas, marcarTreino, participarTreino, recusarConviteGrupo, type Mensagem } from '../lib/social/mensagens'
+import { aceitarConviteGrupo, enviarMensagem, enviarMidia, excluirMensagem, listarMensagens, marcarMensagensComoLidas, marcarTreino, obterUrlMidia, participarTreino, recusarConviteGrupo, type Mensagem } from '../lib/social/mensagens'
 import { formatarDataHoraTreino, validarTreinoMarcado } from '../lib/social/treinoMarcado'
 import { capturarFotoNativa } from '../lib/cameraNativa'
 
@@ -17,17 +17,30 @@ function formatarDuracao(segundos: number) {
 
 const ONDAS_AUDIO = [8, 13, 19, 11, 23, 17, 29, 15, 25, 32, 18, 27, 35, 22, 30, 17, 26, 34, 20, 28, 14, 24, 31, 18, 26, 12]
 
-function PlayerAudio({ url, minha, fotoUrl, nome, modoPrevia = false }: { url: string; minha: boolean; fotoUrl?: string | null; nome?: string; modoPrevia?: boolean }) {
+function PlayerAudio({ url, midiaPath, minha, fotoUrl, nome, modoPrevia = false }: { url?: string | null; midiaPath?: string | null; minha: boolean; fotoUrl?: string | null; nome?: string; modoPrevia?: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const [urlAtiva, setUrlAtiva] = useState(url ?? null)
   const [tocando, setTocando] = useState(false)
   const [duracao, setDuracao] = useState(0)
   const [posicao, setPosicao] = useState(0)
   const [falhou, setFalhou] = useState(false)
 
+  useEffect(() => { setUrlAtiva(url ?? null) }, [url])
+
+  async function garantirUrl() {
+    if (urlAtiva) return urlAtiva
+    if (!midiaPath) throw new Error('Áudio indisponível.')
+    const novaUrl = await obterUrlMidia(midiaPath)
+    setUrlAtiva(novaUrl)
+    return novaUrl
+  }
+
   async function alternar() {
     const audio = audioRef.current
     if (!audio) return
     try {
+      const endereco = await garantirUrl()
+      if (audio.src !== endereco) { audio.src = endereco; audio.load() }
       if (audio.paused) await audio.play()
       else audio.pause()
     } catch { setFalhou(true) }
@@ -35,12 +48,12 @@ function PlayerAudio({ url, minha, fotoUrl, nome, modoPrevia = false }: { url: s
 
   const percentual = duracao > 0 ? Math.min(100, (posicao / duracao) * 100) : 0
 
-  return <div className={`mt-1 flex min-w-[230px] items-center gap-2.5 ${modoPrevia ? '' : 'py-0.5'}`}>
-    <audio ref={audioRef} src={url} preload="metadata" onLoadedMetadata={(e) => { setDuracao(e.currentTarget.duration); setFalhou(false) }} onTimeUpdate={(e) => setPosicao(e.currentTarget.currentTime)} onPlay={() => setTocando(true)} onPause={() => setTocando(false)} onEnded={() => { setTocando(false); setPosicao(0) }} onError={() => setFalhou(true)} />
+  return <div onClick={() => void alternar()} className={`mt-1 flex min-w-[230px] cursor-pointer items-center gap-2.5 ${modoPrevia ? '' : 'py-0.5'}`}>
+    <audio ref={audioRef} src={urlAtiva ?? undefined} preload="metadata" onLoadedMetadata={(e) => { setDuracao(e.currentTarget.duration); setFalhou(false) }} onTimeUpdate={(e) => setPosicao(e.currentTarget.currentTime)} onPlay={() => setTocando(true)} onPause={() => setTocando(false)} onEnded={() => { setTocando(false); setPosicao(0) }} onError={() => { setUrlAtiva(null); setFalhou(true) }} />
     {!modoPrevia && <div className="relative flex size-12 shrink-0 items-center justify-center overflow-visible rounded-full border border-white/15 bg-app/40">{fotoUrl ? <img src={fotoUrl} alt="" className="size-full rounded-full object-cover" /> : <span className="text-sm font-semibold">{nome?.[0]?.toUpperCase() ?? 'V'}</span>}<span className={`absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full ${minha ? 'bg-white text-brand' : 'bg-brand text-white'}`}><Mic size={12} /></span></div>}
-    <button type="button" onClick={() => void alternar()} aria-label={tocando ? 'Pausar áudio' : 'Reproduzir áudio'} className={`flex size-11 shrink-0 items-center justify-center rounded-full ${minha ? 'text-white' : 'text-brand'}`}>{tocando ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-0.5" />}</button>
+    <button type="button" onClick={(e) => { e.stopPropagation(); void alternar() }} aria-label={tocando ? 'Pausar áudio' : 'Reproduzir áudio'} className={`flex size-11 shrink-0 items-center justify-center rounded-full ${minha ? 'text-white' : 'text-brand'}`}>{tocando ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-0.5" />}</button>
     <div className="min-w-0 flex-1">
-      <div className="relative flex h-10 cursor-pointer items-center gap-[2px]" onClick={() => void alternar()} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') void alternar() }} aria-label={tocando ? 'Pausar mensagem de voz' : 'Ouvir mensagem de voz'}>{ONDAS_AUDIO.map((altura, indice) => <span key={indice} className={`w-[2px] shrink-0 rounded-full ${indice / ONDAS_AUDIO.length * 100 <= percentual ? (minha ? 'bg-white' : 'bg-brand') : (minha ? 'bg-white/40' : 'bg-ink-3')}`} style={{ height: `${altura}px` }} />)}<input aria-label="Posição do áudio" type="range" min={0} max={duracao || 0} step={0.1} value={Math.min(posicao, duracao || 0)} onClick={(e) => e.stopPropagation()} onChange={(e) => { const audio = audioRef.current; if (audio) audio.currentTime = Number(e.target.value) }} className="absolute inset-0 size-full cursor-pointer opacity-0" /></div>
+      <div className="relative flex h-10 cursor-pointer items-center gap-[2px]" aria-label={tocando ? 'Pausar mensagem de voz' : 'Ouvir mensagem de voz'}>{ONDAS_AUDIO.map((altura, indice) => <span key={indice} className={`w-[2px] shrink-0 rounded-full ${indice / ONDAS_AUDIO.length * 100 <= percentual ? (minha ? 'bg-white' : 'bg-brand') : (minha ? 'bg-white/40' : 'bg-ink-3')}`} style={{ height: `${altura}px` }} />)}<input aria-label="Posição do áudio" type="range" min={0} max={duracao || 0} step={0.1} value={Math.min(posicao, duracao || 0)} onClick={(e) => e.stopPropagation()} onChange={(e) => { const audio = audioRef.current; if (audio) audio.currentTime = Number(e.target.value) }} className="absolute inset-0 size-full cursor-pointer opacity-0" /></div>
       <p className={`-mt-1 text-[10px] ${minha ? 'text-white/70' : 'text-ink-2'}`}>{falhou ? 'Áudio indisponível' : formatarDuracao(duracao || posicao)}</p>
     </div>
   </div>
@@ -274,7 +287,7 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
                 <button disabled={mensagem.participandoTreino} onClick={() => void confirmarParticipacao(mensagem)} className={`mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-semibold ${mensagem.participandoTreino ? 'border border-white/20 bg-transparent opacity-70' : 'bg-white text-app'}`}>{mensagem.participandoTreino ? <><Check size={15} /> Participação confirmada</> : <><Dumbbell size={15} /> Participar do treino</>}</button>
               </div>}
               {mensagem.midiaTipo === 'imagem' && mensagem.midiaUrl && <button onClick={() => window.open(mensagem.midiaUrl!, '_blank', 'noopener,noreferrer')} className="mt-1 block overflow-hidden rounded-xl" aria-label="Abrir foto"><img src={mensagem.midiaUrl} alt="Foto enviada na conversa" loading="lazy" className="max-h-80 w-full object-cover" /></button>}
-              {mensagem.midiaTipo === 'audio' && mensagem.midiaUrl && <PlayerAudio url={mensagem.midiaUrl} minha={minha} fotoUrl={mensagem.fotoUrl} nome={mensagem.nome} />}
+              {mensagem.midiaTipo === 'audio' && <PlayerAudio url={mensagem.midiaUrl} midiaPath={mensagem.midiaPath} minha={minha} fotoUrl={mensagem.fotoUrl} nome={mensagem.nome} />}
               <p className={`mt-1 text-right text-[10px] ${minha ? 'text-white/60' : 'text-ink-3'}`}>{new Date(mensagem.criadaEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
           </div>

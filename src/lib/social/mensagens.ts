@@ -32,6 +32,12 @@ export async function listarMensagens(destino:{conversaId?:string;grupoId?:strin
   return mensagens
 }
 
+export async function obterUrlMidia(midiaPath:string){
+  const{data,error}=await supabase.storage.from('chat-privado').createSignedUrl(midiaPath,3600)
+  if(error)throw error
+  return data.signedUrl
+}
+
 async function listarMensagensBasicas(destino:{conversaId?:string;grupoId?:string},antes?:number):Promise<Record<string,unknown>[]> {
   let consulta=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em').order('id',{ascending:false}).limit(40)
   if(destino.conversaId)consulta=consulta.eq('conversa_id',destino.conversaId)
