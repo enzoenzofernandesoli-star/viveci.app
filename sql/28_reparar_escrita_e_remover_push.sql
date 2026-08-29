@@ -3,12 +3,27 @@
 
 begin;
 
--- Push ainda não configurado: remover primeiro os gatilhos que podem interromper escritas.
-drop trigger if exists enfileirar_push_mensagem on public.mensagens;
-drop trigger if exists enfileirar_push_curtida on public.post_likes;
-drop trigger if exists enfileirar_push_comentario on public.post_comments;
-drop trigger if exists enfileirar_push_seguidor on public.seguidores;
-drop trigger if exists enfileirar_push_solicitacao_grupo on public.grupo_solicitacoes;
+-- Push ainda não configurado: remover primeiro os gatilhos que podem interromper
+-- escritas. Algumas instalações antigas não possuem todas as tabelas sociais;
+-- por isso cada remoção só roda quando a tabela realmente existe.
+do $$
+declare alvo record;
+begin
+  for alvo in
+    select * from (values
+      ('public.mensagens', 'enfileirar_push_mensagem'),
+      ('public.post_likes', 'enfileirar_push_curtida'),
+      ('public.post_comments', 'enfileirar_push_comentario'),
+      ('public.seguidores', 'enfileirar_push_seguidor'),
+      ('public.grupo_solicitacoes', 'enfileirar_push_solicitacao_grupo')
+    ) as itens(tabela, gatilho)
+  loop
+    if to_regclass(alvo.tabela) is not null then
+      execute format('drop trigger if exists %I on %s', alvo.gatilho, alvo.tabela);
+    end if;
+  end loop;
+end;
+$$;
 drop function if exists public.enfileirar_push_mensagem();
 drop function if exists public.enfileirar_push_social();
 drop function if exists public.enfileirar_push_solicitacao_grupo();
