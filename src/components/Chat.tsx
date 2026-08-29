@@ -15,7 +15,9 @@ function formatarDuracao(segundos: number) {
   return `${Math.floor(segundos / 60)}:${String(Math.floor(segundos % 60)).padStart(2, '0')}`
 }
 
-function PlayerAudio({ url, minha }: { url: string; minha: boolean }) {
+const ONDAS_AUDIO = [8, 13, 19, 11, 23, 17, 29, 15, 25, 32, 18, 27, 35, 22, 30, 17, 26, 34, 20, 28, 14, 24, 31, 18, 26, 12]
+
+function PlayerAudio({ url, minha, fotoUrl, nome, modoPrevia = false }: { url: string; minha: boolean; fotoUrl?: string | null; nome?: string; modoPrevia?: boolean }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [tocando, setTocando] = useState(false)
   const [duracao, setDuracao] = useState(0)
@@ -31,10 +33,16 @@ function PlayerAudio({ url, minha }: { url: string; minha: boolean }) {
     } catch { setFalhou(true) }
   }
 
-  return <div className="mt-1 flex min-w-[210px] items-center gap-3">
+  const percentual = duracao > 0 ? Math.min(100, (posicao / duracao) * 100) : 0
+
+  return <div className={`mt-1 flex min-w-[230px] items-center gap-2.5 ${modoPrevia ? '' : 'py-0.5'}`}>
     <audio ref={audioRef} src={url} preload="metadata" onLoadedMetadata={(e) => { setDuracao(e.currentTarget.duration); setFalhou(false) }} onTimeUpdate={(e) => setPosicao(e.currentTarget.currentTime)} onPlay={() => setTocando(true)} onPause={() => setTocando(false)} onEnded={() => { setTocando(false); setPosicao(0) }} onError={() => setFalhou(true)} />
-    <button type="button" onClick={() => void alternar()} aria-label={tocando ? 'Pausar áudio' : 'Reproduzir áudio'} className={`flex size-11 shrink-0 items-center justify-center rounded-full ${minha ? 'bg-white text-brand' : 'bg-brand text-white'}`}>{tocando ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}</button>
-    <div className="min-w-0 flex-1"><input aria-label="Posição do áudio" type="range" min={0} max={duracao || 0} step={0.1} value={Math.min(posicao, duracao || 0)} onChange={(e) => { const audio = audioRef.current; if (audio) audio.currentTime = Number(e.target.value) }} className="h-1 w-full accent-white" /><p className={`mt-1 text-[10px] ${minha ? 'text-white/70' : 'text-ink-2'}`}>{falhou ? 'Áudio indisponível' : `${formatarDuracao(posicao)} / ${formatarDuracao(duracao)}`}</p></div>
+    {!modoPrevia && <div className="relative flex size-12 shrink-0 items-center justify-center overflow-visible rounded-full border border-white/15 bg-app/40">{fotoUrl ? <img src={fotoUrl} alt="" className="size-full rounded-full object-cover" /> : <span className="text-sm font-semibold">{nome?.[0]?.toUpperCase() ?? 'V'}</span>}<span className={`absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full ${minha ? 'bg-white text-brand' : 'bg-brand text-white'}`}><Mic size={12} /></span></div>}
+    <button type="button" onClick={() => void alternar()} aria-label={tocando ? 'Pausar áudio' : 'Reproduzir áudio'} className={`flex size-11 shrink-0 items-center justify-center rounded-full ${minha ? 'text-white' : 'text-brand'}`}>{tocando ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-0.5" />}</button>
+    <div className="min-w-0 flex-1">
+      <div className="relative flex h-10 cursor-pointer items-center gap-[2px]" onClick={() => void alternar()} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') void alternar() }} aria-label={tocando ? 'Pausar mensagem de voz' : 'Ouvir mensagem de voz'}>{ONDAS_AUDIO.map((altura, indice) => <span key={indice} className={`w-[2px] shrink-0 rounded-full ${indice / ONDAS_AUDIO.length * 100 <= percentual ? (minha ? 'bg-white' : 'bg-brand') : (minha ? 'bg-white/40' : 'bg-ink-3')}`} style={{ height: `${altura}px` }} />)}<input aria-label="Posição do áudio" type="range" min={0} max={duracao || 0} step={0.1} value={Math.min(posicao, duracao || 0)} onClick={(e) => e.stopPropagation()} onChange={(e) => { const audio = audioRef.current; if (audio) audio.currentTime = Number(e.target.value) }} className="absolute inset-0 size-full cursor-pointer opacity-0" /></div>
+      <p className={`-mt-1 text-[10px] ${minha ? 'text-white/70' : 'text-ink-2'}`}>{falhou ? 'Áudio indisponível' : formatarDuracao(duracao || posicao)}</p>
+    </div>
   </div>
 }
 
@@ -266,7 +274,7 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
                 <button disabled={mensagem.participandoTreino} onClick={() => void confirmarParticipacao(mensagem)} className={`mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs font-semibold ${mensagem.participandoTreino ? 'border border-white/20 bg-transparent opacity-70' : 'bg-white text-app'}`}>{mensagem.participandoTreino ? <><Check size={15} /> Participação confirmada</> : <><Dumbbell size={15} /> Participar do treino</>}</button>
               </div>}
               {mensagem.midiaTipo === 'imagem' && mensagem.midiaUrl && <button onClick={() => window.open(mensagem.midiaUrl!, '_blank', 'noopener,noreferrer')} className="mt-1 block overflow-hidden rounded-xl" aria-label="Abrir foto"><img src={mensagem.midiaUrl} alt="Foto enviada na conversa" loading="lazy" className="max-h-80 w-full object-cover" /></button>}
-              {mensagem.midiaTipo === 'audio' && mensagem.midiaUrl && <PlayerAudio url={mensagem.midiaUrl} minha={minha} />}
+              {mensagem.midiaTipo === 'audio' && mensagem.midiaUrl && <PlayerAudio url={mensagem.midiaUrl} minha={minha} fotoUrl={mensagem.fotoUrl} nome={mensagem.nome} />}
               <p className={`mt-1 text-right text-[10px] ${minha ? 'text-white/60' : 'text-ink-3'}`}>{new Date(mensagem.criadaEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
           </div>
@@ -278,7 +286,7 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
       {anexando && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl border border-line bg-card p-2"><button onClick={() => void tirarFoto()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Camera size={19} className="text-brand" /> Câmera</button><button onClick={() => galeriaRef.current?.click()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Image size={19} className="text-brand" /> Galeria</button></div>}
       {audioPendente && audioPendenteUrl && <div className="mt-2 flex min-h-16 items-center gap-3 rounded-2xl border border-line bg-card px-3 py-2">
         <button type="button" onClick={descartarAudio} aria-label="Excluir gravação" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-down/15 text-down"><Trash2 size={18} /></button>
-        <div className="min-w-0 flex-1"><PlayerAudio url={audioPendenteUrl} minha={false} /><p className="mt-1 text-[10px] uppercase tracking-[0.08em] text-ink-2">Revise antes de enviar</p></div>
+        <div className="min-w-0 flex-1"><PlayerAudio url={audioPendenteUrl} minha={false} modoPrevia /><p className="mt-1 text-[10px] uppercase tracking-[0.08em] text-ink-2">Revise antes de enviar</p></div>
         <button type="button" disabled={enviando} onClick={() => void enviarAudioPendente()} aria-label="Enviar áudio" className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-white disabled:opacity-50"><Send size={19} /></button>
       </div>}
       <div className="mt-auto flex shrink-0 items-end gap-2 bg-app py-2">
