@@ -85,7 +85,7 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
       await carregar()
     } catch (e) {
       const detalhe = e instanceof Error ? e.message : ''
-      setErro(detalhe.includes('enviar_mensagem') || detalhe.includes('schema cache') ? 'As mensagens ainda não foram ativadas no banco. Execute o arquivo 22_mensagens.sql no Supabase.' : 'Não foi possível enviar a mensagem.')
+      setErro(detalhe.includes('sessão') || detalhe.includes('Sessão') ? detalhe : detalhe.includes('enviar_mensagem') || detalhe.includes('schema cache') ? 'As mensagens ainda não foram ativadas no banco. Execute o arquivo 22_mensagens.sql no Supabase.' : 'Não foi possível enviar a mensagem.')
     } finally { setEnviando(false) }
   }
 

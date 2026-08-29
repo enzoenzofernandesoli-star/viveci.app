@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { obterSessaoValida } from '../auth'
 import { validarMidiaChat } from '../uploadSeguro'
 
 export type Mensagem = { id:number; remetenteId:string; texto:string|null; treinoId:string|null; criadaEm:string; nome:string; fotoUrl:string|null; conviteId:string|null; conviteGrupoId:string|null; conviteGrupoNome:string|null; conviteGrupoFoto:string|null; conviteAtivo:boolean; treinoMarcadoId:string|null; treinoMarcadoLocal:string|null; treinoMarcadoEm:string|null; treinoMarcadoParticipantes:number; participandoTreino:boolean; midiaTipo:'imagem'|'audio'|null; midiaPath:string|null; midiaUrl:string|null }
@@ -44,15 +45,14 @@ async function listarMensagensBasicas(destino:{conversaId?:string;grupoId?:strin
   return(data??[]).map((item)=>({...item,nome:mapa.get(item.remetente_id)?.nome??'Atleta VIVECI',foto_url:mapa.get(item.remetente_id)?.foto_url??null}))
 }
 
-export async function enviarMensagem(destino:{conversaId?:string;grupoId?:string},texto:string,treinoId?:string){const {error}=await supabase.rpc('enviar_mensagem',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_texto:texto||null,p_treino_id:treinoId??null});if(error)throw error}
+export async function enviarMensagem(destino:{conversaId?:string;grupoId?:string},texto:string,treinoId?:string){await obterSessaoValida();const {error}=await supabase.rpc('enviar_mensagem',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_texto:texto||null,p_treino_id:treinoId??null});if(error)throw error}
 export async function excluirMensagem(mensagemId:number,midiaPath?:string|null){const{error}=await supabase.rpc('excluir_mensagem',{p_mensagem_id:mensagemId});if(error)throw error;if(midiaPath)await supabase.storage.from('chat-privado').remove([midiaPath])}
 
 export async function marcarTreino(destino:{conversaId?:string;grupoId?:string},local:string,dataHora:string){const{error}=await supabase.rpc('marcar_treino',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_local:local.trim(),p_data_hora:new Date(dataHora).toISOString()});if(error)throw error}
 export async function participarTreino(treinoMarcadoId:string){const{error}=await supabase.rpc('participar_treino_marcado',{p_treino_marcado_id:treinoMarcadoId});if(error)throw error}
 
 export async function enviarMidia(destino:{conversaId?:string;grupoId?:string},arquivo:File){
-  const sessao=(await supabase.auth.getSession()).data.session
-  if(!sessao)throw new Error('Autenticação necessária.')
+  const sessao=await obterSessaoValida()
   const validacao=validarMidiaChat(arquivo),tipoDestino=destino.conversaId?'conversas':'grupos',destinoId=destino.conversaId??destino.grupoId
   if(!destinoId)throw new Error('Destino inválido.')
   const path=`${tipoDestino}/${destinoId}/${sessao.user.id}/${crypto.randomUUID()}.${validacao.extensao}`

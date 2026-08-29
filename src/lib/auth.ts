@@ -29,6 +29,22 @@ export function useSessao(): EstadoAuth {
   return useSyncExternalStore(inscrever, () => estado, () => estado)
 }
 
+export async function obterSessaoValida() {
+  let { data, error } = await supabase.auth.getSession()
+  if (error) throw new Error('Não foi possível validar sua sessão.')
+  const pertoDeExpirar = !data.session?.expires_at || data.session.expires_at * 1000 < Date.now() + 60_000
+  if (!data.session || pertoDeExpirar) {
+    const renovada = await supabase.auth.refreshSession()
+    if (renovada.error || !renovada.data.session) throw new Error('Sua sessão expirou. Saia e entre novamente.')
+    data = renovada.data
+  }
+  const sessao = data.session
+  if (!sessao) throw new Error('Sua sessão expirou. Saia e entre novamente.')
+  const usuario = await supabase.auth.getUser(sessao.access_token)
+  if (usuario.error || !usuario.data.user || usuario.data.user.id !== sessao.user.id) throw new Error('Sua sessão expirou. Saia e entre novamente.')
+  return sessao
+}
+
 export async function entrar(email: string, senha: string) {
   const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
   if (error) throw error

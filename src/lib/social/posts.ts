@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase.ts'
+import { obterSessaoValida } from '../auth.ts'
 import { buscarSeguindoIds } from './seguidores.ts'
 import { TAMANHO_MAX_POST, validarImagem } from '../uploadSeguro.ts'
 import { LIMITE_COMENTARIO, LIMITE_LEGENDA, validarTextoSocial } from './limites.ts'
@@ -218,13 +219,8 @@ export async function criarPost(
     mostrarVolume: boolean
   },
 ) {
-  let sessao=(await supabase.auth.getSession()).data.session
-  if(!sessao||!sessao.expires_at||sessao.expires_at*1000<Date.now()+30_000){
-    const{data,error}=await supabase.auth.refreshSession();if(error||!data.session)throw new Error('Sua sessão expirou. Entre novamente para publicar.')
-    sessao=data.session
-  }
-  const{data:usuario,error:erroUsuario}=await supabase.auth.getUser()
-  if(erroUsuario||!usuario.user||usuario.user.id!==userId||sessao.user.id!==userId)throw new Error('Sua sessão expirou. Entre novamente para publicar.')
+  const sessao=await obterSessaoValida()
+  if(sessao.user.id!==userId)throw new Error('Sua sessão expirou. Saia e entre novamente.')
   let fotoUrl: string | null = null
   let fotoPath: string | null = null
   if (dados.arquivoFoto) {
