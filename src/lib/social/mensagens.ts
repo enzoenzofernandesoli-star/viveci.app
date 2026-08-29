@@ -22,11 +22,26 @@ export async function listarMensagensNaoLidas(){const{data,error}=await supabase
 export async function marcarMensagensComoLidas(destino:{conversaId?:string;grupoId?:string}){const{error}=await supabase.rpc('marcar_mensagens_lidas',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null});if(error)throw error}
 
 export async function listarMensagens(destino:{conversaId?:string;grupoId?:string}, antes?:number):Promise<Mensagem[]> {
-  const {data,error}=await supabase.rpc('listar_mensagens',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_antes:antes??null});if(error)throw error
-  const mensagens=((data??[]) as Record<string,unknown>[]).reverse().map((m):Mensagem=>({id:Number(m.id),remetenteId:String(m.remetente_id),texto:m.texto?String(m.texto):null,treinoId:m.treino_id?String(m.treino_id):null,criadaEm:String(m.criada_em),nome:String(m.nome??'Atleta VIVECI'),fotoUrl:m.foto_url?String(m.foto_url):null,conviteId:m.convite_id?String(m.convite_id):null,conviteGrupoId:m.convite_grupo_id?String(m.convite_grupo_id):null,conviteGrupoNome:m.convite_grupo_nome?String(m.convite_grupo_nome):null,conviteGrupoFoto:m.convite_grupo_foto?String(m.convite_grupo_foto):null,conviteAtivo:m.convite_ativo===true,treinoMarcadoId:m.treino_marcado_id?String(m.treino_marcado_id):null,treinoMarcadoLocal:m.treino_marcado_local?String(m.treino_marcado_local):null,treinoMarcadoEm:m.treino_marcado_em?String(m.treino_marcado_em):null,treinoMarcadoParticipantes:Number(m.treino_marcado_participantes??0),participandoTreino:m.participando_treino===true,midiaTipo:m.midia_tipo==='imagem'||m.midia_tipo==='audio'?m.midia_tipo:null,midiaPath:m.midia_path?String(m.midia_path):null,midiaUrl:null}))
+  const {data,error}=await supabase.rpc('listar_mensagens',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_antes:antes??null})
+  let linhas=(data??[]) as Record<string,unknown>[]
+  if(error)linhas=await listarMensagensBasicas(destino,antes)
+  const mensagens=linhas.reverse().map((m):Mensagem=>({id:Number(m.id),remetenteId:String(m.remetente_id),texto:m.texto?String(m.texto):null,treinoId:m.treino_id?String(m.treino_id):null,criadaEm:String(m.criada_em),nome:String(m.nome??'Atleta VIVECI'),fotoUrl:m.foto_url?String(m.foto_url):null,conviteId:m.convite_id?String(m.convite_id):null,conviteGrupoId:m.convite_grupo_id?String(m.convite_grupo_id):null,conviteGrupoNome:m.convite_grupo_nome?String(m.convite_grupo_nome):null,conviteGrupoFoto:m.convite_grupo_foto?String(m.convite_grupo_foto):null,conviteAtivo:m.convite_ativo===true,treinoMarcadoId:m.treino_marcado_id?String(m.treino_marcado_id):null,treinoMarcadoLocal:m.treino_marcado_local?String(m.treino_marcado_local):null,treinoMarcadoEm:m.treino_marcado_em?String(m.treino_marcado_em):null,treinoMarcadoParticipantes:Number(m.treino_marcado_participantes??0),participandoTreino:m.participando_treino===true,midiaTipo:m.midia_tipo==='imagem'||m.midia_tipo==='audio'?m.midia_tipo:null,midiaPath:m.midia_path?String(m.midia_path):null,midiaUrl:null}))
   const paths=[...new Set(mensagens.flatMap((m)=>m.midiaPath?[m.midiaPath]:[]))]
-  if(paths.length){const{data:urls,error:erroUrls}=await supabase.storage.from('chat-privado').createSignedUrls(paths,3600);if(erroUrls)throw erroUrls;const mapa=new Map((urls??[]).map((item)=>[item.path,item.signedUrl]));for(const mensagem of mensagens)if(mensagem.midiaPath)mensagem.midiaUrl=mapa.get(mensagem.midiaPath)??null}
+  if(paths.length){const{data:urls}=await supabase.storage.from('chat-privado').createSignedUrls(paths,3600);const mapa=new Map((urls??[]).map((item)=>[item.path,item.signedUrl]));for(const mensagem of mensagens)if(mensagem.midiaPath)mensagem.midiaUrl=mapa.get(mensagem.midiaPath)??null}
   return mensagens
+}
+
+async function listarMensagensBasicas(destino:{conversaId?:string;grupoId?:string},antes?:number):Promise<Record<string,unknown>[]> {
+  let consulta=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em').order('id',{ascending:false}).limit(40)
+  if(destino.conversaId)consulta=consulta.eq('conversa_id',destino.conversaId)
+  else if(destino.grupoId)consulta=consulta.eq('grupo_id',destino.grupoId)
+  else throw new Error('Destino inválido.')
+  if(antes)consulta=consulta.lt('id',antes)
+  const{data,error}=await consulta;if(error)throw error
+  const ids=[...new Set((data??[]).map((item)=>item.remetente_id))]
+  const{data:perfis}=ids.length?await supabase.from('perfis_publicos').select('id,nome,foto_url').in('id',ids):{data:[]}
+  const mapa=new Map((perfis??[]).map((perfil)=>[perfil.id,perfil]))
+  return(data??[]).map((item)=>({...item,nome:mapa.get(item.remetente_id)?.nome??'Atleta VIVECI',foto_url:mapa.get(item.remetente_id)?.foto_url??null}))
 }
 
 export async function enviarMensagem(destino:{conversaId?:string;grupoId?:string},texto:string,treinoId?:string){const {error}=await supabase.rpc('enviar_mensagem',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_texto:texto||null,p_treino_id:treinoId??null});if(error)throw error}
