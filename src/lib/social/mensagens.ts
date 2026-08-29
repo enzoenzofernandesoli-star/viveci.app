@@ -27,6 +27,12 @@ export async function listarMensagens(destino:{conversaId?:string;grupoId?:strin
   let linhas=(data??[]) as Record<string,unknown>[]
   if(error)linhas=await listarMensagensBasicas(destino,antes)
   const mensagens=linhas.reverse().map((m):Mensagem=>({id:Number(m.id),remetenteId:String(m.remetente_id),texto:m.texto?String(m.texto):null,treinoId:m.treino_id?String(m.treino_id):null,criadaEm:String(m.criada_em),nome:String(m.nome??'Atleta VIVECI'),fotoUrl:m.foto_url?String(m.foto_url):null,conviteId:m.convite_id?String(m.convite_id):null,conviteGrupoId:m.convite_grupo_id?String(m.convite_grupo_id):null,conviteGrupoNome:m.convite_grupo_nome?String(m.convite_grupo_nome):null,conviteGrupoFoto:m.convite_grupo_foto?String(m.convite_grupo_foto):null,conviteAtivo:m.convite_ativo===true,treinoMarcadoId:m.treino_marcado_id?String(m.treino_marcado_id):null,treinoMarcadoLocal:m.treino_marcado_local?String(m.treino_marcado_local):null,treinoMarcadoEm:m.treino_marcado_em?String(m.treino_marcado_em):null,treinoMarcadoParticipantes:Number(m.treino_marcado_participantes??0),participandoTreino:m.participando_treino===true,midiaTipo:m.midia_tipo==='imagem'||m.midia_tipo==='audio'?m.midia_tipo:null,midiaPath:m.midia_path?String(m.midia_path):null,midiaUrl:null}))
+  const convitesPendentes=[...new Set(mensagens.filter((m)=>m.conviteId&&!m.conviteGrupoId).map((m)=>m.conviteId!))]
+  if(convitesPendentes.length){
+    const{data:detalhes}=await supabase.rpc('detalhar_convites_mensagens',{p_convite_ids:convitesPendentes})
+    const mapa=new Map(((detalhes??[]) as Record<string,unknown>[]).map((item)=>[String(item.convite_id),item]))
+    for(const mensagem of mensagens){const detalhe=mensagem.conviteId?mapa.get(mensagem.conviteId):undefined;if(!detalhe)continue;mensagem.conviteGrupoId=String(detalhe.grupo_id);mensagem.conviteGrupoNome=String(detalhe.grupo_nome);mensagem.conviteGrupoFoto=detalhe.grupo_foto?String(detalhe.grupo_foto):null;mensagem.conviteAtivo=detalhe.ativo===true}
+  }
   const paths=[...new Set(mensagens.flatMap((m)=>m.midiaPath?[m.midiaPath]:[]))]
   if(paths.length){const{data:urls}=await supabase.storage.from('chat-privado').createSignedUrls(paths,3600);const mapa=new Map((urls??[]).map((item)=>[item.path,item.signedUrl]));for(const mensagem of mensagens)if(mensagem.midiaPath)mensagem.midiaUrl=mapa.get(mensagem.midiaPath)??null}
   return mensagens
@@ -39,7 +45,7 @@ export async function obterUrlMidia(midiaPath:string){
 }
 
 async function listarMensagensBasicas(destino:{conversaId?:string;grupoId?:string},antes?:number):Promise<Record<string,unknown>[]> {
-  let consulta=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em,midia_tipo,midia_path').order('id',{ascending:false}).limit(40)
+  let consulta=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em,midia_tipo,midia_path,convite_id:convite_grupo_id').order('id',{ascending:false}).limit(40)
   if(destino.conversaId)consulta=consulta.eq('conversa_id',destino.conversaId)
   else if(destino.grupoId)consulta=consulta.eq('grupo_id',destino.grupoId)
   else throw new Error('Destino inválido.')
