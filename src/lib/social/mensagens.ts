@@ -53,10 +53,16 @@ async function listarMensagensBasicas(destino:{conversaId?:string;grupoId?:strin
     if(antes)consulta=consulta.lt('id',antes)
     return consulta
   }
-  let{data,error}=await consultar('id,remetente_id,texto,treino_id,criada_em,midia_tipo,midia_path,convite_grupo_id')
+  let{data,error}=await consultar('id,remetente_id,texto,treino_id,criada_em,midia_tipo,midia_path')
   if(error)({data,error}=await consultar('id,remetente_id,texto,treino_id,criada_em'))
   if(error)throw error
   const linhas=(data??[]) as unknown as Record<string,unknown>[]
+  if(linhas.length){
+    const idsMensagens=linhas.map((item)=>Number(item.id))
+    const{data:convites}=await supabase.from('mensagens').select('id,convite_grupo_id').in('id',idsMensagens).not('convite_grupo_id','is',null)
+    const mapaConvites=new Map(((convites??[]) as unknown as Record<string,unknown>[]).map((item)=>[Number(item.id),item.convite_grupo_id]))
+    for(const linha of linhas)linha.convite_grupo_id=mapaConvites.get(Number(linha.id))??null
+  }
   const ids=[...new Set(linhas.map((item)=>String(item.remetente_id)))]
   const{data:perfis}=ids.length?await supabase.from('perfis_publicos').select('id,nome,foto_url').in('id',ids):{data:[]}
   const mapa=new Map((perfis??[]).map((perfil)=>[perfil.id,perfil]))
