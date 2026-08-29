@@ -14,8 +14,7 @@ begin
       ('public.mensagens', 'enfileirar_push_mensagem'),
       ('public.post_likes', 'enfileirar_push_curtida'),
       ('public.post_comments', 'enfileirar_push_comentario'),
-      ('public.seguidores', 'enfileirar_push_seguidor'),
-      ('public.grupo_solicitacoes', 'enfileirar_push_solicitacao_grupo')
+      ('public.seguidores', 'enfileirar_push_seguidor')
     ) as itens(tabela, gatilho)
   loop
     if to_regclass(alvo.tabela) is not null then
@@ -26,7 +25,6 @@ end;
 $$;
 drop function if exists public.enfileirar_push_mensagem();
 drop function if exists public.enfileirar_push_social();
-drop function if exists public.enfileirar_push_solicitacao_grupo();
 drop function if exists public.registrar_push_token(text,text);
 drop function if exists public.desativar_meus_push_tokens();
 drop table if exists public.notificacoes_push;
