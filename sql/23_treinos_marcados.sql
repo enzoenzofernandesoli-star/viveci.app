@@ -1,6 +1,8 @@
 -- VIVECI — BLOCO 23: treinos marcados nas conversas e guildas
 -- Aplicar depois de 22_mensagens.sql. Seguro para executar novamente.
 
+begin;
+
 create table if not exists public.treinos_marcados (
   id uuid primary key default gen_random_uuid(),
   criador_id uuid not null references auth.users(id) on delete cascade,
@@ -120,3 +122,5 @@ $$;
 
 revoke all on function public.marcar_treino(uuid,uuid,text,timestamptz), public.participar_treino_marcado(uuid), public.listar_mensagens(uuid,uuid,bigint), public.excluir_mensagem(bigint) from public, anon;
 grant execute on function public.marcar_treino(uuid,uuid,text,timestamptz), public.participar_treino_marcado(uuid), public.listar_mensagens(uuid,uuid,bigint), public.excluir_mensagem(bigint) to authenticated;
+
+commit;

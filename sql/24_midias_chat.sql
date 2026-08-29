@@ -1,6 +1,8 @@
 -- VIVECI — BLOCO 24: fotos e áudios privados nos chats
 -- Aplicar depois de 23_treinos_marcados.sql. Seguro para executar novamente.
 
+begin;
+
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
 values('chat-privado','chat-privado',false,15728640,array[
   'image/jpeg','image/png','image/webp','audio/webm','audio/mp4','audio/mpeg','audio/ogg','audio/wav','audio/x-wav'
@@ -96,3 +98,5 @@ $$;
 
 revoke all on function public.enviar_midia_mensagem(uuid,uuid,text),public.listar_mensagens(uuid,uuid,bigint) from public,anon;
 grant execute on function public.enviar_midia_mensagem(uuid,uuid,text),public.listar_mensagens(uuid,uuid,bigint) to authenticated;
+
+commit;
