@@ -39,7 +39,7 @@ export async function obterUrlMidia(midiaPath:string){
 }
 
 async function listarMensagensBasicas(destino:{conversaId?:string;grupoId?:string},antes?:number):Promise<Record<string,unknown>[]> {
-  let consulta=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em').order('id',{ascending:false}).limit(40)
+  let consulta=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em,midia_tipo,midia_path').order('id',{ascending:false}).limit(40)
   if(destino.conversaId)consulta=consulta.eq('conversa_id',destino.conversaId)
   else if(destino.grupoId)consulta=consulta.eq('grupo_id',destino.grupoId)
   else throw new Error('Destino inválido.')
