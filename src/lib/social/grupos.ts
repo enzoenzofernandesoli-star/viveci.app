@@ -100,6 +100,14 @@ export async function solicitarEntradaGrupo(grupoId: string, senha?: string) {
   return String(data)
 }
 
+export async function entrarGrupo(grupoId: string, senha?: string) {
+  const { data, error } = await supabase.rpc('entrar_grupo', { p_grupo_id: grupoId, p_senha: senha || null })
+  if (error) throw error
+  if (data === 'senha_incorreta') throw new Error('Senha incorreta.')
+  if (data === 'bloqueado') throw new Error('Muitas tentativas. Aguarde 15 minutos e tente novamente.')
+  if (data !== 'entrou') throw new Error('Não foi possível entrar no grupo.')
+}
+
 export async function listarSolicitacoesGrupo(grupoId: string): Promise<SolicitacaoGrupo[]> {
   const { data, error } = await supabase.rpc('listar_solicitacoes_grupo', { p_grupo_id: grupoId })
   if (error) throw error

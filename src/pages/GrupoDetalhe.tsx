@@ -5,7 +5,7 @@ import { BrasaoRank } from '../components/RankCorporal'
 import { Empty } from '../components/Empty'
 import { Chat } from '../components/Chat'
 import { calcularRankPorMedia } from '../lib/rankCorporal'
-import { alterarPapelMembro, atualizarFotoGrupo, atualizarGrupo, carregarGrupo, carregarMembrosGrupo, convidarParaGrupo, listarSolicitacoesGrupo, removerMembroGrupo, responderSolicitacaoGrupo, solicitarEntradaGrupo, type GrupoSocial, type MembroGrupo, type SolicitacaoGrupo, type VisibilidadeGrupo } from '../lib/social/grupos'
+import { alterarPapelMembro, atualizarFotoGrupo, atualizarGrupo, carregarGrupo, carregarMembrosGrupo, convidarParaGrupo, entrarGrupo, listarSolicitacoesGrupo, removerMembroGrupo, responderSolicitacaoGrupo, type GrupoSocial, type MembroGrupo, type SolicitacaoGrupo, type VisibilidadeGrupo } from '../lib/social/grupos'
 import { usePesquisaPessoas } from '../lib/social/pesquisaPessoas'
 
 export default function GrupoDetalhe() {
@@ -22,7 +22,7 @@ export default function GrupoDetalhe() {
   const [atualizandoFoto, setAtualizandoFoto] = useState(false)
   const [visao, setVisao] = useState<'chat' | 'info'>('chat')
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoGrupo[]>([])
-  const [solicitacaoEnviada, setSolicitacaoEnviada] = useState(false)
+  const [entrando, setEntrando] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -120,10 +120,11 @@ export default function GrupoDetalhe() {
 
       {!grupo.souMembro ? (
         <section className="border-y border-line/60 py-6">
-          <p className="text-sm font-semibold">Solicite entrada para acompanhar o rank coletivo</p>
+          <p className="text-sm font-semibold">Entre para acompanhar o rank coletivo</p>
+          <p className="mt-1 text-xs leading-5 text-ink-2">{grupo.visibilidade === 'privado' ? 'Digite a senha do grupo. Se você recebeu um convite, pode entrar sem senha pelo cartão enviado nas mensagens.' : 'Este grupo é aberto. A entrada é imediata.'}</p>
           {grupo.visibilidade === 'privado' && <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Senha do grupo" className="mt-4 h-12 w-full rounded-xl border border-line bg-card px-3 text-sm outline-none focus:border-brand" />}
           {erro && <p className="mt-3 text-sm text-down">{erro}</p>}
-          {solicitacaoEnviada ? <p className="mt-4 rounded-xl border border-brand/30 bg-brand/10 p-4 text-sm text-brand">Solicitação enviada. Um administrador precisa aprovar sua entrada.</p> : <button onClick={async () => { try { await solicitarEntradaGrupo(id, senha); setSolicitacaoEnviada(true) } catch (e) { setErro(e instanceof Error ? e.message : 'Não foi possível solicitar a entrada.') } }} className="mt-4 min-h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white">Solicitar entrada</button>}
+          <button disabled={entrando || (grupo.visibilidade === 'privado' && !senha)} onClick={async () => { setEntrando(true); setErro(null); try { await entrarGrupo(id, senha); setVisao('chat'); setVersao((valor) => valor + 1) } catch (e) { setErro(e instanceof Error ? e.message : 'Não foi possível entrar no grupo.') } finally { setEntrando(false) } }} className="mt-4 min-h-12 w-full rounded-xl bg-brand text-sm font-semibold text-white disabled:opacity-50">{entrando ? 'Entrando...' : 'Entrar no grupo'}</button>
         </section>
       ) : (
         <>
