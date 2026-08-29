@@ -23,6 +23,7 @@ function PlayerAudio({ url, midiaPath, minha, fotoUrl, nome, modoPrevia = false 
   const recuperandoRef = useRef(false)
   const tentativasRef = useRef(0)
   const ultimoAvancoRef = useRef({ posicao: 0, instante: Date.now() })
+  const ultimaUrlRecebidaRef = useRef(url ?? null)
   const [urlAtiva, setUrlAtiva] = useState(url ?? null)
   const [tocando, setTocando] = useState(false)
   const [carregando, setCarregando] = useState(false)
@@ -30,7 +31,11 @@ function PlayerAudio({ url, midiaPath, minha, fotoUrl, nome, modoPrevia = false 
   const [posicao, setPosicao] = useState(0)
   const [falhou, setFalhou] = useState(false)
 
-  useEffect(() => { setUrlAtiva(url ?? null) }, [url])
+  useEffect(() => {
+    if (!url || ultimaUrlRecebidaRef.current === url) return
+    ultimaUrlRecebidaRef.current = url
+    if (!urlAtiva && !falhou) setUrlAtiva(url)
+  }, [url, urlAtiva, falhou])
 
   useEffect(() => {
     const pausarOutroPlayer = (evento: Event) => {
@@ -66,7 +71,11 @@ function PlayerAudio({ url, midiaPath, minha, fotoUrl, nome, modoPrevia = false 
   const recuperarReproducao = useCallback(async () => {
     const audio = audioRef.current
     if (!audio || !midiaPath || recuperandoRef.current || audio.ended || tentativasRef.current >= 2) {
-      if (audio && tentativasRef.current >= 2) audio.pause()
+      if (audio && tentativasRef.current >= 2) {
+        audio.pause()
+        setTocando(false)
+        setCarregando(false)
+      }
       return
     }
     recuperandoRef.current = true
@@ -92,6 +101,7 @@ function PlayerAudio({ url, midiaPath, minha, fotoUrl, nome, modoPrevia = false 
       setFalhou(false)
     } catch {
       audio.pause()
+      setTocando(false)
       setFalhou(true)
     } finally {
       recuperandoRef.current = false
@@ -113,10 +123,19 @@ function PlayerAudio({ url, midiaPath, minha, fotoUrl, nome, modoPrevia = false 
     return () => window.clearInterval(fiscal)
   }, [tocando, recuperarReproducao])
 
+  const finalizarReproducao = useCallback((audio:HTMLAudioElement) => {
+    audio.pause()
+    audio.currentTime = 0
+    setTocando(false)
+    setCarregando(false)
+    setPosicao(0)
+    tentativasRef.current = 0
+  }, [])
+
   const percentual = duracao > 0 ? Math.min(100, (posicao / duracao) * 100) : 0
 
   return <div onClick={() => void alternar()} className={`mt-1 flex min-w-[230px] cursor-pointer items-center gap-2.5 ${modoPrevia ? '' : 'py-0.5'}`}>
-    <audio ref={audioRef} src={urlAtiva ?? undefined} preload="metadata" onLoadedMetadata={(e) => { setDuracao(e.currentTarget.duration); setFalhou(false) }} onTimeUpdate={(e) => { setPosicao(e.currentTarget.currentTime); ultimoAvancoRef.current = { posicao: e.currentTarget.currentTime, instante: Date.now() } }} onPlay={() => { setTocando(true); setCarregando(false); ultimoAvancoRef.current = { posicao: audioRef.current?.currentTime ?? 0, instante: Date.now() } }} onPlaying={() => setCarregando(false)} onWaiting={() => setCarregando(true)} onPause={() => { setTocando(false); setCarregando(false) }} onEnded={(e) => { setTocando(false); setCarregando(false); setPosicao(0); e.currentTarget.currentTime = 0 }} onError={() => { if (!recuperandoRef.current) setUrlAtiva(null); setTocando(false); setCarregando(false); setFalhou(true) }} />
+    <audio ref={audioRef} src={urlAtiva ?? undefined} preload="metadata" onLoadedMetadata={(e) => { setDuracao(e.currentTarget.duration); setFalhou(false) }} onTimeUpdate={(e) => { const audio=e.currentTarget; if(Number.isFinite(audio.duration)&&audio.duration>0&&audio.currentTime>=audio.duration-0.08){finalizarReproducao(audio);return} setPosicao(audio.currentTime); ultimoAvancoRef.current = { posicao: audio.currentTime, instante: Date.now() } }} onPlay={() => { setTocando(true); setCarregando(false); ultimoAvancoRef.current = { posicao: audioRef.current?.currentTime ?? 0, instante: Date.now() } }} onPlaying={() => setCarregando(false)} onWaiting={() => setCarregando(true)} onPause={() => { setTocando(false); setCarregando(false) }} onEnded={(e) => finalizarReproducao(e.currentTarget)} onError={() => { if (!recuperandoRef.current) setUrlAtiva(null); setTocando(false); setCarregando(false); setFalhou(true) }} />
     {!modoPrevia && <div className="relative flex size-12 shrink-0 items-center justify-center overflow-visible rounded-full border border-white/15 bg-app/40">{fotoUrl ? <img src={fotoUrl} alt="" className="size-full rounded-full object-cover" /> : <span className="text-sm font-semibold">{nome?.[0]?.toUpperCase() ?? 'V'}</span>}<span className={`absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full ${minha ? 'bg-white text-brand' : 'bg-brand text-white'}`}><Mic size={12} /></span></div>}
     <button type="button" onClick={(e) => { e.stopPropagation(); void alternar() }} aria-label={tocando ? 'Pausar áudio' : 'Reproduzir áudio'} className={`flex size-11 shrink-0 items-center justify-center rounded-full ${minha ? 'text-white' : 'text-brand'}`}>{tocando ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-0.5" />}</button>
     <div className="min-w-0 flex-1">
