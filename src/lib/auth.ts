@@ -63,7 +63,6 @@ export async function cadastrar(email: string, senha: string, nome: string) {
 }
 
 export async function sair() {
-  await supabase.rpc('desativar_meus_push_tokens')
   await supabase.auth.signOut()
 }
 

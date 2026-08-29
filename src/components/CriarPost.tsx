@@ -99,7 +99,8 @@ export function CriarPost({
       })
       onPublicado()
     } catch (err) {
-      setErro(mensagemErro(err, 'Não deu pra publicar agora. Tente novamente.'))
+      const detalhe = err instanceof Error ? err.message : ''
+      setErro(detalhe.startsWith('FOTO_UPLOAD:') ? 'O banco recusou o envio da foto. Execute o arquivo 28 no Supabase.' : detalhe.startsWith('POST_INSERT:') ? 'O banco recusou a criação da publicação. Execute o arquivo 28 no Supabase.' : mensagemErro(err, 'Não deu pra publicar agora. Tente novamente.'))
     } finally {
       publicacaoEmCurso.current = false
       setPublicando(false)

@@ -278,12 +278,9 @@ qualquer entrega.
 - **Mídias no chat** — conversas individuais e guildas aceitam fotos da câmera
   ou galeria e áudio gravado de até 5 minutos. Os arquivos ficam no bucket
   privado `chat-privado`; somente participantes do destino recebem URL assinada.
-- **Notificações push Android** — o app registra tokens FCM pelo plugin oficial
-  do Capacitor. Mensagens, mídias, treinos marcados, convites, solicitações de
-  guilda, curtidas, comentários e seguidores alimentam `notificacoes_push`.
-  A Edge Function `enviar-push` usa FCM HTTP v1 e abre a rota correta ao toque.
-  A ativação remota está documentada em `docs/NOTIFICACOES_PUSH.md`; credenciais
-  Firebase nunca entram no Git nem no APK.
+- **Notificações push** — removidas integralmente enquanto não há Firebase
+  configurado. Não adicionar plugin, tokens, filas, gatilhos ou funções de push
+  sem novo pedido explícito e configuração completa do serviço.
 - **Grupos sociais** — terceira aba dentro de Social. Grupos abertos e privados
   aparecem na pesquisa; os abertos aceitam entrada direta e os privados exigem
   convite válido ou senha. Dono e administradores podem editar nome/foto,

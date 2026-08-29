@@ -5,7 +5,6 @@ import { RotaProtegida } from './components/RotaProtegida'
 import { RotaOnboardingCompleto } from './components/RotaOnboardingCompleto'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
-import { AtivadorNotificacoes } from './components/AtivadorNotificacoes'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Treinos = lazy(() => import('./pages/Treinos'))
@@ -29,7 +28,6 @@ const RedefinirSenha = lazy(() => import('./pages/RedefinirSenha'))
 export default function App() {
   return (
     <BrowserRouter>
-      <AtivadorNotificacoes />
       <Suspense fallback={<div className="flex min-h-dvh items-center justify-center bg-app text-sm text-ink-2">Carregando...</div>}>
       <Routes>
         <Route path="login" element={<Login />} />

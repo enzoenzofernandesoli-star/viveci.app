@@ -227,7 +227,7 @@ export async function criarPost(
     const { extensao } = validarImagem(dados.arquivoFoto, TAMANHO_MAX_POST)
     const caminho = `${userId}/social/${Date.now()}.${extensao}`
     const { error: erroUpload } = await supabase.storage.from('midia-publica').upload(caminho, dados.arquivoFoto, { contentType: dados.arquivoFoto.type })
-    if (erroUpload) throw erroUpload
+    if (erroUpload) throw new Error(`FOTO_UPLOAD: ${erroUpload.message}`)
     fotoUrl = supabase.storage.from('midia-publica').getPublicUrl(caminho).data.publicUrl
     fotoPath = caminho
   }
@@ -244,7 +244,7 @@ export async function criarPost(
   })
   if (error) {
     if (fotoPath) await supabase.storage.from('midia-publica').remove([fotoPath])
-    throw error
+    throw new Error(`POST_INSERT: ${error.message}`)
   }
 }
 
