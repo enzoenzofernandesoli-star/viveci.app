@@ -30,6 +30,9 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
   const galeriaRef = useRef<HTMLInputElement>(null)
   const gravadorRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const esperaAudioRef = useRef<number | null>(null)
+  const segurandoAudioRef = useRef(false)
+  const toqueLongoRef = useRef(false)
   const historico = useHistoricoTreinos(sessao?.user.id, 10)
   const destino = { conversaId, grupoId }
 
@@ -68,7 +71,10 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
     return () => window.clearInterval(intervalo)
   }, [gravando])
 
-  useEffect(() => () => streamRef.current?.getTracks().forEach((track) => track.stop()), [])
+  useEffect(() => () => {
+    if (esperaAudioRef.current !== null) window.clearTimeout(esperaAudioRef.current)
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+  }, [])
 
   async function enviar(treinoId?: string) {
     if (!texto.trim() && !treinoId) return
@@ -153,10 +159,40 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
         if (partes.length) void enviarArquivo(new File(partes, `audio-${Date.now()}.${extensao}`, { type: tipo }))
       }
       streamRef.current = stream; gravadorRef.current = gravador; setSegundosAudio(0); setGravando(true); gravador.start()
+      if (!segurandoAudioRef.current) gravador.stop()
     } catch (e) { setErro(e instanceof Error ? e.message : 'Permita o acesso ao microfone para gravar.') }
   }
 
   function pararAudio() { if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop() }
+
+  function iniciarPressaoAudio(evento: React.PointerEvent<HTMLButtonElement>) {
+    if (texto.trim() || enviando || gravando) return
+    evento.currentTarget.setPointerCapture(evento.pointerId)
+    segurandoAudioRef.current = true
+    toqueLongoRef.current = false
+    esperaAudioRef.current = window.setTimeout(() => {
+      toqueLongoRef.current = true
+      esperaAudioRef.current = null
+      void iniciarAudio()
+    }, 350)
+  }
+
+  function terminarPressaoAudio() {
+    segurandoAudioRef.current = false
+    if (esperaAudioRef.current !== null) {
+      window.clearTimeout(esperaAudioRef.current)
+      esperaAudioRef.current = null
+    }
+    if (toqueLongoRef.current) pararAudio()
+  }
+
+  function acionarEnvio() {
+    if (toqueLongoRef.current) {
+      toqueLongoRef.current = false
+      return
+    }
+    if (texto.trim()) void enviar()
+  }
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
@@ -187,12 +223,12 @@ export function Chat({ conversaId, grupoId, mostrarAutores = false }: ChatProps)
       </div>
       {erro && <p className="mt-2 text-sm text-down">{erro}</p>}
       {escolhendo && <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-line bg-card p-2"><button onClick={() => { setEscolhendo(false); setMarcando(true); setErro(null) }} className="flex min-h-12 w-full items-center gap-3 border-b border-line px-2 text-left text-sm font-semibold text-brand"><CalendarDays size={18} /> Marcar novo treino</button><p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-2">Compartilhar treino concluído</p>{historico.carregando ? <p className="p-3 text-xs text-ink-2">Carregando treinos...</p> : historico.treinos.map((treino) => <button key={treino.id} onClick={() => void enviar(treino.id)} className="min-h-12 w-full border-b border-line/60 px-2 text-left text-sm">{treino.nome}</button>)}</div>}
-      {anexando && <div className="mt-2 grid grid-cols-3 gap-2 rounded-xl border border-line bg-card p-2"><button onClick={() => void tirarFoto()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Camera size={19} className="text-brand" /> Câmera</button><button onClick={() => galeriaRef.current?.click()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Image size={19} className="text-brand" /> Galeria</button><button onClick={() => void iniciarAudio()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Mic size={19} className="text-brand" /> Áudio</button></div>}
+      {anexando && <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl border border-line bg-card p-2"><button onClick={() => void tirarFoto()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Camera size={19} className="text-brand" /> Câmera</button><button onClick={() => galeriaRef.current?.click()} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-line text-xs"><Image size={19} className="text-brand" /> Galeria</button></div>}
       <div className="mt-auto flex shrink-0 items-end gap-2 bg-app py-2">
         <button onClick={() => setEscolhendo((valor) => !valor)} aria-label="Marcar treino" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card text-brand"><Dumbbell size={18} /></button>
         {gravando ? <button onClick={pararAudio} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-3xl border border-down/50 bg-down/10 text-sm text-down"><Square size={15} fill="currentColor" /> Parar · {Math.floor(segundosAudio / 60)}:{String(segundosAudio % 60).padStart(2, '0')}</button> : <textarea value={texto} maxLength={1000} onChange={(e) => setTexto(e.target.value)} rows={1} placeholder="Mensagem" className="min-h-12 min-w-0 flex-1 resize-none rounded-3xl border border-line bg-card px-4 py-3 text-sm outline-none focus:border-brand" />}
-        {!gravando && <button onClick={() => { setAnexando((valor) => !valor); setEscolhendo(false) }} aria-label="Enviar foto ou áudio" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card text-brand"><Paperclip size={18} /></button>}
-        {!gravando && <button disabled={enviando} onClick={() => void enviar()} aria-label="Enviar mensagem" className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-white disabled:opacity-50"><Send size={18} /></button>}
+        {!gravando && <button onClick={() => { setAnexando((valor) => !valor); setEscolhendo(false) }} aria-label="Enviar foto" className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line bg-card text-brand"><Paperclip size={18} /></button>}
+        {!gravando && <button disabled={enviando} onPointerDown={iniciarPressaoAudio} onPointerUp={terminarPressaoAudio} onPointerCancel={terminarPressaoAudio} onClick={acionarEnvio} onContextMenu={(evento) => evento.preventDefault()} aria-label={texto.trim() ? 'Enviar mensagem' : 'Mantenha pressionado para gravar áudio'} className="flex size-12 shrink-0 touch-none items-center justify-center rounded-full bg-brand text-white disabled:opacity-50">{texto.trim() ? <Send size={18} /> : <Mic size={19} />}</button>}
       </div>
       <input ref={cameraRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" onChange={(e) => { void enviarArquivo(e.target.files?.[0]); e.target.value = '' }} />
       <input ref={galeriaRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { void enviarArquivo(e.target.files?.[0]); e.target.value = '' }} />
