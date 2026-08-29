@@ -10,3 +10,10 @@ dist
 /.gradle-local
 /.gradle-apk-build
 /VIVECI-teste.apk
+/android/app/google-services.json
+*firebase*service-account*.json
+.env
+.env.*
+!.env.example
+*.pem
+*.key
