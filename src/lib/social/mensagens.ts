@@ -45,16 +45,22 @@ export async function obterUrlMidia(midiaPath:string){
 }
 
 async function listarMensagensBasicas(destino:{conversaId?:string;grupoId?:string},antes?:number):Promise<Record<string,unknown>[]> {
-  let consulta=supabase.from('mensagens').select('id,remetente_id,texto,treino_id,criada_em,midia_tipo,midia_path,convite_id:convite_grupo_id').order('id',{ascending:false}).limit(40)
-  if(destino.conversaId)consulta=consulta.eq('conversa_id',destino.conversaId)
-  else if(destino.grupoId)consulta=consulta.eq('grupo_id',destino.grupoId)
-  else throw new Error('Destino inválido.')
-  if(antes)consulta=consulta.lt('id',antes)
-  const{data,error}=await consulta;if(error)throw error
-  const ids=[...new Set((data??[]).map((item)=>item.remetente_id))]
+  async function consultar(campos:string){
+    let consulta=supabase.from('mensagens').select(campos).order('id',{ascending:false}).limit(40)
+    if(destino.conversaId)consulta=consulta.eq('conversa_id',destino.conversaId)
+    else if(destino.grupoId)consulta=consulta.eq('grupo_id',destino.grupoId)
+    else throw new Error('Destino inválido.')
+    if(antes)consulta=consulta.lt('id',antes)
+    return consulta
+  }
+  let{data,error}=await consultar('id,remetente_id,texto,treino_id,criada_em,midia_tipo,midia_path,convite_grupo_id')
+  if(error)({data,error}=await consultar('id,remetente_id,texto,treino_id,criada_em'))
+  if(error)throw error
+  const linhas=(data??[]) as unknown as Record<string,unknown>[]
+  const ids=[...new Set(linhas.map((item)=>String(item.remetente_id)))]
   const{data:perfis}=ids.length?await supabase.from('perfis_publicos').select('id,nome,foto_url').in('id',ids):{data:[]}
   const mapa=new Map((perfis??[]).map((perfil)=>[perfil.id,perfil]))
-  return(data??[]).map((item)=>({...item,nome:mapa.get(item.remetente_id)?.nome??'Atleta VIVECI',foto_url:mapa.get(item.remetente_id)?.foto_url??null}))
+  return linhas.map((item)=>({...item,convite_id:item.convite_grupo_id??null,convite_grupo_id:null,nome:mapa.get(String(item.remetente_id))?.nome??'Atleta VIVECI',foto_url:mapa.get(String(item.remetente_id))?.foto_url??null}))
 }
 
 export async function enviarMensagem(destino:{conversaId?:string;grupoId?:string},texto:string,treinoId?:string){await obterSessaoValida();const {error}=await supabase.rpc('enviar_mensagem',{p_conversa_id:destino.conversaId??null,p_grupo_id:destino.grupoId??null,p_texto:texto||null,p_treino_id:treinoId??null});if(error)throw error}
